@@ -45,7 +45,8 @@ export async function GET() {
     }
 
     if (!nowRes.ok) {
-      return Response.json({ isPlaying: false, recentTracks: [] })
+      const errBody = await nowRes.text()
+      return Response.json({ isPlaying: false, recentTracks: [], _debug: `${nowRes.status}: ${errBody}` })
     }
 
     const data = await nowRes.json()
