@@ -28,7 +28,7 @@ export const mediaItems: MediaItem[] = [
     type: 'podcast',
     title: 'are you allowed to feel hopeless?',
     creator: 'the zurkie show',
-    url: 'https://www.acquired.fm/episodes/jensen-huang',
+    url: 'https://open.spotify.com/episode/0Y7wikY3csTW6jvhNKcbRN?si=6c7a0f3150cd49cd',
     note: 'We are our biggest critics, life is not linear, and we have to keep trying over and over again',
     date: 'Feb 2026',
   },
