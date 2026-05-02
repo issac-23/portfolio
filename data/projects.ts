@@ -15,12 +15,11 @@ export interface Project {
 // github: repo link (optional)
 // ─────────────────────────────────────────────────────────────────
 export const projects: Project[] = [
-  // {
-  //   title: 'My Project',
-  //   description: 'A short description of what it does and why you built it.',
-  //   tags: ['Next.js', 'TypeScript', 'Tailwind'],
-  //   url: 'https://yourproject.com',
-  //   github: 'https://github.com/you/project',
-  //   status: 'live',
-  // },
+  {
+    title: 'tally',
+    description: 'A budget and finance tracker to help me manage my expenses and savings.',
+    tags: ['Next.js', 'TypeScript', 'Tailwind', 'Recharts','Supabase'],
+    github: 'https://github.com/issac-23/tally',
+    status: 'wip',
+  },
 ]
