@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import ThemeToggle from './ThemeToggle'
 
 const links = [
   { label: 'About', href: '#about' },
@@ -50,8 +51,10 @@ export default function Nav() {
           ))}
         </ul>
 
-        {/* Mobile toggle */}
-        <button
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          {/* Mobile toggle */}
+          <button
           className="md:hidden text-muted hover:text-fg transition-colors p-1"
           onClick={() => setOpen(!open)}
           aria-label="Toggle menu"
@@ -66,6 +69,7 @@ export default function Nav() {
             </svg>
           )}
         </button>
+        </div>
       </nav>
 
       {/* Mobile menu */}

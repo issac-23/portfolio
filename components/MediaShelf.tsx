@@ -97,7 +97,7 @@ export default function MediaShelf() {
                         <div className="flex items-center gap-2 mb-2">
                           <Badge type={item.type} />
                           {item.date && (
-                            <span className="text-xs" style={{ color: '#6B6057' }}>{item.date}</span>
+                            <span className="text-xs" style={{ color: 'var(--muted)' }}>{item.date}</span>
                           )}
                         </div>
                         <p className="text-fg font-medium group-hover:text-accent transition-colors">

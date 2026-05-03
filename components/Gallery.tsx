@@ -51,7 +51,7 @@ export default function Gallery() {
             {galleryPhotos.length === 0 ? (
               <div
                 className="rounded-2xl border border-dashed p-12 text-center"
-                style={{ borderColor: '#2A2520', background: '#161310' }}
+                style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
               >
                 <p className="text-muted text-sm">Photos coming soon.</p>
                 <p className="text-xs mt-2" style={{ color: '#6B6057' }}>

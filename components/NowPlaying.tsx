@@ -91,10 +91,10 @@ export default function NowPlaying() {
             <div className="bg-surface rounded-2xl p-6 border border-border">
               {loading ? (
                 <div className="flex items-center gap-4 animate-pulse">
-                  <div className="w-16 h-16 rounded-xl flex-shrink-0" style={{ background: '#1E1B17' }} />
+                  <div className="w-16 h-16 rounded-xl flex-shrink-0" style={{ background: 'var(--surface-2)' }} />
                   <div className="space-y-2 flex-1">
-                    <div className="h-4 w-32 rounded" style={{ background: '#1E1B17' }} />
-                    <div className="h-3 w-24 rounded" style={{ background: '#1E1B17' }} />
+                    <div className="h-4 w-32 rounded" style={{ background: 'var(--surface-2)' }} />
+                    <div className="h-3 w-24 rounded" style={{ background: 'var(--surface-2)' }} />
                   </div>
                 </div>
               ) : data?.isPlaying ? (
@@ -125,7 +125,7 @@ export default function NowPlaying() {
                 </a>
               ) : (
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#1E1B17' }}>
+                  <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-2)' }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted">
                       <path d="M9 18V5l12-2v13" />
                       <circle cx="6" cy="18" r="3" />
@@ -135,7 +135,7 @@ export default function NowPlaying() {
                   <div>
                     <p className="text-muted text-sm">Not playing right now</p>
                     {data?.recentTracks?.[0] && (
-                      <p className="text-xs mt-1" style={{ color: '#6B6057' }}>
+                      <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
                         Last: {data.recentTracks[0].title}
                       </p>
                     )}
