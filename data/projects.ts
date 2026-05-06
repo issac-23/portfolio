@@ -15,15 +15,15 @@ export interface Project {
 // github: repo link (optional)
 // ─────────────────────────────────────────────────────────────────
 export const projects: Project[] = [
-  {title: 'dcf calculator',
-    description: 'Intermediate two-stage DCF calculator for public stocks. Pulls real financials, projects 5-year free cash flows, and outputs fair value per share with a sensitivity table. Streamlit + pytest-validated engine.',
+  {title: 'DCF Calculator',
+    description: 'Intermediate two-stage DCF calculator for public stocks. Pulls real financials, projects 5-year free cash flows, and outputs fair value per share with a sensitivity table.',
     tags: ['Python', 'Streamlit', 'yfinance', 'pandas', 'plotly', 'numpy', 'pytest'],
     github: 'https://github.com/issac-23/dcf-calculator',
     status: 'wip',
   },
   {
     title: 'tally',
-    description: 'A budget and finance tracker to help me manage my expenses and savings.',
+    description: 'Full-stack personal finance tracker with color-coded runway forecasting. Logs expenses by category and merchant, projects how long your savings last at the current burn rate, and calculates a sustainable monthly budget from your income.',
     tags: ['Next.js', 'TypeScript', 'Tailwind', 'Recharts','Supabase'],
     github: 'https://github.com/issac-23/tally',
     status: 'wip',
