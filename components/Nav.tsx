@@ -51,7 +51,15 @@ export default function Nav() {
           ))}
         </ul>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-block text-xs text-fg border border-border rounded-full px-3.5 py-1.5 hover:border-accent hover:text-accent transition-all"
+          >
+            Resume
+          </a>
           <ThemeToggle />
           {/* Mobile toggle */}
           <button

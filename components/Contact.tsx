@@ -86,6 +86,26 @@ export default function Contact() {
                   </p>
                 </div>
               </a>
+
+              <a
+                href="/resume.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 bg-surface border border-border rounded-xl px-6 py-4 hover:border-accent group transition-all"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted group-hover:text-accent transition-colors flex-shrink-0">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="9" y1="13" x2="15" y2="13" />
+                  <line x1="9" y1="17" x2="15" y2="17" />
+                </svg>
+                <div>
+                  <p className="text-xs text-muted mb-0.5">Resume</p>
+                  <p className="text-sm text-fg group-hover:text-accent transition-colors">
+                    Download PDF
+                  </p>
+                </div>
+              </a>
             </div>
           </div>
         </div>
