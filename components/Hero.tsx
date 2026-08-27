@@ -1,6 +1,6 @@
 export default function Hero() {
   return (
-    <section id="top" className="min-h-[86svh] md:min-h-[88vh] flex items-center px-6 pt-24 pb-16">
+    <section id="top" className="min-h-[76svh] md:min-h-[80vh] flex items-center px-6 pt-24 pb-16">
       <div className="max-w-4xl mx-auto w-full">
         <p className="text-accent text-xs font-medium tracking-widest uppercase mb-5">
           Hello, I&apos;m
@@ -11,7 +11,7 @@ export default function Hero() {
         >
           Issac Ip
         </h1>
-        <p className="text-muted text-lg leading-relaxed max-w-md mb-8">
+        <p className="text-muted text-lg leading-relaxed max-w-xl mb-8">
           CS + Economics at Northeastern University.
           Into music, photography, and good company.
         </p>
