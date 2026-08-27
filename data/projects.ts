@@ -10,7 +10,7 @@ export interface Project {
 // ─────────────────────────────────────────────────────────────────
 // HOW TO ADD PROJECTS:
 // Add new entries to the top of this array.
-// status: 'live' | 'wip' (in progress) | 'concept'
+// status: 'live' | 'deployed' | 'wip' (in progress) | 'concept'
 // url: deployed link (optional)
 // github: repo link (optional)
 // ─────────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ export const projects: Project[] = [
   {
     title: 'tally',
     description: 'Full-stack personal finance tracker with color-coded runway forecasting. Logs expenses by category and merchant, projects how long your savings last at the current burn rate, and calculates a sustainable monthly budget from your income.',
-    tags: ['Next.js', 'TypeScript', 'Tailwind','Supabase'],
+    tags: ['Next.js', 'TypeScript', 'Tailwind', 'Supabase'],
     github: 'https://github.com/issac-23/tally',
     status: 'live',
   },

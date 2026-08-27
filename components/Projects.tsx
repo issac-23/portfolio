@@ -3,10 +3,12 @@
 import { useEffect, useRef } from 'react'
 import { projects } from '@/data/projects'
 
+// Colours resolve per theme so the badges stay legible in light mode too.
 const statusLabel: Record<string, { text: string; color: string }> = {
-  live:    { text: 'Live',        color: '#6EBF8B' },
-  wip:     { text: 'In Progress', color: '#C8956C' },
-  concept: { text: 'Concept',     color: '#9A8F85' },
+  live:    { text: 'Live',        color: 'var(--status-ok)' },
+  deployed:{ text: 'Deployed',    color: 'var(--status-ok)' },
+  wip:     { text: 'In Progress', color: 'var(--accent)' },
+  concept: { text: 'Concept',     color: 'var(--muted)' },
 }
 
 export default function Projects() {
@@ -43,10 +45,10 @@ export default function Projects() {
             {projects.length === 0 ? (
               <div
                 className="rounded-2xl border border-dashed p-12 text-center"
-                style={{ borderColor: '#2A2520', background: '#161310' }}
+                style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
               >
                 <p className="text-muted text-sm">Projects coming soon.</p>
-                <p className="text-xs mt-2" style={{ color: '#6B6057' }}>
+                <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>
                   Add entries to <code className="text-accent">data/projects.ts</code> to populate this section.
                 </p>
               </div>
@@ -57,14 +59,18 @@ export default function Projects() {
                   return (
                     <div
                       key={i}
-                      className="bg-surface rounded-xl p-6 border border-border hover:bg-surface-2 transition-all group"
+                      className="bg-surface rounded-xl p-6 border border-border hover:bg-surface-2 lift-card group"
                       style={{ transitionDelay: `${i * 60}ms` }}
                     >
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <h3 className="text-fg font-medium">{project.title}</h3>
                         <span
                           className="text-xs rounded-full px-2.5 py-0.5 flex-shrink-0"
-                          style={{ color: s.color, background: `${s.color}18`, border: `1px solid ${s.color}30` }}
+                          style={{
+                            color: s.color,
+                            background: `color-mix(in srgb, ${s.color} 12%, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${s.color} 30%, transparent)`,
+                          }}
                         >
                           {s.text}
                         </span>

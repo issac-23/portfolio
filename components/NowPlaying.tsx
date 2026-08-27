@@ -21,6 +21,17 @@ interface RecentTrack {
   songUrl: string
 }
 
+// Spotify's recently-played feed repeats a track for each separate play
+function dedupe(tracks: RecentTrack[]) {
+  const seen = new Set<string>()
+  return tracks.filter((t) => {
+    const key = `${t.title}|${t.artist}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 function MusicBars() {
   return (
     <span className="inline-flex items-end gap-[2px]" style={{ height: '14px' }}>
@@ -42,15 +53,18 @@ function MusicBars() {
 export default function NowPlaying() {
   const [data, setData] = useState<NowPlayingData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [failed, setFailed] = useState(false)
   const ref = useRef<HTMLElement>(null)
 
   const fetchData = async () => {
     try {
       const res = await fetch('/api/spotify/now-playing')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
       setData(json)
+      setFailed(false)
     } catch {
-      // silent
+      setFailed(true)
     } finally {
       setLoading(false)
     }
@@ -88,13 +102,31 @@ export default function NowPlaying() {
 
           <div className="space-y-8">
             {/* Now Playing card */}
-            <div className="bg-surface rounded-2xl p-6 border border-border">
+            <div className="bg-surface rounded-2xl p-6 border border-border lift-card">
               {loading ? (
-                <div className="flex items-center gap-4 animate-pulse">
+                <div className="flex items-center gap-4 t-skel">
                   <div className="w-16 h-16 rounded-xl flex-shrink-0" style={{ background: 'var(--surface-2)' }} />
                   <div className="space-y-2 flex-1">
                     <div className="h-4 w-32 rounded" style={{ background: 'var(--surface-2)' }} />
                     <div className="h-3 w-24 rounded" style={{ background: 'var(--surface-2)' }} />
+                  </div>
+                </div>
+              ) : failed ? (
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--surface-2)' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 8v4M12 16h.01" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-muted text-sm">Couldn&apos;t reach Spotify</p>
+                    <button
+                      onClick={() => { setLoading(true); fetchData() }}
+                      className="text-xs text-accent hover:text-fg transition-colors mt-1"
+                    >
+                      Try again
+                    </button>
                   </div>
                 </div>
               ) : data?.isPlaying ? (
@@ -106,7 +138,7 @@ export default function NowPlaying() {
                 >
                   {data.albumImageUrl && (
                     <div className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden">
-                      <Image src={data.albumImageUrl} alt={data.album ?? ''} fill className="object-cover" />
+                      <Image src={data.albumImageUrl} alt={data.album ? `${data.album} album art` : ''} fill sizes="64px" className="object-cover" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -149,16 +181,16 @@ export default function NowPlaying() {
               <div>
                 <p className="text-xs text-muted uppercase tracking-widest mb-4">Recently played</p>
                 <div className="space-y-4">
-                  {data!.recentTracks!.slice(0, 5).map((track, i) => (
+                  {dedupe(data!.recentTracks!).slice(0, 5).map((track, i) => (
                     <a
-                      key={i}
+                      key={`${track.songUrl}-${i}`}
                       href={track.songUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 group"
+                      className="flex items-center gap-3 group rounded-lg -mx-2 px-2 py-1.5 hover:bg-surface transition-colors"
                     >
                       <div className="relative w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden">
-                        <Image src={track.albumImageUrl} alt={track.album} fill className="object-cover" />
+                        <Image src={track.albumImageUrl} alt="" aria-hidden="true" fill sizes="40px" className="object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-fg truncate group-hover:text-accent transition-colors">

@@ -15,7 +15,7 @@ module.exports = {
         border:      'var(--border)',
         fg:          'var(--fg)',
         muted:       'var(--muted)',
-        accent:      '#C8956C',
+        accent:      'var(--accent)',
       },
       fontFamily: {
         serif: ['"DM Serif Display"', 'Georgia', 'serif'],

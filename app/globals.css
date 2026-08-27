@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Motion tokens (transitions.dev shared scale) ── */
+:root {
+  --duration-stagger: 40ms;
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+  --duration-very-slow: 500ms;
+
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: ease-in-out;
+  --ease-out: ease-out;
+  --ease-linear: linear;
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  --distance-micro: 4px;
+  --distance-base: 8px;
+  --distance-medium: 12px;
+
+  --scale-large: 0.96;
+  --scale-medium: 0.97;
+
+  --blur-small: 2px;
+  --blur-medium: 3px;
+
+  --modal-open-dur: var(--duration-fast);
+  --modal-close-dur: var(--duration-quick);
+  --modal-scale: var(--scale-large);
+  --modal-scale-close: var(--scale-large);
+  --modal-ease: var(--ease-smooth-out);
+}
+
 /* ── Light mode (default) ── */
 :root {
   --bg:        #F7F2ED;
@@ -9,8 +42,16 @@
   --surface-2: #E5DDD5;
   --border:    #D6CCC3;
   --fg:        #1A1714;
-  --muted:     #7A6E66;
+  /* Darker than the dark-mode muted so body copy clears WCAG AA (4.5:1)
+     against both --bg and --surface. #7A6E66 measured 4.44:1 and failed. */
+  --muted:     #706459;
+  /* The brand tan only reaches 2.37:1 on the cream background, so light mode
+     uses a deepened version for anything that renders as text. */
+  --accent:    #85572E;
+  --status-ok: #2E6B43;
   --glow:      rgba(200, 149, 108, 0.18);
+  --accent-soft: rgba(200, 149, 108, 0.12);
+  --shadow: rgba(43, 33, 25, 0.08);
 }
 
 /* ── Dark mode ── */
@@ -21,7 +62,11 @@ html.dark {
   --border:    #2A2520;
   --fg:        #EDE8E3;
   --muted:     #9A8F85;
+  --accent:    #C8956C;
+  --status-ok: #6EBF8B;
   --glow:      rgba(255, 255, 255, 0.22);
+  --accent-soft: rgba(200, 149, 108, 0.12);
+  --shadow: rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -40,15 +85,47 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+a,
+button {
+  outline-offset: 4px;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 1px solid var(--fg);
+}
+
 ::selection {
   background-color: rgba(200, 149, 108, 0.25);
-  color: #EDE8E3;
+  color: var(--fg);
+}
+
+html {
+  scrollbar-color: var(--border) var(--bg);
 }
 
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #0C0A09; }
-::-webkit-scrollbar-thumb { background: #2A2520; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #3A322C; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  transition: top var(--duration-quick) var(--ease-smooth-out);
+}
+
+.skip-link:focus-visible {
+  top: 1rem;
+}
 
 /* Section entrance animation */
 .section-fade {
@@ -56,6 +133,34 @@ body {
   transform: translateY(28px);
   transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lift-card {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.28s ease,
+              background-color 0.28s ease,
+              box-shadow 0.28s ease;
+}
+
+.lift-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 48px var(--shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 .section-fade.visible {
   opacity: 1;
@@ -99,4 +204,128 @@ body {
 @keyframes barPulse {
   0%, 100% { transform: scaleY(0.5); }
   50%       { transform: scaleY(1); }
+}
+
+/* ── Modal open / close (transitions.dev 06-modal) ── */
+.t-modal-backdrop {
+  opacity: 0;
+  transition: opacity var(--modal-open-dur) var(--modal-ease);
+}
+.t-modal-backdrop.is-open { opacity: 1; }
+.t-modal-backdrop.is-closing {
+  opacity: 0;
+  transition: opacity var(--modal-close-dur) var(--modal-ease);
+}
+
+.t-modal {
+  transform-origin: center;
+  transform: scale(var(--modal-scale));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--modal-open-dur) var(--modal-ease),
+    opacity   var(--modal-open-dur) var(--modal-ease);
+  will-change: transform, opacity;
+}
+.t-modal.is-open {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.t-modal.is-closing {
+  transform: scale(var(--modal-scale-close));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--modal-close-dur) var(--modal-ease),
+    opacity   var(--modal-close-dur) var(--modal-ease);
+}
+
+/* ── Icon swap (transitions.dev 09-icon-swap) ── */
+.t-icon-swap {
+  display: grid;
+  place-items: center;
+}
+.t-icon-swap > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity   var(--duration-fast) var(--ease-in-out),
+    transform var(--duration-fast) var(--ease-in-out),
+    filter    var(--duration-fast) var(--ease-in-out);
+}
+.t-icon-swap > [data-state='out'] {
+  opacity: 0;
+  transform: scale(0.7) rotate(-90deg);
+  filter: blur(var(--blur-small));
+}
+.t-icon-swap > [data-state='in'] {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  filter: blur(0);
+}
+
+/* Theme icons are driven by the `html.dark` class, not React state, so the
+   correct icon paints before hydration and never mismatches the server. */
+.t-theme-icon > .icon-sun,
+.t-theme-icon > .icon-moon {
+  transition:
+    opacity   var(--duration-fast) var(--ease-in-out),
+    transform var(--duration-fast) var(--ease-in-out),
+    filter    var(--duration-fast) var(--ease-in-out);
+}
+.t-theme-icon > .icon-sun {
+  opacity: 0;
+  transform: scale(0.7) rotate(-90deg);
+  filter: blur(var(--blur-small));
+}
+.t-theme-icon > .icon-moon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  filter: blur(0);
+}
+html.dark .t-theme-icon > .icon-sun {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  filter: blur(0);
+}
+html.dark .t-theme-icon > .icon-moon {
+  opacity: 0;
+  transform: scale(0.7) rotate(90deg);
+  filter: blur(var(--blur-small));
+}
+
+/* ── Filter list cross-fade ── */
+.t-filter-list {
+  transition:
+    opacity var(--duration-quick) var(--ease-in-out),
+    filter  var(--duration-quick) var(--ease-in-out);
+}
+.t-filter-list.is-swapping {
+  opacity: 0;
+  filter: blur(var(--blur-small));
+}
+
+/* ── Skeleton pulse + content reveal (transitions.dev 14-skeleton-reveal) ── */
+@keyframes skelPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+.t-skel {
+  animation: skelPulse 1.4s var(--ease-linear) infinite;
+}
+.t-skel-reveal {
+  animation: skelReveal var(--duration-slow) var(--ease-in-out) both;
+}
+@keyframes skelReveal {
+  from { opacity: 0; filter: blur(var(--blur-small)); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-modal,
+  .t-modal-backdrop,
+  .t-icon-swap > *,
+  .t-filter-list { transition: none !important; }
+  .t-skel,
+  .t-skel-reveal { animation: none !important; }
 }

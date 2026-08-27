@@ -25,10 +25,24 @@ function Badge({ type }: { type: MediaType }) {
 
 export default function MediaShelf() {
   const [filter, setFilter] = useState('all')
+  const [swapping, setSwapping] = useState(false)
   const ref = useRef<HTMLElement>(null)
 
   const availableTypes = ['all', ...Array.from(new Set(mediaItems.map((m) => m.type)))]
   const filtered = filter === 'all' ? mediaItems : mediaItems.filter((m) => m.type === filter)
+
+  const pickFilter = (type: string) => {
+    if (type === filter) return
+    setSwapping(true)
+    const ms =
+      parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--duration-quick')
+      ) || 150
+    setTimeout(() => {
+      setFilter(type)
+      setSwapping(false)
+    }, ms)
+  }
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -59,14 +73,15 @@ export default function MediaShelf() {
 
           <div>
             {/* Filter tabs */}
-            <div className="flex flex-wrap gap-2 mb-8">
+            <div className="flex flex-wrap gap-2 mb-8" role="group" aria-label="Filter media by type">
               {availableTypes.map((type) => {
                 const c = typeConfig[type] ?? typeConfig.other
                 return (
                   <button
                     key={type}
-                    onClick={() => setFilter(type)}
-                    className={`text-xs rounded-full px-3 py-1.5 border transition-all ${
+                    onClick={() => pickFilter(type)}
+                    aria-pressed={filter === type}
+                    className={`text-xs rounded-full px-3 py-1.5 border transition-all hover:-translate-y-0.5 ${
                       filter === type
                         ? 'border-accent text-accent'
                         : 'border-border text-muted hover:border-fg/30 hover:text-fg'
@@ -82,14 +97,17 @@ export default function MediaShelf() {
             {filtered.length === 0 ? (
               <p className="text-muted text-sm">Nothing here yet.</p>
             ) : (
-              <div className="space-y-3 stagger-children visible">
+              <div
+                aria-live="polite"
+                className={`space-y-3 t-filter-list ${swapping ? 'is-swapping' : ''}`}
+              >
                 {filtered.map((item, i) => (
                   <a
                     key={i}
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block bg-surface rounded-xl p-5 border border-border hover:bg-surface-2 hover:border-border/60 transition-all group"
+                    className="block bg-surface rounded-xl p-5 border border-border hover:bg-surface-2 hover:border-border/60 lift-card group"
                     style={{ transitionDelay: `${i * 60}ms` }}
                   >
                     <div className="flex items-start justify-between gap-4">
