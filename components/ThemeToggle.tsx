@@ -22,8 +22,9 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      aria-label="Toggle theme"
-      className="text-muted hover:text-fg transition-colors p-1"
+      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="text-muted hover:text-fg hover:bg-surface-2 transition-all p-2 rounded-full"
     >
       {dark ? (
         // Sun icon

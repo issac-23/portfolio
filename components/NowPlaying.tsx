@@ -88,7 +88,7 @@ export default function NowPlaying() {
 
           <div className="space-y-8">
             {/* Now Playing card */}
-            <div className="bg-surface rounded-2xl p-6 border border-border">
+            <div className="bg-surface rounded-2xl p-6 border border-border lift-card">
               {loading ? (
                 <div className="flex items-center gap-4 animate-pulse">
                   <div className="w-16 h-16 rounded-xl flex-shrink-0" style={{ background: 'var(--surface-2)' }} />
@@ -155,7 +155,7 @@ export default function NowPlaying() {
                       href={track.songUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 group"
+                      className="flex items-center gap-3 group rounded-lg -mx-2 px-2 py-1.5 hover:bg-surface transition-colors"
                     >
                       <div className="relative w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden">
                         <Image src={track.albumImageUrl} alt={track.album} fill className="object-cover" />

@@ -66,7 +66,7 @@ export default function MediaShelf() {
                   <button
                     key={type}
                     onClick={() => setFilter(type)}
-                    className={`text-xs rounded-full px-3 py-1.5 border transition-all ${
+                    className={`text-xs rounded-full px-3 py-1.5 border transition-all hover:-translate-y-0.5 ${
                       filter === type
                         ? 'border-accent text-accent'
                         : 'border-border text-muted hover:border-fg/30 hover:text-fg'
@@ -89,7 +89,7 @@ export default function MediaShelf() {
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block bg-surface rounded-xl p-5 border border-border hover:bg-surface-2 hover:border-border/60 transition-all group"
+                    className="block bg-surface rounded-xl p-5 border border-border hover:bg-surface-2 hover:border-border/60 lift-card group"
                     style={{ transitionDelay: `${i * 60}ms` }}
                   >
                     <div className="flex items-start justify-between gap-4">

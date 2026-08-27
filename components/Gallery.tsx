@@ -54,7 +54,7 @@ export default function Gallery() {
                 style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
               >
                 <p className="text-muted text-sm">Photos coming soon.</p>
-                <p className="text-xs mt-2" style={{ color: '#6B6057' }}>
+                <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>
                   Add images to <code className="text-accent">/public/photos/gallery/</code> and update <code className="text-accent">data/gallery.ts</code>
                 </p>
               </div>
@@ -64,7 +64,8 @@ export default function Gallery() {
                   <button
                     key={i}
                     onClick={() => setSelected(i)}
-                    className="w-full block overflow-hidden rounded-lg group cursor-zoom-in"
+                    className="w-full block overflow-hidden rounded-lg group cursor-zoom-in lift-card"
+                    aria-label={`Open photo ${i + 1}`}
                   >
                     <div className="relative w-full" style={{ paddingBottom: '75%' }}>
                       <Image
@@ -86,11 +87,11 @@ export default function Gallery() {
       {selected !== null && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(10px)' }}
           onClick={() => setSelected(null)}
         >
           <div
-            className="relative max-w-4xl w-full"
+            className="relative max-w-4xl w-full animate-[lightboxIn_220ms_cubic-bezier(0.16,1,0.3,1)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative w-full" style={{ height: '80vh' }}>
@@ -108,19 +109,22 @@ export default function Gallery() {
             )}
             <button
               onClick={() => setSelected((selected - 1 + galleryPhotos.length) % galleryPhotos.length)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 text-white/40 hover:text-white transition-colors text-2xl p-2"
+              className="absolute left-2 sm:left-0 top-1/2 -translate-y-1/2 sm:-translate-x-12 text-white/60 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all text-2xl w-10 h-10 flex items-center justify-center"
+              aria-label="Previous photo"
             >
               ←
             </button>
             <button
               onClick={() => setSelected((selected + 1) % galleryPhotos.length)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 text-white/40 hover:text-white transition-colors text-2xl p-2"
+              className="absolute right-2 sm:right-0 top-1/2 -translate-y-1/2 sm:translate-x-12 text-white/60 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all text-2xl w-10 h-10 flex items-center justify-center"
+              aria-label="Next photo"
             >
               →
             </button>
             <button
               onClick={() => setSelected(null)}
-              className="absolute top-0 right-0 -translate-y-8 text-white/40 hover:text-white transition-colors p-2"
+              className="absolute top-2 right-2 sm:top-0 sm:right-0 sm:-translate-y-10 text-white/60 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all w-10 h-10 flex items-center justify-center"
+              aria-label="Close photo"
             >
               ✕
             </button>
