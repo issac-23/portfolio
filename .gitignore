@@ -19,3 +19,6 @@ next-env.d.ts
 
 # UX audit screenshot output
 /shots
+
+# Full-resolution photo originals kept locally by scripts/optimize-photos.mjs
+/public/photos/gallery/_originals

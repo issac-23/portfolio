@@ -13,7 +13,6 @@ export default function Hero() {
         </h1>
         <p className="text-muted text-lg leading-relaxed max-w-xl mb-8">
           CS + Economics at Northeastern University.
-          Into music, photography, and good company.
         </p>
         <div className="flex flex-wrap gap-2 mb-10">
           {['Northeastern', 'CS + Econ', 'Music', 'Photography'].map((item) => (

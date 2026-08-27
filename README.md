@@ -54,8 +54,44 @@ See `SPOTIFY_SETUP.md` for instructions on getting these values.
 
 **Media shelf** — open `data/media.ts` and add an entry to the top of the array.
 
-**Gallery** — drop an image into `public/photos/gallery/`, then add an entry to `data/gallery.ts`.
+**Gallery** — drop an image into `public/photos/gallery/`, then run:
+
+```bash
+node scripts/optimize-photos.mjs
+```
+
+That caps the long edge at 2400px, bakes in EXIF rotation, and prints the
+`width`/`height` for each file. Add an entry to `data/gallery.ts` using the
+printed dimensions — the grid needs them to lay out without cropping or
+shifting. Full-resolution originals are moved to
+`public/photos/gallery/_originals/` (gitignored, kept locally).
 
 **Projects** — open `data/projects.ts` and add an entry to the top of the array.
 
 After any change: `git add . && git commit -m "your message" && git push` — Vercel deploys automatically.
+
+## UX / accessibility checks
+
+Playwright-driven audit scripts. Start the dev server first, then:
+
+```bash
+node scripts/journeys.mjs        # 29 interaction + a11y checks across the core flows
+```
+
+```bash
+node scripts/contrast.mjs        # WCAG AA contrast in both light and dark themes
+```
+
+```bash
+node scripts/shots.mjs <label>   # desktop + mobile screenshots, both themes
+```
+
+```bash
+node scripts/og.mjs              # regenerate public/og.png
+```
+
+Output lands in `shots/<label>/` (gitignored).
+
+> **Don't run `npm run build` while `npm run dev` is running** — they share
+> `.next` and the dev server starts returning 500s. Stop dev first, or
+> `rm -rf .next` to recover.

@@ -7,6 +7,16 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     setDark(document.documentElement.classList.contains('dark'))
+
+    // Follow the OS until the visitor makes an explicit choice.
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = (e: MediaQueryListEvent) => {
+      if (localStorage.getItem('theme')) return
+      document.documentElement.classList.toggle('dark', e.matches)
+      setDark(e.matches)
+    }
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
   }, [])
 
   const toggle = () => {

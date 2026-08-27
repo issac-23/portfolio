@@ -119,23 +119,23 @@ export default function Gallery() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              /* Masonry: intrinsic aspect ratios, so nothing gets cropped. */
+              <div className="[column-count:2] sm:[column-count:3] [column-gap:0.75rem]">
                 {galleryPhotos.map((photo, i) => (
                   <button
                     key={photo.src}
                     onClick={(e) => open(i, e.currentTarget)}
-                    className="w-full block overflow-hidden rounded-lg group cursor-zoom-in lift-card"
+                    className="w-full block overflow-hidden rounded-lg group cursor-zoom-in lift-card mb-3 [break-inside:avoid]"
                     aria-label={`Open photo: ${photo.alt ?? photo.caption ?? `photo ${i + 1}`}`}
                   >
-                    <div className="relative w-full" style={{ paddingBottom: '75%' }}>
-                      <Image
-                        src={photo.src}
-                        alt={photo.alt ?? photo.caption ?? `Gallery photo ${i + 1}`}
-                        fill
-                        sizes="(max-width: 640px) 45vw, 200px"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
+                    <Image
+                      src={photo.src}
+                      alt={photo.alt ?? photo.caption ?? `Gallery photo ${i + 1}`}
+                      width={photo.width}
+                      height={photo.height}
+                      sizes="(max-width: 640px) 45vw, 200px"
+                      className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
+                    />
                   </button>
                 ))}
               </div>

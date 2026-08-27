@@ -28,7 +28,7 @@ const html = `<!doctype html>
   <div class="glow"></div>
   <div class="kicker">Hello, I'm</div>
   <h1>Issac Ip</h1>
-  <p>CS + Economics at Northeastern University. Into music, photography, and good company.</p>
+  <p>CS + Economics at Northeastern University.</p>
   <div class="chips">
     <span class="chip">Projects</span>
     <span class="chip">Photography</span>

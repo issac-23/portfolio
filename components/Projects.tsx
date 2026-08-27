@@ -3,11 +3,12 @@
 import { useEffect, useRef } from 'react'
 import { projects } from '@/data/projects'
 
+// Colours resolve per theme so the badges stay legible in light mode too.
 const statusLabel: Record<string, { text: string; color: string }> = {
-  live:    { text: 'Live',        color: '#6EBF8B' },
-  deployed:{ text: 'Deployed',    color: '#6EBF8B' },
-  wip:     { text: 'In Progress', color: '#C8956C' },
-  concept: { text: 'Concept',     color: '#9A8F85' },
+  live:    { text: 'Live',        color: 'var(--status-ok)' },
+  deployed:{ text: 'Deployed',    color: 'var(--status-ok)' },
+  wip:     { text: 'In Progress', color: 'var(--accent)' },
+  concept: { text: 'Concept',     color: 'var(--muted)' },
 }
 
 export default function Projects() {
@@ -65,7 +66,11 @@ export default function Projects() {
                         <h3 className="text-fg font-medium">{project.title}</h3>
                         <span
                           className="text-xs rounded-full px-2.5 py-0.5 flex-shrink-0"
-                          style={{ color: s.color, background: `${s.color}18`, border: `1px solid ${s.color}30` }}
+                          style={{
+                            color: s.color,
+                            background: `color-mix(in srgb, ${s.color} 12%, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${s.color} 30%, transparent)`,
+                          }}
                         >
                           {s.text}
                         </span>

@@ -33,15 +33,14 @@ export default function About() {
 
           <div className="space-y-5 text-muted leading-relaxed">
             <p>
-              I&apos;m Issac — a rising second-year at{' '}
+              I&apos;m Issac — a second-year at{' '}
               <span className="text-fg">Northeastern University</span> studying{' '}
               <span className="text-fg">Computer Science and Economics</span>.
               I&apos;m drawn to the intersection of technology, creative culture, and how people connect.
             </p>
             <p>
               Outside of class you&apos;ll find me deep in a music rabbit hole, somewhere with a camera,
-              or just hanging out with people I like. I think the best ideas come from being genuinely
-              curious — about people, places, and everything in between.
+              or just hanging out with people I like.
             </p>
             <p>
               This site is a little corner of the internet that&apos;s mine — a place to share
