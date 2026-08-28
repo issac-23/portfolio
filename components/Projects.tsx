@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { projects } from '@/data/projects'
+import { projects, type Project } from '@/data/projects'
 
 // Colours resolve per theme so the badges stay legible in light mode too.
-const statusLabel: Record<string, { text: string; color: string }> = {
+const statusLabel: Record<Project['status'], { text: string; color: string }> = {
   live:    { text: 'Live',        color: 'var(--status-ok)' },
-  deployed:{ text: 'Deployed',    color: 'var(--status-ok)' },
   wip:     { text: 'In Progress', color: 'var(--accent)' },
   concept: { text: 'Concept',     color: 'var(--muted)' },
 }
