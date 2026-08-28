@@ -4,14 +4,16 @@ export interface Project {
   tags: string[]
   url?: string
   github?: string
-  status: 'live' | 'deployed' | 'wip' | 'concept'
+  status: 'live' | 'wip' | 'concept'
 }
 
 // ─────────────────────────────────────────────────────────────────
 // HOW TO ADD PROJECTS:
 // Add new entries to the top of this array.
-// status: 'live' | 'deployed' | 'wip' (in progress) | 'concept'
-// url: deployed link (optional)
+// status: 'live' (usable at a public url) | 'wip' (in progress) | 'concept'
+// url: public link — set this whenever status is 'live', or the badge
+//      promises something the card cannot deliver
+
 // github: repo link (optional)
 // ─────────────────────────────────────────────────────────────────
 export const projects: Project[] = [
@@ -26,6 +28,7 @@ export const projects: Project[] = [
     title: 'tally',
     description: 'Full-stack personal finance tracker with color-coded runway forecasting. Logs expenses by category and merchant, projects how long your savings last at the current burn rate, and calculates a sustainable monthly budget from your income.',
     tags: ['Next.js', 'TypeScript', 'Tailwind', 'Supabase'],
+    url: 'https://tally-issac.vercel.app/',
     github: 'https://github.com/issac-23/tally',
     status: 'live',
   },

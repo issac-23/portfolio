@@ -10,7 +10,7 @@
  * than overwritten, so nothing is destroyed.
  */
 import sharp from 'sharp'
-import { readdir, mkdir, rename, stat } from 'node:fs/promises'
+import { readdir, mkdir, stat, readFile, unlink, writeFile, access } from 'node:fs/promises'
 import path from 'node:path'
 
 const DIR = 'public/photos/gallery'
@@ -25,12 +25,27 @@ const files = (await readdir(DIR, { withFileTypes: true }))
   .map((d) => d.name)
 
 const results = []
+const skipped = []
+
+const exists = (p) => access(p).then(() => true, () => false)
 
 for (const name of files) {
   const src = path.join(DIR, name)
+
+  // Already processed: a backup means DIR holds the optimized copy. Re-encoding
+  // it would lose quality and clobber the true original in _originals.
+  if (await exists(path.join(BACKUP, name))) {
+    const meta = await sharp(await readFile(src)).metadata()
+    skipped.push({ file: name, width: meta.width, height: meta.height })
+    continue
+  }
+
   const before = (await stat(src)).size
 
-  const input = sharp(src).rotate() // bake in EXIF orientation
+  // Read the bytes up front. Passing the path to sharp keeps a file handle
+  // open, which makes the rename below fail with EBUSY on Windows.
+  const original = await readFile(src)
+  const input = sharp(original).rotate() // bake in EXIF orientation
   const meta = await input.metadata()
   // metadata() reports pre-rotation dimensions; resolve them ourselves
   const swapped = meta.orientation && meta.orientation >= 5
@@ -49,9 +64,10 @@ for (const name of files) {
     .toBuffer({ resolveWithObject: true })
 
   // stash the original, then write the optimized file in its place
-  await rename(src, path.join(BACKUP, name))
+  await writeFile(path.join(BACKUP, name), original)
+  await unlink(src)
   const outName = name.replace(/\.(jpe?g|png)$/i, '.jpg')
-  await sharp(buf.data).toFile(path.join(DIR, outName))
+  await writeFile(path.join(DIR, outName), buf.data)
 
   results.push({
     file: outName,
@@ -68,6 +84,15 @@ const totalAfter = results.reduce((a, r) => a + r.afterKB, 0)
 for (const r of results) {
   console.log(`${r.file}  ${r.width}x${r.height}  ${r.beforeKB}KB -> ${r.afterKB}KB`)
 }
-console.log(`\nTOTAL ${totalBefore}KB -> ${totalAfter}KB (${Math.round((1 - totalAfter / totalBefore) * 100)}% smaller)`)
+if (results.length) {
+  console.log(`\nTOTAL ${totalBefore}KB -> ${totalAfter}KB (${Math.round((1 - totalAfter / totalBefore) * 100)}% smaller)`)
+} else {
+  console.log('\nNothing new to optimize.')
+}
+if (skipped.length) {
+  console.log(`\nAlready optimized (skipped): ${skipped.map((s) => s.file).join(', ')}`)
+}
+
 console.log('\nDimensions for data/gallery.ts:')
-console.log(JSON.stringify(results.map((r) => ({ src: `/photos/gallery/${r.file}`, width: r.width, height: r.height })), null, 2))
+const all = [...results, ...skipped]
+console.log(JSON.stringify(all.map((r) => ({ src: `/photos/gallery/${r.file}`, width: r.width, height: r.height })), null, 2))

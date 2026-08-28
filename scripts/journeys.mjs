@@ -77,7 +77,14 @@ async function journeyTheme(browser) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
   const page = await ctx.newPage()
   const consoleErrors = []
-  page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 120)) })
+  // /_vercel/insights/script.js only exists on Vercel once Web Analytics is
+  // enabled in the dashboard, so it 404s on localhost. Not a real error.
+  // The URL is on location(), not in the message text, for network errors.
+  const expected = (m) =>
+    `${m.location()?.url ?? ''} ${m.text()}`.includes('/_vercel/insights/')
+  page.on('console', (m) => {
+    if (m.type() === 'error' && !expected(m)) consoleErrors.push(m.text().slice(0, 120))
+  })
   await page.goto(URL, { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(700)
 

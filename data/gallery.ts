@@ -17,6 +17,27 @@ export interface GalleryPhoto {
 // ─────────────────────────────────────────────────────────────────
 export const galleryPhotos: GalleryPhoto[] = [
   {
+    src: '/photos/gallery/20260814_000220.jpg',
+    width: 2400,
+    height: 1800,
+    alt: 'Bright green aurora borealis over a silhouetted mountain ridge, reflected in the water below',
+    caption: 'August 2026',
+  },
+  {
+    src: '/photos/gallery/20260812_082818.jpg',
+    width: 1800,
+    height: 2400,
+    alt: 'Shingled houses built on stilts against a steep evergreen hillside, early sun catching one window',
+    caption: 'August 2026',
+  },
+  {
+    src: '/photos/gallery/20260724_152551.jpg',
+    width: 1800,
+    height: 2400,
+    alt: 'A figure standing on sunlit granite boulders above deep blue ocean, sailboats on the horizon',
+    caption: 'July 2026',
+  },
+  {
     src: '/photos/gallery/Screenshot_20260501_195320_Gallery.jpg',
     width: 1346,
     height: 2400,
