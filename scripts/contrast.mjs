@@ -1,6 +1,9 @@
 /** Checks text contrast against WCAG AA (4.5:1 body, 3:1 large) in both themes. */
 import { chromium } from 'playwright'
 
+// Override when 3000 is taken by another project: SITE=http://localhost:3009
+const SITE = process.env.SITE ?? 'http://localhost:3000'
+
 const browser = await chromium.launch()
 let failures = 0
 
@@ -8,7 +11,7 @@ for (const theme of ['light', 'dark']) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
   await ctx.addInitScript(`localStorage.setItem('theme', '${theme}')`)
   const page = await ctx.newPage()
-  await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' })
+  await page.goto(SITE, { waitUntil: 'domcontentloaded' })
   await page.evaluate(() => document.querySelectorAll('.section-fade').forEach((n) => n.classList.add('visible')))
   await page.waitForTimeout(1500)
 

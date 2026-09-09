@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/next'
+import { SITE_URL, SOCIAL } from './site'
 import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.issac-ip.com'),
+  metadataBase: new URL(SITE_URL),
   title: 'Issac Ip — CS + Economics @ Northeastern',
   description:
     'Issac Ip — CS + Economics at Northeastern University. Projects, photography, and what I’m listening to and reading.',
@@ -24,6 +25,28 @@ export const metadata: Metadata = {
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
   },
+}
+
+/**
+ * Person schema, so search engines treat "Issac Ip" as an entity with a school
+ * and known profiles rather than inferring it from page copy.
+ *
+ * Email is deliberately left out — it's already on the page as a mailto, and
+ * putting it here just makes it easier to harvest.
+ */
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Issac Ip',
+  url: SITE_URL,
+  image: `${SITE_URL}/og.png`,
+  description: 'CS + Economics student at Northeastern University.',
+  affiliation: {
+    '@type': 'CollegeOrUniversity',
+    name: 'Northeastern University',
+  },
+  knowsAbout: ['Computer Science', 'Economics', 'Software Engineering'],
+  sameAs: [SOCIAL.github, SOCIAL.linkedin],
 }
 
 export const viewport: Viewport = {
@@ -51,6 +74,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         {children}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+        />
         {/* No-ops locally — only reports from the deployed site. */}
         <Analytics />
       </body>
