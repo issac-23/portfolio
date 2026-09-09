@@ -2,7 +2,8 @@ import { chromium, devices } from 'playwright'
 import { mkdir } from 'node:fs/promises'
 
 const LABEL = process.argv[2] ?? 'before'
-const URL = 'http://localhost:3000'
+// Override when 3000 is taken by another project: SITE=http://localhost:3009
+const URL = process.env.SITE ?? 'http://localhost:3000'
 const OUT = `shots/${LABEL}-journeys`
 const findings = []
 

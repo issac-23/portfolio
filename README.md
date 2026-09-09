@@ -92,6 +92,13 @@ node scripts/og.mjs              # regenerate public/og.png
 
 Output lands in `shots/<label>/` (gitignored).
 
+If port 3000 is already taken by another project, start this one elsewhere and
+point the scripts at it — otherwise they will happily audit the wrong app:
+
+```bash
+SITE=http://localhost:3009 node scripts/journeys.mjs
+```
+
 > **Don't run `npm run build` while `npm run dev` is running** — they share
 > `.next` and the dev server starts returning 500s. Stop dev first, or
 > `rm -rf .next` to recover.
