@@ -19,10 +19,11 @@ export interface Project {
 export const projects: Project[] = [
   {
     title: 'DCF Calculator',
-    description: 'Intermediate two-stage DCF calculator for public stocks. Pulls real financials, projects 5-year free cash flows, and outputs fair value per share with a sensitivity table.',
+    description: 'Two-stage DCF calculator for public stocks. Pulls real financials, projects 5-year free cash flows, and outputs fair value per share with a sensitivity grid. Also runs in reverse: given the market price, it solves for the growth rate that would justify it.',
     tags: ['Python', 'Streamlit', 'pandas', 'pytest'],
+    url: 'https://dcf-calculator-issac.streamlit.app',
     github: 'https://github.com/issac-23/dcf-calculator',
-    status: 'wip',
+    status: 'live',
   },
   {
     title: 'tally',
