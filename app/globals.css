@@ -95,6 +95,15 @@ button:focus-visible {
   outline: 1px solid var(--fg);
 }
 
+/* The lightbox backdrop is a fixed dark surface in both themes, so the
+   theme-reactive outline above disappears on it in light mode: --fg is
+   #1A1714 there, which measures 1.04:1 against the backdrop and leaves
+   keyboard users with no visible position among the three controls. */
+.lightbox-surface a:focus-visible,
+.lightbox-surface button:focus-visible {
+  outline: 2px solid #fff;
+}
+
 ::selection {
   background-color: rgba(200, 149, 108, 0.25);
   color: var(--fg);
