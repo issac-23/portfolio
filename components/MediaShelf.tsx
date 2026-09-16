@@ -123,7 +123,11 @@ export default function MediaShelf() {
                         </p>
                         <p className="text-sm text-muted mt-0.5">{item.creator}</p>
                         {item.note && (
-                          <p className="text-xs text-muted mt-2 italic" style={{ opacity: 0.7 }}>
+                          // --muted alone clears AA here; the 0.7 opacity that
+                          // used to be on this was what pushed it under.
+                          // Italic 12px is already the hardest text on the card
+                          // to read, so it is the last thing to fade.
+                          <p className="text-xs text-muted mt-2 italic">
                             &ldquo;{item.note}&rdquo;
                           </p>
                         )}
