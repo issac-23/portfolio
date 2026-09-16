@@ -109,14 +109,6 @@ export default function Contact() {
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="mt-24 pt-8 border-t border-border flex items-center justify-between">
-          <p className="text-xs" style={{ color: 'var(--muted)' }}>© 2026 Issac Ip</p>
-          <a href="#top" className="text-xs text-muted hover:text-fg transition-colors">
-            Back to top ↑
-          </a>
-        </div>
       </div>
     </section>
   )
