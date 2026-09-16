@@ -19,7 +19,7 @@ export default function Footer() {
         </p>
         <a
           href="#top"
-          className="text-xs text-muted hover:text-fg transition-colors"
+          className="text-xs text-muted hover:text-fg transition-colors inline-flex items-center min-h-[24px]"
         >
           Back to top ↑
         </a>
