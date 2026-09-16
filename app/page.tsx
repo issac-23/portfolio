@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <>
       <Background />
-      <main style={{ position: 'relative', zIndex: 1 }}>
+      <main id="main-content" style={{ position: 'relative', zIndex: 1 }}>
         <Nav />
         <Hero />
         <About />
