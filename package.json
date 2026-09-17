@@ -6,7 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check": "npm run check:contrast",
+    "check:contrast": "node scripts/contrast.mjs",
+    "check:analytics": "node scripts/verify-analytics.mjs",
+    "shots": "node scripts/shots.mjs",
+    "shots:journeys": "node scripts/journeys.mjs",
+    "shots:gallery": "node scripts/gallery-shot.mjs",
+    "shots:lightbox": "node scripts/lightbox-shot.mjs",
+    "shots:notfound": "node scripts/notfound-shot.mjs",
+    "og": "node scripts/og.mjs",
+    "photos:optimize": "node scripts/optimize-photos.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
