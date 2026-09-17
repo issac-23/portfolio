@@ -1,0 +1,47 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-contrast:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Only Chromium. contrast.mjs is the only thing running here and that is
+      # all it launches; installing all three browsers roughly triples the step.
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - run: npm run build
+
+      # contrast.mjs measures computed styles in a real browser, so it needs the
+      # app actually served. Production build rather than next dev: that is what
+      # ships, and dev's on-demand compilation makes the first request slow
+      # enough to trip the script's own 30s navigation timeout.
+      - name: Start the app
+        run: |
+          npm start &
+          # Plain poll rather than npx wait-on, which would pull an undeclared
+          # package over the network on every run.
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://localhost:3000; then
+              echo "up after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "server did not come up within 60s"; exit 1
+
+      - name: Check contrast
+        run: npm run check:contrast
