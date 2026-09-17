@@ -147,7 +147,7 @@ export default function Gallery() {
       {/* Lightbox */}
       {selected !== null && photo && (
         <div
-          className={`t-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 ${
+          className={`lightbox-surface t-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 ${
             isOpen ? 'is-open' : 'is-closing'
           }`}
           style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(10px)' }}
@@ -182,9 +182,11 @@ export default function Gallery() {
             </div>
             <div className="flex items-center justify-center gap-3 mt-3">
               {photo.caption && (
-                <p className="text-center text-muted text-sm">{photo.caption}</p>
+                // Not text-muted: that token flips with the theme, but this
+                // backdrop is always dark, so in light mode it dropped to 3.2:1.
+                <p className="text-center text-white/80 text-sm">{photo.caption}</p>
               )}
-              <span className="text-white/30 text-xs tabular-nums">
+              <span className="text-white/70 text-xs tabular-nums">
                 {selected + 1} / {galleryPhotos.length}
               </span>
             </div>

@@ -79,7 +79,12 @@ function CallbackContent() {
 export default function CallbackPage() {
   return (
     <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0C0A09' }} />}>
-      <CallbackContent />
+      {/* Wrapped so the root layout's skip link has a target here too. This
+          is a dev-only token helper, but a skip link that silently does
+          nothing on one route is the bug being fixed. */}
+      <main id="main-content">
+        <CallbackContent />
+      </main>
     </Suspense>
   )
 }

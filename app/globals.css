@@ -43,12 +43,22 @@
   --border:    #D6CCC3;
   --fg:        #1A1714;
   /* Darker than the dark-mode muted so body copy clears WCAG AA (4.5:1)
-     against both --bg and --surface. #7A6E66 measured 4.44:1 and failed. */
-  --muted:     #706459;
+     against every surface it lands on, --surface-2 included. That last one
+     is why this moved from #706459: it cleared --bg at 5.16:1 and --surface
+     at 4.73:1 but only reached 4.28:1 on --surface-2, which is the hover
+     background for media and project cards. So muted text passed at rest
+     and failed under the cursor. #7A6E66 measured 4.44:1 and failed.
+     Current value: bg 5.48:1, surface 5.02:1, surface-2 4.54:1. */
+  --muted:     #6C6055;
   /* The brand tan only reaches 2.37:1 on the cream background, so light mode
      uses a deepened version for anything that renders as text. */
   --accent:    #85572E;
-  --status-ok: #2E6B43;
+  /* Deepened from #2E6B43. The status badge draws its text in this colour on
+     a 12% tint of the same colour, which compresses contrast by construction:
+     the old value measured 4.46:1 on --surface and 4.05:1 once the card
+     picked up its hover background, so it passed at rest and failed under the
+     cursor. Now 4.97:1 and 4.52:1. */
+  --status-ok: #26633B;
   --glow:      rgba(200, 149, 108, 0.18);
   --accent-soft: rgba(200, 149, 108, 0.12);
   --shadow: rgba(43, 33, 25, 0.08);
@@ -93,6 +103,15 @@ button {
 a:focus-visible,
 button:focus-visible {
   outline: 1px solid var(--fg);
+}
+
+/* The lightbox backdrop is a fixed dark surface in both themes, so the
+   theme-reactive outline above disappears on it in light mode: --fg is
+   #1A1714 there, which measures 1.04:1 against the backdrop and leaves
+   keyboard users with no visible position among the three controls. */
+.lightbox-surface a:focus-visible,
+.lightbox-surface button:focus-visible {
+  outline: 2px solid #fff;
 }
 
 ::selection {

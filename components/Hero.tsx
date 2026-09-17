@@ -35,7 +35,7 @@ export default function Hero() {
               <path d="M12 5v14M5 12l7 7 7-7" />
             </svg>
           </a>
-          <a href="#contact" className="text-sm text-muted hover:text-fg transition-colors">
+          <a href="#contact" className="text-sm text-muted hover:text-fg transition-colors inline-flex items-center min-h-[24px]">
             Get in touch →
           </a>
         </div>

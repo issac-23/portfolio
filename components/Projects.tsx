@@ -92,7 +92,7 @@ export default function Projects() {
                               href={project.github}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-muted hover:text-fg transition-colors"
+                              className="text-xs text-muted hover:text-fg transition-colors inline-flex items-center min-h-[24px]"
                             >
                               GitHub →
                             </a>
@@ -102,7 +102,7 @@ export default function Projects() {
                               href={project.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-accent hover:text-fg transition-colors"
+                              className="text-xs text-accent hover:text-fg transition-colors inline-flex items-center min-h-[24px]"
                             >
                               View live →
                             </a>

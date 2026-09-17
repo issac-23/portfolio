@@ -70,7 +70,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <a href="#about" className="skip-link">
+        {/* Targets #main-content, which every route renders, rather than
+            #about, which only the home page has. This link lives in the root
+            layout, so pointing it at a home-page section made it the first
+            thing a keyboard user reached on the 404 page and also a no-op. */}
+        <a href="#main-content" className="skip-link">
           Skip to content
         </a>
         {children}
