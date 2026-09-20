@@ -22,8 +22,7 @@ export default function Contact() {
           <div>
             <span className="text-xs text-accent tracking-widest uppercase font-medium">Contact</span>
             <h2
-              className="text-3xl text-fg mt-3"
-              style={{ fontFamily: '"DM Serif Display", Georgia, serif' }}
+              className="text-3xl text-fg mt-3 font-serif"
             >
               Let&apos;s Talk
             </h2>

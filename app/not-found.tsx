@@ -24,8 +24,7 @@ export default function NotFound() {
           404
         </span>
         <h1
-          className="text-4xl text-fg mt-3"
-          style={{ fontFamily: '"DM Serif Display", Georgia, serif' }}
+          className="text-4xl text-fg mt-3 font-serif"
         >
           This page doesn&apos;t exist
         </h1>

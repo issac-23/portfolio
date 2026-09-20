@@ -77,7 +77,6 @@ export default function Nav() {
           <a
             href="#top"
             className="font-serif text-lg text-fg hover:text-accent transition-colors"
-            style={{ fontFamily: '"DM Serif Display", Georgia, serif' }}
           >
             Issac Ip
           </a>
