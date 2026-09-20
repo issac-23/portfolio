@@ -1,7 +1,29 @@
 import type { Metadata, Viewport } from 'next'
+import { DM_Serif_Display, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SITE_URL, SOCIAL } from './site'
 import './globals.css'
+
+// Self-hosted at build time rather than fetched from Google on every visit:
+// no third-party request, no render-blocking stylesheet, and no flash of
+// fallback text. Exposed as CSS variables so Tailwind's font-serif and
+// font-sans resolve to them.
+const serif = DM_Serif_Display({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
+  display: 'swap',
+  fallback: ['Georgia', 'serif'],
+})
+
+const sans = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-sans',
+  display: 'swap',
+  fallback: ['system-ui', 'sans-serif'],
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -58,18 +80,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`scroll-smooth ${serif.variable} ${sans.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* Sets the theme before first paint: stored choice wins, else the OS preference. */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');var d=t?t==='dark':!window.matchMedia||window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.classList.toggle('dark',d)}catch(e){document.documentElement.classList.add('dark')}})()` }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap"
-          rel="stylesheet"
-        />
       </head>
-      <body style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <body className="font-sans">
         {/* Targets #main-content, which every route renders, rather than
             #about, which only the home page has. This link lives in the root
             layout, so pointing it at a home-page section made it the first

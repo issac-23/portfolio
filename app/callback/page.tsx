@@ -36,7 +36,7 @@ function CallbackContent() {
   const s: Record<string, React.CSSProperties> = {
     page: {
       minHeight: '100vh', background: '#0C0A09', color: '#EDE8E3',
-      fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column',
+      fontFamily: 'var(--font-sans), system-ui, sans-serif', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: '1.25rem',
       maxWidth: '600px', margin: '0 auto', textAlign: 'center',
     },

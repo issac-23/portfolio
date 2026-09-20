@@ -30,8 +30,7 @@ export default function Projects() {
           <div>
             <span className="text-xs text-accent tracking-widest uppercase font-medium">Work</span>
             <h2
-              className="text-3xl text-fg mt-3"
-              style={{ fontFamily: '"DM Serif Display", Georgia, serif' }}
+              className="text-3xl text-fg mt-3 font-serif"
             >
               Projects
             </h2>

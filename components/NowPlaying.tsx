@@ -93,8 +93,7 @@ export default function NowPlaying() {
           <div>
             <span className="text-xs text-accent tracking-widest uppercase font-medium">Music</span>
             <h2
-              className="text-3xl text-fg mt-3"
-              style={{ fontFamily: '"DM Serif Display", Georgia, serif' }}
+              className="text-3xl text-fg mt-3 font-serif"
             >
               What I&apos;m Listening To
             </h2>

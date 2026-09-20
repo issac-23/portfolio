@@ -6,8 +6,7 @@ export default function Hero() {
           Hello, I&apos;m
         </p>
         <h1
-          className="text-6xl md:text-8xl text-fg leading-none mb-6"
-          style={{ fontFamily: '"DM Serif Display", Georgia, serif' }}
+          className="text-6xl md:text-8xl text-fg leading-none mb-6 font-serif"
         >
           Issac Ip
         </h1>

@@ -24,6 +24,9 @@ jobs:
       - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
 
+      # Lint before build: it is the fastest signal and does not need a server.
+      - run: npm run lint
+
       - run: npm run build
 
       # contrast.mjs measures computed styles in a real browser, so it needs the
