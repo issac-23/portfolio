@@ -27,9 +27,12 @@ module.exports = {
         muted:       themed('--muted'),
         accent:      themed('--accent'),
       },
+      // Point at the next/font variables set on <html> in layout.tsx. The
+      // fallbacks are declared there, on the font loader, so they apply
+      // during the swap rather than only if the variable is missing.
       fontFamily: {
-        serif: ['"DM Serif Display"', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-serif)'],
+        sans: ['var(--font-sans)'],
       },
     },
   },
