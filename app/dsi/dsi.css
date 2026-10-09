@@ -539,8 +539,14 @@
   will-change: transform;
   transition: transform 0.26s cubic-bezier(0.22, 0.7, 0.3, 1);
 }
+/* A fixed width, so a slot is exactly as wide as its icon no matter what its
+   caption says. Otherwise the START pill and longer captions widen their slot,
+   and when the rounded face swaps in after the fallback the widths change and
+   every slot after them shifts, leaving the rail off centre. Captions overflow
+   into the gap instead.                                                     */
 .dsi-slot {
   flex: none;
+  width: 62px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -615,7 +621,8 @@
 }
 
 @media (max-width: 620px) {
-  .dsi-rail { gap: 10px; }
+  .dsi-rail { gap: 12px; }
+  .dsi-slot { width: 44px; }
   .dsi-ico { width: 44px; height: 44px; }
   .dsi-ico svg { width: 24px; height: 24px; }
   .dsi-slot[data-sel] .dsi-ico { transform: scale(1.318); }
