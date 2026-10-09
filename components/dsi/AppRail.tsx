@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import type { DsiApp } from './apps'
 
@@ -72,19 +72,19 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
     }
   }, [])
 
-  const place = (p: number, anim: boolean) => {
+  const place = useCallback((p: number, anim: boolean) => {
     posRef.current = p
     animate.current = anim
     setPos(p)
-  }
+  }, [])
 
-  const rebase = () => {
+  const rebase = useCallback(() => {
     const p = posRef.current
     const mid = N + mod(p, N)
     if (mid !== p) flushSync(() => place(mid, false))
-  }
+  }, [N, place])
 
-  const select = (target: number) => {
+  const select = useCallback((target: number) => {
     const delta = target - posRef.current
     // Pull back into the middle copy before moving, not only after. Waiting
     // for the settle timer alone lets a held arrow key, which repeats faster
@@ -93,7 +93,30 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
     place(posRef.current + delta, true)
     clearTimeout(settle.current)
     settle.current = setTimeout(rebase, SETTLE_MS)
-  }
+  }, [place, rebase])
+
+  // Bound to the document, not the rail, so the arrows work from a cold load
+  // instead of only once something inside the rail has been focused.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+      if (!d || e.metaKey || e.ctrlKey || e.altKey) return
+      const t = e.target as HTMLElement | null
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
+      e.preventDefault()
+
+      const hadFocus = !!rail.current?.contains(document.activeElement)
+      select(posRef.current + d)
+      // Focus always goes to the middle copy, which is the one assistive tech
+      // can see. The ring is drawn on whichever copy is on screen instead.
+      if (hadFocus) {
+        const node = rail.current?.children[N + mod(posRef.current, N)] as HTMLElement | undefined
+        node?.focus({ preventScroll: true })
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [N, select])
 
   const slots = []
   for (let c = 0; c < COPIES; c++) {
@@ -109,7 +132,9 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
           className="dsi-slot"
           data-sel={sel || undefined}
           aria-hidden={real ? undefined : true}
-          tabIndex={real ? undefined : -1}
+          // Roving tabindex: Tab lands on the selected app, not the first one,
+          // and a second Tab leaves the rail rather than walking all eight.
+          tabIndex={real && i === logical ? 0 : -1}
           aria-label={real ? app.name : undefined}
           aria-current={real ? i === logical : undefined}
           // Scenery slots must not take focus on click: they are hidden from
