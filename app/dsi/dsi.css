@@ -392,7 +392,9 @@
   --dsi-panel: #fff;
   --dsi-panel-line: #5b9dc4;
   --dsi-ink: #16384a;
-  --dsi-muted: #3f6578;
+  /* Measured against the rail gradient's darkest stop (#8fcdea), not just
+     the white name box: the old #3f6578 was 6.3:1 on white but 3.6:1 there. */
+  --dsi-muted: #2c4f60;
   --dsi-start: #2a7fd4;
   --dsi-start-2: #1a5da8;
   --dsi-track: #cfe7f4;
