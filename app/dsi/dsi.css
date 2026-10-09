@@ -380,3 +380,93 @@
   .dsi-silo i { width: 30px; }
   .dsi-cardslot i { width: 24px; }
 }
+
+/* ── screen UI tokens ─────────────────────────────────────────────────────
+   Kept apart from the shell tokens above: the shell is plastic, these are
+   pixels, and they change together for a different reason.               */
+.dsi-root {
+  --dsi-navy: #17356d;
+  --dsi-navy-2: #2d5aa8;
+  --dsi-rail-a: #d4eefc;
+  --dsi-rail-b: #8fcdea;
+  --dsi-panel: #fff;
+  --dsi-panel-line: #5b9dc4;
+  --dsi-ink: #16384a;
+  --dsi-muted: #3f6578;
+  --dsi-start: #2a7fd4;
+  --dsi-start-2: #1a5da8;
+  --dsi-track: #cfe7f4;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .dsi-root {
+    --dsi-navy: #091b3a;
+    --dsi-navy-2: #16356b;
+    --dsi-rail-a: #0c2a3a;
+    --dsi-rail-b: #0a2130;
+    --dsi-panel: #112d3c;
+    --dsi-panel-line: #2f6a8a;
+    --dsi-ink: #dbeef8;
+    --dsi-muted: #9ec0d0;
+    --dsi-start: #3f9ae0;
+    --dsi-start-2: #1f6cb5;
+    --dsi-track: #1d4558;
+  }
+}
+:root[data-theme='dark'] .dsi-root {
+  --dsi-navy: #091b3a;
+  --dsi-navy-2: #16356b;
+  --dsi-rail-a: #0c2a3a;
+  --dsi-rail-b: #0a2130;
+  --dsi-panel: #112d3c;
+  --dsi-panel-line: #2f6a8a;
+  --dsi-ink: #dbeef8;
+  --dsi-muted: #9ec0d0;
+  --dsi-start: #3f9ae0;
+  --dsi-start-2: #1f6cb5;
+  --dsi-track: #1d4558;
+}
+
+/* ── status bar ── */
+.dsi-status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 7px;
+  background: linear-gradient(180deg, var(--dsi-navy-2), var(--dsi-navy));
+  color: #eaf4ff;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.dsi-vol { display: flex; align-items: flex-end; gap: 2px; }
+.dsi-vol i { display: block; width: 2px; border-radius: 1px; background: #9fd4ff; }
+.dsi-vol i:nth-child(1) { height: 4px; }
+.dsi-vol i:nth-child(2) { height: 6px; }
+.dsi-vol i:nth-child(3) { height: 8px; }
+.dsi-user {
+  padding: 1px 7px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 700;
+}
+.dsi-status-gap { flex: 1; }
+.dsi-batt {
+  position: relative;
+  flex: none;
+  width: 15px;
+  height: 8px;
+  border: 1px solid #cfe6ff;
+  border-radius: 1px;
+}
+.dsi-batt::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  right: 4px;
+  border-radius: 1px;
+  background: #43b26b;
+}
+
+@media (max-width: 620px) {
+  .dsi-status { font-size: 0.58rem; }
+}
