@@ -1,0 +1,382 @@
+/*
+ * Nintendo DSi shell.
+ *
+ * Scoped under .dsi-root so none of it reaches the rest of the site, and every
+ * token is prefixed --dsi- so it cannot collide with the palette in globals.css.
+ *
+ * Light is the Light Blue colourway, dark is the matte black one. Both are real
+ * DSi shells, so neither theme is invented.
+ */
+
+.dsi-root {
+  --dsi-page: #d3dde3;
+  --dsi-desk: #c2ced6;
+  --dsi-shell: #58c8e9;
+  --dsi-shell-hi: #7ad8f2;
+  --dsi-shell-lo: #35a8cc;
+  --dsi-shell-edge: #2b90b0;
+  --dsi-emboss: rgba(255, 255, 255, 0.55);
+  --dsi-engrave: rgba(0, 0, 0, 0.26);
+  --dsi-chrome-ink: #0e4155;
+  --dsi-bezel: #0e1a20;
+  --dsi-screen-a: #eaf7ff;
+  --dsi-screen-b: #a9d9f2;
+
+  /* Device proportions. The height is driven by the screens, so the stage can
+     solve for a width that always fits the viewport. */
+  --dsi-screen-pct: 70%;
+  --dsi-aspect: 1.25;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .dsi-root {
+    --dsi-page: #0a0e11;
+    --dsi-desk: #14191d;
+    --dsi-shell: #2f3337;
+    --dsi-shell-hi: #43484d;
+    --dsi-shell-lo: #1c2023;
+    --dsi-shell-edge: #101315;
+    --dsi-emboss: rgba(255, 255, 255, 0.14);
+    --dsi-engrave: rgba(0, 0, 0, 0.6);
+    --dsi-chrome-ink: #c3ccd2;
+    --dsi-bezel: #000;
+    --dsi-screen-a: #0d2838;
+    --dsi-screen-b: #0a2130;
+  }
+}
+
+:root[data-theme='dark'] .dsi-root {
+  --dsi-page: #0a0e11;
+  --dsi-desk: #14191d;
+  --dsi-shell: #2f3337;
+  --dsi-shell-hi: #43484d;
+  --dsi-shell-lo: #1c2023;
+  --dsi-shell-edge: #101315;
+  --dsi-emboss: rgba(255, 255, 255, 0.14);
+  --dsi-engrave: rgba(0, 0, 0, 0.6);
+  --dsi-chrome-ink: #c3ccd2;
+  --dsi-bezel: #000;
+  --dsi-screen-a: #0d2838;
+  --dsi-screen-b: #0a2130;
+}
+
+/* ── stage ───────────────────────────────────────────────────────────────
+   The device is sized from whichever runs out first: the 680px design width,
+   the viewport width, or the viewport height divided by the device's aspect.
+   Sizing from width alone makes the device ~770px tall, which fits a 1080p
+   screen but not a 768p laptop, and the page would start scrolling.
+   svh rather than vh so mobile browser chrome is accounted for.            */
+.dsi-stage {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: radial-gradient(120% 90% at 50% 0%, var(--dsi-page), var(--dsi-desk));
+}
+
+.dsi-device {
+  width: min(680px, 100%, calc((100svh - 32px) / var(--dsi-aspect)));
+}
+
+/* ── shell ── */
+.dsi-lid,
+.dsi-base {
+  position: relative;
+  background: linear-gradient(
+    168deg,
+    var(--dsi-shell-hi) 0%,
+    var(--dsi-shell) 34%,
+    var(--dsi-shell-lo) 100%
+  );
+  border: 1px solid var(--dsi-shell-edge);
+  box-shadow:
+    0 24px 50px -22px rgba(0, 0, 0, 0.65),
+    inset 0 2px 0 var(--dsi-emboss);
+}
+.dsi-lid {
+  border-radius: 22px 22px 7px 7px;
+  padding: 14px 14px 10px;
+}
+.dsi-base {
+  border-radius: 7px 7px 22px 22px;
+  padding: 10px 14px 14px;
+}
+
+.dsi-shoulder {
+  position: absolute;
+  top: -7px;
+  z-index: -1;
+  width: 66px;
+  height: 12px;
+  padding-bottom: 3px;
+  border: 1px solid var(--dsi-shell-edge);
+  border-bottom: 0;
+  border-radius: 7px 7px 2px 2px;
+  background: linear-gradient(180deg, var(--dsi-shell-hi), var(--dsi-shell-lo));
+  display: grid;
+  place-items: center;
+  font-size: 0.42rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--dsi-chrome-ink);
+}
+.dsi-shoulder-l { left: 26px; }
+.dsi-shoulder-r { right: 26px; }
+
+.dsi-seam {
+  position: absolute;
+  inset: 5px 5px 4px;
+  border: 1px solid var(--dsi-engrave);
+  border-radius: 18px 18px 4px 4px;
+  opacity: 0.22;
+  pointer-events: none;
+}
+.dsi-screw {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--dsi-engrave);
+  opacity: 0.35;
+}
+
+/* ── screens ── */
+.dsi-half {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, var(--dsi-screen-pct)) 1fr;
+  align-items: center;
+  column-gap: 8px;
+}
+.dsi-frame {
+  background: var(--dsi-bezel);
+  border-radius: 6px;
+  padding: 7px 6px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+.dsi-screen {
+  aspect-ratio: 4 / 3;
+  min-width: 0;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(175deg, var(--dsi-screen-a), var(--dsi-screen-b));
+}
+
+/* ── hinge ── */
+.dsi-hinge {
+  margin: 0 10px;
+  height: 26px;
+  border: 1px solid var(--dsi-shell-edge);
+  border-block: 0;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--dsi-shell-lo), var(--dsi-shell));
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding-inline: 16px;
+}
+.dsi-grille { display: flex; gap: 3px; }
+.dsi-grille i {
+  width: 2.5px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--dsi-engrave);
+}
+.dsi-hinge-mid { display: flex; align-items: center; gap: 7px; }
+.dsi-lens {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--dsi-engrave);
+  background: radial-gradient(circle at 36% 32%, #5d6b74 0%, #10171c 58%, #000 100%);
+}
+.dsi-mic {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.46rem;
+  letter-spacing: 0.08em;
+  color: var(--dsi-chrome-ink);
+}
+.dsi-mic i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--dsi-engrave);
+}
+
+/* ── speakers, LEDs ── */
+.dsi-speaker { display: flex; justify-content: center; }
+.dsi-speaker i {
+  display: block;
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--dsi-engrave);
+  box-shadow: 0 1px 0 var(--dsi-emboss);
+}
+.dsi-leds {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 2px 0;
+  color: var(--dsi-chrome-ink);
+}
+.dsi-leds svg { width: 11px; height: 11px; display: block; opacity: 0.85; }
+.dsi-led-on {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #43b26b;
+  box-shadow: 0 0 5px #43b26b;
+}
+
+/* ── controls ── */
+.dsi-dpad {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  justify-self: center;
+}
+.dsi-dpad::before,
+.dsi-dpad::after {
+  content: '';
+  position: absolute;
+  border: 1px solid var(--dsi-shell-edge);
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--dsi-shell-hi), var(--dsi-shell-lo));
+  box-shadow: inset 0 1px 0 var(--dsi-emboss);
+}
+.dsi-dpad::before { left: 0; right: 0; top: 33.5%; height: 33%; }
+.dsi-dpad::after { top: 0; bottom: 0; left: 33.5%; width: 33%; }
+.dsi-dpad i {
+  position: absolute;
+  z-index: 2;
+  background: var(--dsi-engrave);
+  border-radius: 1px;
+}
+.dsi-dpad .u { top: 8px; left: 50%; width: 2px; height: 8px; margin-left: -1px; }
+.dsi-dpad .d { bottom: 8px; left: 50%; width: 2px; height: 8px; margin-left: -1px; }
+.dsi-dpad .l { left: 8px; top: 50%; width: 8px; height: 2px; margin-top: -1px; }
+.dsi-dpad .r { right: 8px; top: 50%; width: 8px; height: 2px; margin-top: -1px; }
+
+.dsi-face {
+  position: relative;
+  width: 58px;
+  height: 52px;
+  justify-self: center;
+}
+.dsi-btn {
+  position: absolute;
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--dsi-shell-edge);
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--dsi-shell-hi), var(--dsi-shell-lo));
+  box-shadow: inset 0 1px 0 var(--dsi-emboss);
+  display: grid;
+  place-items: center;
+  font-size: 0.46rem;
+  font-weight: 700;
+  color: var(--dsi-chrome-ink);
+}
+.dsi-btn-x { top: 0; left: 50%; margin-left: -8.5px; }
+.dsi-btn-y { top: 17px; left: 2px; }
+.dsi-btn-a { top: 17px; right: 2px; }
+.dsi-btn-b { top: 34px; left: 50%; margin-left: -8.5px; }
+
+.dsi-startsel {
+  display: grid;
+  gap: 5px;
+  margin-top: 9px;
+  justify-items: end;
+}
+.dsi-startsel div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.44rem;
+  letter-spacing: 0.06em;
+  color: var(--dsi-chrome-ink);
+}
+.dsi-startsel i,
+.dsi-power i {
+  border: 1px solid var(--dsi-shell-edge);
+  background: linear-gradient(180deg, var(--dsi-shell-hi), var(--dsi-shell-lo));
+  box-shadow: inset 0 1px 0 var(--dsi-emboss);
+}
+.dsi-startsel i { width: 15px; height: 8px; border-radius: 5px; }
+.dsi-power {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  font-size: 0.44rem;
+  letter-spacing: 0.06em;
+  color: var(--dsi-chrome-ink);
+}
+.dsi-power i {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.dsi-power svg { width: 7px; height: 7px; }
+
+/* ── bottom edge: stylus silo and game card slot ── */
+.dsi-edge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 9px;
+  padding-inline: 4px;
+}
+.dsi-silo,
+.dsi-cardslot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.42rem;
+  letter-spacing: 0.08em;
+  color: var(--dsi-chrome-ink);
+}
+.dsi-silo i {
+  display: block;
+  width: 46px;
+  height: 6px;
+  border: 1px solid var(--dsi-engrave);
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--dsi-engrave), transparent);
+  opacity: 0.6;
+}
+.dsi-cardslot i {
+  display: block;
+  width: 34px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--dsi-engrave);
+  opacity: 0.55;
+  box-shadow: 0 1px 0 var(--dsi-emboss);
+}
+
+@media (max-width: 620px) {
+  .dsi-root { --dsi-screen-pct: 76%; }
+  .dsi-lid { padding: 10px 9px 7px; }
+  .dsi-base { padding: 7px 9px 10px; }
+  .dsi-half { column-gap: 5px; }
+  .dsi-shoulder { width: 48px; }
+  .dsi-dpad { width: 34px; height: 34px; }
+  .dsi-face { width: 40px; height: 36px; }
+  .dsi-btn { width: 12px; height: 12px; font-size: 0.36rem; }
+  .dsi-btn-x { margin-left: -6px; }
+  .dsi-btn-b { top: 24px; margin-left: -6px; }
+  .dsi-btn-y { top: 12px; left: 0; }
+  .dsi-btn-a { top: 12px; right: 0; }
+  .dsi-startsel i { width: 11px; height: 6px; }
+  .dsi-silo i { width: 30px; }
+  .dsi-cardslot i { width: 24px; }
+}
