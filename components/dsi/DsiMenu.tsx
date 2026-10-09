@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
 import { APPS } from './apps'
@@ -12,6 +13,8 @@ import StatusBar from './StatusBar'
  * together, so it lives here rather than in either one.
  */
 export default function DsiMenu() {
+  const [selected, setSelected] = useState(0)
+
   return (
     <Device
       top={
@@ -22,7 +25,7 @@ export default function DsiMenu() {
       }
       bottom={
         <div className="dsi-lower">
-          <AppRail apps={APPS} selected={0} />
+          <AppRail apps={APPS} selected={selected} onSelect={setSelected} />
         </div>
       }
     />

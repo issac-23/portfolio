@@ -522,7 +522,10 @@
 .dsi-viewport {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  /* clip, not hidden. hidden still lets the browser scroll the box when
+     something inside gets focus or scrollIntoView, and that sideways
+     scroll knocks the rail off the transform that centres it.        */
+  overflow: clip;
   display: flex;
   align-items: center;
 }
@@ -531,6 +534,8 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  will-change: transform;
+  transition: transform 0.26s cubic-bezier(0.22, 0.7, 0.3, 1);
 }
 .dsi-slot {
   flex: none;
@@ -585,8 +590,12 @@
   white-space: nowrap;
   color: var(--dsi-muted);
 }
-.dsi-slot[aria-current='true'] .dsi-ico { width: 84px; height: 84px; opacity: 1; }
-.dsi-slot[aria-current='true'] .dsi-ico svg { width: 46px; height: 46px; }
+/* Grown with transform rather than width and height. Scale does not touch
+   layout, so every slot keeps its offsetLeft and the centring is exact at
+   every frame. Animating the real size shifted the rail mid-slide by half
+   the growth, which is the drift the mockup had to correct for after.   */
+.dsi-ico { transform-origin: 50% 100%; transition: transform 0.22s ease, opacity 0.22s ease; }
+.dsi-slot[aria-current='true'] .dsi-ico { transform: scale(1.355); opacity: 1; }
 .dsi-slot[aria-current='true'] .dsi-cap {
   padding: 2px 13px;
   border-radius: 4px;
@@ -605,6 +614,9 @@
   .dsi-rail { gap: 10px; }
   .dsi-ico { width: 44px; height: 44px; }
   .dsi-ico svg { width: 24px; height: 24px; }
-  .dsi-slot[aria-current='true'] .dsi-ico { width: 58px; height: 58px; }
-  .dsi-slot[aria-current='true'] .dsi-ico svg { width: 32px; height: 32px; }
+  .dsi-slot[aria-current='true'] .dsi-ico { transform: scale(1.318); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsi-rail, .dsi-ico { transition: none; }
 }
