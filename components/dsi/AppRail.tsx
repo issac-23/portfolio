@@ -118,6 +118,17 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
     return () => document.removeEventListener('keydown', onKey)
   }, [N, select])
 
+  // The arrow buttons keep focus on themselves, so a screen reader would
+  // otherwise never hear what got selected. Keyboard moves already announce
+  // through focus, so only the buttons write to the live region.
+  const [announce, setAnnounce] = useState('')
+  const step = (d: number) => {
+    const app = apps[mod(posRef.current + d, N)]
+    select(posRef.current + d)
+    setAnnounce(`${app.name}, ${app.publisher}`)
+  }
+
+  const current = apps[logical]
   const slots = []
   for (let c = 0; c < COPIES; c++) {
     const real = c === 1
@@ -155,10 +166,29 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
   }
 
   return (
-    <div className="dsi-viewport">
-      <div className="dsi-rail" ref={rail} role="group" aria-label="Applications">
-        {slots}
+    <>
+      <div className="dsi-namebox" aria-hidden="true">
+        <b>{current.name}</b>
+        <span>{current.publisher}</span>
       </div>
-    </div>
+
+      <div className="dsi-viewport">
+        <div className="dsi-rail" ref={rail} role="group" aria-label="Applications">
+          {slots}
+        </div>
+      </div>
+
+      <div className="dsi-scroller">
+        <button type="button" aria-label="Previous app" onClick={() => step(-1)}>&#9664;</button>
+        <span className="dsi-track" aria-hidden="true">
+          {apps.map((app, i) => (
+            <i key={app.id} data-on={i === logical || undefined} />
+          ))}
+        </span>
+        <button type="button" aria-label="Next app" onClick={() => step(1)}>&#9654;</button>
+      </div>
+
+      <p className="sr-only" aria-live="polite">{announce}</p>
+    </>
   )
 }

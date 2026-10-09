@@ -622,3 +622,65 @@
 @media (prefers-reduced-motion: reduce) {
   .dsi-rail, .dsi-ico { transition: none; }
 }
+
+/* ── name box: the app's title over its "publisher" line ── */
+.dsi-namebox {
+  flex: none;
+  padding: 3px 8px;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 6px;
+  background: var(--dsi-panel);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+.dsi-namebox b {
+  display: block;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--dsi-ink);
+}
+.dsi-namebox span {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--dsi-muted);
+}
+
+/* ── scroll track: one segment per app, flanked by arrows ── */
+.dsi-scroller { flex: none; display: flex; align-items: center; gap: 4px; }
+.dsi-scroller button {
+  flex: none;
+  width: 22px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--dsi-panel-line);
+  border-radius: 3px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+  font: inherit;
+  font-size: 0.55rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.dsi-scroller button:focus-visible {
+  outline: 2px solid var(--dsi-start);
+  outline-offset: 1px;
+}
+.dsi-track {
+  flex: 1;
+  min-width: 0;
+  height: 10px;
+  display: flex;
+  gap: 1.5px;
+  padding: 1.5px;
+  border: 1px solid var(--dsi-panel-line);
+  border-radius: 3px;
+  background: var(--dsi-panel);
+}
+.dsi-track i { flex: 1; border-radius: 1px; background: var(--dsi-track); }
+.dsi-track i[data-on] { background: linear-gradient(180deg, var(--dsi-start), var(--dsi-start-2)); }
+
+@media (max-width: 620px) {
+  .dsi-namebox b { font-size: 0.8rem; }
+  .dsi-namebox span { font-size: 0.6rem; }
+}
