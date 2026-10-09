@@ -1,6 +1,8 @@
 'use client'
 
+import { galleryPhotos } from '@/data/gallery'
 import Device from './Device'
+import PhotoFrame from './PhotoFrame'
 import StatusBar from './StatusBar'
 
 /**
@@ -8,5 +10,14 @@ import StatusBar from './StatusBar'
  * together, so it lives here rather than in either one.
  */
 export default function DsiMenu() {
-  return <Device top={<StatusBar user="Issac" />} />
+  return (
+    <Device
+      top={
+        <>
+          <StatusBar user="Issac" />
+          <PhotoFrame photos={galleryPhotos} />
+        </>
+      }
+    />
+  )
 }
