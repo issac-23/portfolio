@@ -1,6 +1,8 @@
 'use client'
 
 import { galleryPhotos } from '@/data/gallery'
+import AppRail from './AppRail'
+import { APPS } from './apps'
 import Device from './Device'
 import PhotoFrame from './PhotoFrame'
 import StatusBar from './StatusBar'
@@ -17,6 +19,11 @@ export default function DsiMenu() {
           <StatusBar user="Issac" />
           <PhotoFrame photos={galleryPhotos} />
         </>
+      }
+      bottom={
+        <div className="dsi-lower">
+          <AppRail apps={APPS} selected={0} />
+        </div>
       }
     />
   )

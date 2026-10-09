@@ -508,3 +508,103 @@
 @media (prefers-reduced-motion: reduce) {
   .dsi-photo-shot { animation: none; }
 }
+
+/* ── lower screen: the app rail ── */
+.dsi-lower {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 7px 5px;
+  background: linear-gradient(175deg, var(--dsi-rail-a), var(--dsi-rail-b));
+}
+.dsi-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.dsi-rail {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.dsi-slot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.dsi-ico {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.34);
+  border-radius: 13px;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.34),
+    inset 0 -6px 10px -6px rgba(0, 0, 0, 0.4);
+  opacity: 0.6;
+}
+/* the gloss the DSi tiles caught across their top half */
+.dsi-ico::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(255, 255, 255, 0.26) 42%,
+    rgba(255, 255, 255, 0) 54%
+  );
+}
+.dsi-ico svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.55));
+}
+.dsi-cap {
+  font-size: 0.6rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--dsi-muted);
+}
+.dsi-slot[aria-current='true'] .dsi-ico { width: 84px; height: 84px; opacity: 1; }
+.dsi-slot[aria-current='true'] .dsi-ico svg { width: 46px; height: 46px; }
+.dsi-slot[aria-current='true'] .dsi-cap {
+  padding: 2px 13px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--dsi-start), var(--dsi-start-2));
+  color: #fff;
+  letter-spacing: 0.12em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.dsi-slot:focus-visible {
+  outline: 2px solid var(--dsi-start);
+  outline-offset: 3px;
+  border-radius: 9px;
+}
+
+@media (max-width: 620px) {
+  .dsi-rail { gap: 10px; }
+  .dsi-ico { width: 44px; height: 44px; }
+  .dsi-ico svg { width: 24px; height: 24px; }
+  .dsi-slot[aria-current='true'] .dsi-ico { width: 58px; height: 58px; }
+  .dsi-slot[aria-current='true'] .dsi-ico svg { width: 32px; height: 32px; }
+}
