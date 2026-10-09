@@ -595,8 +595,8 @@
    every frame. Animating the real size shifted the rail mid-slide by half
    the growth, which is the drift the mockup had to correct for after.   */
 .dsi-ico { transform-origin: 50% 100%; transition: transform 0.22s ease, opacity 0.22s ease; }
-.dsi-slot[aria-current='true'] .dsi-ico { transform: scale(1.355); opacity: 1; }
-.dsi-slot[aria-current='true'] .dsi-cap {
+.dsi-slot[data-sel] .dsi-ico { transform: scale(1.355); opacity: 1; }
+.dsi-slot[data-sel] .dsi-cap {
   padding: 2px 13px;
   border-radius: 4px;
   background: linear-gradient(180deg, var(--dsi-start), var(--dsi-start-2));
@@ -614,7 +614,7 @@
   .dsi-rail { gap: 10px; }
   .dsi-ico { width: 44px; height: 44px; }
   .dsi-ico svg { width: 24px; height: 24px; }
-  .dsi-slot[aria-current='true'] .dsi-ico { transform: scale(1.318); }
+  .dsi-slot[data-sel] .dsi-ico { transform: scale(1.318); }
 }
 
 @media (prefers-reduced-motion: reduce) {
