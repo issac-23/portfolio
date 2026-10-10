@@ -63,11 +63,18 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
     centre(animate.current)
   }, [pos])
 
+  // Re-centre whenever the viewport itself changes size, not only when the
+  // window does. A font swap, a zoom or a layout change upstream can all
+  // resize it without a resize event, and the rail would stay centred on
+  // the old width. Selecting does not resize the viewport, so this never
+  // fires mid-slide.
   useEffect(() => {
-    const onResize = () => centre(false)
-    window.addEventListener('resize', onResize)
+    const view = rail.current?.parentElement
+    if (!view) return
+    const ro = new ResizeObserver(() => centre(false))
+    ro.observe(view)
     return () => {
-      window.removeEventListener('resize', onResize)
+      ro.disconnect()
       clearTimeout(settle.current)
     }
   }, [])
