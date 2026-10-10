@@ -13,6 +13,16 @@ interface AppRailProps {
   apps: DsiApp[]
   /** Reports the selected app's index into `apps`, not the slot index. */
   onChange?: (index: number) => void
+  /** Index into `apps` to start on, so coming back from an app lands where it left. */
+  initial?: number
+  /** Take focus on mount. Used on the way back from an app, never on first load. */
+  autoFocus?: boolean
+  /**
+   * Starting the selected app, which is a second tap on it, Enter on it, or
+   * Enter with nothing focused. Gets the visible icon so the launch can grow
+   * out of the one on screen rather than a hidden copy.
+   */
+  onLaunch?: (index: number, icon: HTMLElement) => void
 }
 
 /**
@@ -27,10 +37,10 @@ interface AppRailProps {
  * two are scenery, so a screen reader hears eight apps rather than
  * twenty-four.
  */
-export default function AppRail({ apps, onChange }: AppRailProps) {
+export default function AppRail({ apps, onChange, initial = 0, autoFocus, onLaunch }: AppRailProps) {
   const N = apps.length
-  const [pos, setPos] = useState(N)
-  const posRef = useRef(N)
+  const [pos, setPos] = useState(N + initial)
+  const posRef = useRef(N + initial)
   const animate = useRef(false)
   const settle = useRef<ReturnType<typeof setTimeout>>()
   const rail = useRef<HTMLDivElement>(null)
@@ -91,6 +101,19 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
     if (mid !== p) flushSync(() => place(mid, false))
   }, [N, place])
 
+  const launch = useCallback(() => {
+    const icon = rail.current?.children[posRef.current]?.querySelector<HTMLElement>('.dsi-ico')
+    if (icon) onLaunch?.(mod(posRef.current, N), icon)
+  }, [N, onLaunch])
+
+  useEffect(() => {
+    if (!autoFocus) return
+    const node = rail.current?.children[posRef.current] as HTMLElement | undefined
+    node?.focus({ preventScroll: true })
+    // Mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const select = useCallback((target: number) => {
     const delta = target - posRef.current
     // Pull back into the middle copy before moving, not only after. Waiting
@@ -106,6 +129,13 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
   // instead of only once something inside the rail has been focused.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Enter with nothing focused is START. Enter on a slot arrives as that
+      // button's click instead, so it is left alone here.
+      if (e.key === 'Enter' && document.activeElement === document.body) {
+        e.preventDefault()
+        launch()
+        return
+      }
       const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
       if (!d || e.metaKey || e.ctrlKey || e.altKey) return
       const t = e.target as HTMLElement | null
@@ -127,7 +157,7 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
     // position, so a slow load reads as slow instead of as mis-centred.
     rail.current?.setAttribute('data-ready', '')
     return () => document.removeEventListener('keydown', onKey)
-  }, [N, select])
+  }, [N, select, launch])
 
   // The arrow buttons keep focus on themselves, so a screen reader would
   // otherwise never hear what got selected. Keyboard moves already announce
@@ -162,7 +192,10 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
           // Scenery slots must not take focus on click: they are hidden from
           // assistive tech, and a focused hidden element is a dead end.
           onMouseDown={real ? undefined : e => e.preventDefault()}
-          onClick={() => select(n)}
+          // Tapping the selected app starts it; tapping any other selects it.
+          // Compared by app, not slot, so Enter on the focused middle copy
+          // still launches while the rail is mid-slide on another copy.
+          onClick={() => (i === mod(posRef.current, N) ? launch() : select(n))}
         >
           <span
             className="dsi-ico"
