@@ -17,6 +17,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  // Every worker drives a browser against the one next start process. Past
+  // about four locally they starve each other and timings stop meaning much.
+  workers: process.env.CI ? undefined : 4,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
 
   use: {
