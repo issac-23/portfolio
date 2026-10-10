@@ -122,6 +122,10 @@ export default function AppRail({ apps, onChange }: AppRailProps) {
       }
     }
     document.addEventListener('keydown', onKey)
+    // Marks the moment the rail can actually be driven: placed and listening.
+    // The e2e suite waits on this rather than inferring readiness from
+    // position, so a slow load reads as slow instead of as mis-centred.
+    rail.current?.setAttribute('data-ready', '')
     return () => document.removeEventListener('keydown', onKey)
   }, [N, select])
 
