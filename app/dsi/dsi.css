@@ -380,3 +380,316 @@
   .dsi-silo i { width: 30px; }
   .dsi-cardslot i { width: 24px; }
 }
+
+/* ── screen UI tokens ─────────────────────────────────────────────────────
+   Kept apart from the shell tokens above: the shell is plastic, these are
+   pixels, and they change together for a different reason.               */
+.dsi-root {
+  --dsi-navy: #17356d;
+  --dsi-navy-2: #2d5aa8;
+  --dsi-rail-a: #d4eefc;
+  --dsi-rail-b: #8fcdea;
+  --dsi-panel: #fff;
+  --dsi-panel-line: #5b9dc4;
+  --dsi-ink: #16384a;
+  /* Measured against the rail gradient's darkest stop (#8fcdea), not just
+     the white name box: the old #3f6578 was 6.3:1 on white but 3.6:1 there. */
+  --dsi-muted: #2c4f60;
+  --dsi-start: #2a7fd4;
+  --dsi-start-2: #1a5da8;
+  --dsi-track: #cfe7f4;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .dsi-root {
+    --dsi-navy: #091b3a;
+    --dsi-navy-2: #16356b;
+    --dsi-rail-a: #0c2a3a;
+    --dsi-rail-b: #0a2130;
+    --dsi-panel: #112d3c;
+    --dsi-panel-line: #2f6a8a;
+    --dsi-ink: #dbeef8;
+    --dsi-muted: #9ec0d0;
+    --dsi-start: #3f9ae0;
+    --dsi-start-2: #1f6cb5;
+    --dsi-track: #1d4558;
+  }
+}
+:root[data-theme='dark'] .dsi-root {
+  --dsi-navy: #091b3a;
+  --dsi-navy-2: #16356b;
+  --dsi-rail-a: #0c2a3a;
+  --dsi-rail-b: #0a2130;
+  --dsi-panel: #112d3c;
+  --dsi-panel-line: #2f6a8a;
+  --dsi-ink: #dbeef8;
+  --dsi-muted: #9ec0d0;
+  --dsi-start: #3f9ae0;
+  --dsi-start-2: #1f6cb5;
+  --dsi-track: #1d4558;
+}
+
+/* ── status bar ── */
+.dsi-status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 7px;
+  background: linear-gradient(180deg, var(--dsi-navy-2), var(--dsi-navy));
+  color: #eaf4ff;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.dsi-vol { display: flex; align-items: flex-end; gap: 2px; }
+.dsi-vol i { display: block; width: 2px; border-radius: 1px; background: #9fd4ff; }
+.dsi-vol i:nth-child(1) { height: 4px; }
+.dsi-vol i:nth-child(2) { height: 6px; }
+.dsi-vol i:nth-child(3) { height: 8px; }
+.dsi-user {
+  padding: 1px 7px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 700;
+}
+.dsi-status-gap { flex: 1; }
+.dsi-batt {
+  position: relative;
+  flex: none;
+  width: 15px;
+  height: 8px;
+  border: 1px solid #cfe6ff;
+  border-radius: 1px;
+}
+.dsi-batt::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  right: 4px;
+  border-radius: 1px;
+  background: #43b26b;
+}
+
+@media (max-width: 620px) {
+  .dsi-status { font-size: 0.58rem; }
+}
+
+/* ── top screen photo ──
+   Most of the gallery is portrait and the screen is 4:3 landscape. Cropping
+   would throw away most of each frame, so the photo is contained over a
+   blurred copy of itself instead, the way phone galleries letterbox.     */
+.dsi-photo {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #09141b;
+}
+.dsi-photo-shot {
+  position: absolute;
+  inset: 0;
+  animation: dsi-fade 0.6s ease both;
+}
+.dsi-photo-back {
+  object-fit: cover;
+  filter: blur(14px) brightness(0.7);
+  transform: scale(1.15);
+}
+.dsi-photo-front { object-fit: contain; }
+.dsi-photo-tag {
+  position: absolute;
+  inset: auto 6px 4px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.56rem;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+@keyframes dsi-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .dsi-photo-shot { animation: none; }
+}
+
+/* ── lower screen: the app rail ── */
+.dsi-lower {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 7px 5px;
+  background: linear-gradient(175deg, var(--dsi-rail-a), var(--dsi-rail-b));
+}
+.dsi-viewport {
+  flex: 1;
+  min-height: 0;
+  /* clip, not hidden. hidden still lets the browser scroll the box when
+     something inside gets focus or scrollIntoView, and that sideways
+     scroll knocks the rail off the transform that centres it.        */
+  overflow: clip;
+  display: flex;
+  align-items: center;
+}
+.dsi-rail {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  will-change: transform;
+  transition: transform 0.26s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+/* A fixed width, so a slot is exactly as wide as its icon no matter what its
+   caption says. Otherwise the START pill and longer captions widen their slot,
+   and when the rounded face swaps in after the fallback the widths change and
+   every slot after them shifts, leaving the rail off centre. Captions overflow
+   into the gap instead.                                                     */
+.dsi-slot {
+  flex: none;
+  width: 62px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.dsi-ico {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.34);
+  border-radius: 13px;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.34),
+    inset 0 -6px 10px -6px rgba(0, 0, 0, 0.4);
+  opacity: 0.6;
+}
+/* the gloss the DSi tiles caught across their top half */
+.dsi-ico::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(255, 255, 255, 0.26) 42%,
+    rgba(255, 255, 255, 0) 54%
+  );
+}
+.dsi-ico svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.55));
+}
+.dsi-cap {
+  font-size: 0.6rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--dsi-muted);
+}
+/* Grown with transform rather than width and height. Scale does not touch
+   layout, so every slot keeps its offsetLeft and the centring is exact at
+   every frame. Animating the real size shifted the rail mid-slide by half
+   the growth, which is the drift the mockup had to correct for after.   */
+.dsi-ico { transform-origin: 50% 100%; transition: transform 0.22s ease, opacity 0.22s ease; }
+.dsi-slot[data-sel] .dsi-ico { transform: scale(1.355); opacity: 1; }
+.dsi-slot[data-sel] .dsi-cap {
+  padding: 2px 13px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--dsi-start), var(--dsi-start-2));
+  color: #fff;
+  letter-spacing: 0.12em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+/* Focus sits on the middle copy, which can be off screen while the visible
+   selection is on another copy. So the ring is drawn on the visible one. */
+.dsi-slot:focus-visible { outline: none; }
+.dsi-rail:has(.dsi-slot:focus-visible) .dsi-slot[data-sel] .dsi-ico {
+  outline: 2px solid var(--dsi-start);
+  outline-offset: 3px;
+}
+
+@media (max-width: 620px) {
+  .dsi-rail { gap: 12px; }
+  .dsi-slot { width: 44px; }
+  .dsi-ico { width: 44px; height: 44px; }
+  .dsi-ico svg { width: 24px; height: 24px; }
+  .dsi-slot[data-sel] .dsi-ico { transform: scale(1.318); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsi-rail, .dsi-ico { transition: none; }
+}
+
+/* ── name box: the app's title over its "publisher" line ── */
+.dsi-namebox {
+  flex: none;
+  padding: 3px 8px;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 6px;
+  background: var(--dsi-panel);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+.dsi-namebox b {
+  display: block;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--dsi-ink);
+}
+.dsi-namebox span {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--dsi-muted);
+}
+
+/* ── scroll track: one segment per app, flanked by arrows ── */
+.dsi-scroller { flex: none; display: flex; align-items: center; gap: 4px; }
+.dsi-scroller button {
+  flex: none;
+  width: 22px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--dsi-panel-line);
+  border-radius: 3px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+  font: inherit;
+  font-size: 0.55rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.dsi-scroller button:focus-visible {
+  outline: 2px solid var(--dsi-start);
+  outline-offset: 1px;
+}
+.dsi-track {
+  flex: 1;
+  min-width: 0;
+  height: 10px;
+  display: flex;
+  gap: 1.5px;
+  padding: 1.5px;
+  border: 1px solid var(--dsi-panel-line);
+  border-radius: 3px;
+  background: var(--dsi-panel);
+}
+.dsi-track i { flex: 1; border-radius: 1px; background: var(--dsi-track); }
+.dsi-track i[data-on] { background: linear-gradient(180deg, var(--dsi-start), var(--dsi-start-2)); }
+
+@media (max-width: 620px) {
+  .dsi-namebox b { font-size: 0.8rem; }
+  .dsi-namebox span { font-size: 0.6rem; }
+}

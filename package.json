@@ -16,7 +16,8 @@
     "shots:lightbox": "node scripts/lightbox-shot.mjs",
     "shots:notfound": "node scripts/notfound-shot.mjs",
     "og": "node scripts/og.mjs",
-    "photos:optimize": "node scripts/optimize-photos.mjs"
+    "photos:optimize": "node scripts/optimize-photos.mjs",
+    "check:dsi": "node scripts/dsi-rail.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
