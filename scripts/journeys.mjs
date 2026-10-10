@@ -298,7 +298,8 @@ async function journeyKeyboardAndMeta(browser) {
     lowContrast.map(c => `${c.sel} = ${c.ratio}:1`).join('; '))
 
   const footerOpacity = await page.evaluate(() => {
-    const p = [...document.querySelectorAll('#contact p')].find(n => n.textContent.includes('©'))
+    // In the contentinfo <footer> since that became its own landmark.
+    const p = [...document.querySelectorAll('footer p')].find(n => n.textContent.includes('©'))
     return p ? { opacity: getComputedStyle(p).opacity, color: getComputedStyle(p).color } : null
   })
   log(J, 'footer copyright is legible', footerOpacity && parseFloat(footerOpacity.opacity) >= 0.7,
