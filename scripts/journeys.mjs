@@ -64,11 +64,15 @@ async function journeyMobileMenu(browser) {
   log(J, 'menu closes after selecting link', afterNav.h < 50, `panel height ${Math.round(afterNav.h)}px`)
   await page.screenshot({ path: `${OUT}/${J}-03-after-nav.png` })
 
-  // is the active section reflected in nav?
-  const activeCount = await page.evaluate(() => {
-    return [...document.querySelectorAll('header a[href^="#"]')].filter(a => getComputedStyle(a).color === getComputedStyle(document.body).color).length
-  })
-  log(J, 'active section indicated in nav', activeCount > 0, `${activeCount} link(s) in active color`)
+  // Is the section just navigated to marked active? Checked through
+  // aria-current, the state the nav exposes to assistive tech. Comparing
+  // computed colours as strings broke when the link started serialising as
+  // color(srgb ...) while body stayed rgb(...), for the very same colour.
+  const active = await page.evaluate(() =>
+    [...document.querySelectorAll('header a[aria-current="true"]')].map(a => a.getAttribute('href'))
+  )
+  log(J, 'active section indicated in nav', active.length > 0 && active.every(h => h === '#projects'),
+    `aria-current on ${active.join(', ') || 'nothing'}`)
 
   await ctx.close()
 }
