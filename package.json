@@ -17,7 +17,6 @@
     "shots:notfound": "node scripts/notfound-shot.mjs",
     "og": "node scripts/og.mjs",
     "photos:optimize": "node scripts/optimize-photos.mjs",
-    "check:dsi": "node scripts/dsi-rail.mjs",
     "test:e2e": "next build && playwright test",
     "typecheck:e2e": "tsc -p e2e/tsconfig.json"
   },
