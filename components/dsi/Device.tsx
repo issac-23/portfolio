@@ -30,7 +30,10 @@ export default function Device({ top, bottom }: DeviceProps) {
             <div className="dsi-speaker"><i /></div>
           </div>
           <div className="dsi-frame">
-            <div className="dsi-screen">{top}</div>
+            <div className="dsi-screen">
+              {top}
+              <div className="dsi-fx" aria-hidden="true" />
+            </div>
           </div>
           <div aria-hidden="true">
             <div className="dsi-speaker"><i /></div>
@@ -77,7 +80,10 @@ export default function Device({ top, bottom }: DeviceProps) {
           </div>
 
           <div className="dsi-frame">
-            <div className="dsi-screen">{bottom}</div>
+            <div className="dsi-screen">
+              {bottom}
+              <div className="dsi-fx" aria-hidden="true" />
+            </div>
           </div>
 
           <div aria-hidden="true">
