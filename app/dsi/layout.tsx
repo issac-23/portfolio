@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { M_PLUS_Rounded_1c } from 'next/font/google'
+import PrefsSync from '@/components/dsi/PrefsSync'
 import './dsi.css'
 
 // Self-hosted the same way the site's other faces are. The DSi's system font
@@ -18,12 +19,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+// Applies the stored motion choice before the device paints, the way the
+// root layout does for the theme, so a visitor who turned motion off never
+// sees one frame of it.
+const motionScript = `(function(){try{if(localStorage.getItem('dsi-motion')==='reduce')document.documentElement.dataset.motion='reduce'}catch(e){}})()`
+
 export default function DsiLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={`dsi-root ${rounded.variable}`}
       style={{ fontFamily: 'var(--font-rounded)' }}
     >
+      <script dangerouslySetInnerHTML={{ __html: motionScript }} />
+      <PrefsSync />
       {children}
     </div>
   )
