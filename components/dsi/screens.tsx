@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { projects } from '@/data/projects'
 import type { AppId } from './apps'
 import { ProjectDetail, ProjectList } from './ProjectsApp'
+import { ProfileCard, ProfileStats } from './ProfileApp'
 import { AppTop } from './screen'
 
 /**
@@ -34,5 +35,13 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
       </AppTop>
     ),
     bottom: c => <ProjectList projects={projects} selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
+  },
+  profile: {
+    top: () => (
+      <AppTop>
+        <ProfileCard />
+      </AppTop>
+    ),
+    bottom: c => <ProfileStats onBack={c.back} />,
   },
 }
