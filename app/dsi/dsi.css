@@ -1035,3 +1035,18 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 @media (prefers-reduced-motion: reduce) {
   .dsi-bars i { animation: none; }
 }
+
+/* ── Shelf ── */
+.dsi-note {
+  margin: 4px 0 0;
+  padding: 6px 9px;
+  border-left: 3px solid #c08a2e;
+  border-radius: 0 6px 6px 0;
+  background: var(--dsi-panel);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  font-style: italic;
+}
+@media (max-width: 620px) {
+  .dsi-note { padding: 4px 7px; font-size: 0.62rem; }
+}
