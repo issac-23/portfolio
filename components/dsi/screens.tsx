@@ -5,6 +5,8 @@ import { projects } from '@/data/projects'
 import type { AppId } from './apps'
 import { ProjectDetail, ProjectList } from './ProjectsApp'
 import { ProfileCard, ProfileStats } from './ProfileApp'
+import { Album, PhotoView } from './CameraApp'
+import { galleryPhotos } from '@/data/gallery'
 import { AppTop } from './screen'
 
 /**
@@ -43,5 +45,13 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
       </AppTop>
     ),
     bottom: c => <ProfileStats onBack={c.back} />,
+  },
+  camera: {
+    top: c => (
+      <AppTop>
+        <PhotoView photo={galleryPhotos[c.sel]} index={c.sel} total={galleryPhotos.length} />
+      </AppTop>
+    ),
+    bottom: c => <Album photos={galleryPhotos} selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
   },
 }
