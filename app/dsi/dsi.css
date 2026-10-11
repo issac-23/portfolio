@@ -1164,3 +1164,69 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 @media (max-width: 620px) {
   .dsi-setting-value { font-size: 0.6rem; }
 }
+
+/* ── Plain view ──
+   An ordinary document: one column, real headings, underlined links, and
+   the page scrolls like any other. Same tokens as the screens, so it is
+   themed but never dressed up.                                          */
+.dsi-plain {
+  min-height: 100svh;
+  max-width: 68ch;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+  line-height: 1.6;
+}
+.dsi-root:has(.dsi-plain) { background: var(--dsi-panel); }
+.dsi-plain h1 { margin: 0; font-size: 2rem; font-weight: 800; line-height: 1.15; }
+.dsi-plain h2 {
+  margin: 40px 0 10px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--dsi-panel-line);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.dsi-plain h3 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 800; }
+.dsi-plain p { margin: 0 0 10px; }
+/* Underlined on purpose: the site's Tailwind reset strips it, and colour
+   alone is not enough to tell a link from the text around it. */
+.dsi-plain a { color: var(--dsi-accent-ink); text-decoration: underline; text-underline-offset: 2px; }
+.dsi-plain a:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; border-radius: 2px; }
+.dsi-plain ul { margin: 0; padding-left: 20px; }
+.dsi-plain-head p { margin: 4px 0 12px; color: var(--dsi-muted); }
+.dsi-plain-head nav { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; font-weight: 700; }
+.dsi-plain-switch { font-size: 0.9rem; }
+.dsi-plain-stats { margin: 12px 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 2px 16px; }
+.dsi-plain-stats div { display: contents; }
+.dsi-plain-stats dt { color: var(--dsi-muted); font-weight: 700; }
+.dsi-plain-stats dd { margin: 0; }
+.dsi-plain-card + .dsi-plain-card { margin-top: 20px; }
+.dsi-plain-badge {
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #237a45;
+  color: #fff;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+.dsi-plain-meta { color: var(--dsi-muted); font-size: 0.9rem; }
+.dsi-plain-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.dsi-plain-photos {
+  list-style: none;
+  padding: 0 !important;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.dsi-plain-photos img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.dsi-plain-photos span { display: block; margin-top: 2px; font-size: 0.8rem; color: var(--dsi-muted); }
+.dsi-plain-shelf li + li { margin-top: 10px; }
+.dsi-plain-shelf .dsi-plain-meta, .dsi-plain-shelf q { display: block; }
+.dsi-plain-shelf q { font-style: italic; }
+
+@media print {
+  .dsi-plain-switch { display: none; }
+  .dsi-plain { max-width: none; padding: 0; }
+}
