@@ -889,3 +889,43 @@
   .dsi-card-text span, .dsi-card-status { font-size: 0.55rem; }
   .dsi-action { padding: 2px 4px; font-size: 0.6rem; }
 }
+
+/* ── Profile ── */
+.dsi-avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #fdfdfd, #c9d3da);
+}
+.dsi-avatar svg { width: 26px; height: 26px; }
+.dsi-sub { font-size: 0.68rem; color: var(--dsi-muted); }
+.dsi-stats {
+  margin: 0 0 6px;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 6px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+  overflow: hidden;
+}
+.dsi-stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+.dsi-stats div + div { border-top: 1px solid var(--dsi-track); }
+.dsi-stats dt { color: var(--dsi-muted); font-weight: 700; }
+.dsi-stats dd { margin: 0; font-weight: 800; text-align: right; }
+.dsi-interests { color: var(--dsi-ink); }
+
+@media (max-width: 620px) {
+  .dsi-avatar { width: 30px; height: 30px; }
+  .dsi-avatar svg { width: 20px; height: 20px; }
+  .dsi-sub { font-size: 0.58rem; }
+  .dsi-stats div { padding: 2px 6px; font-size: 0.6rem; }
+}
