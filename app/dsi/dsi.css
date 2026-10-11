@@ -698,3 +698,187 @@
   .dsi-namebox b { font-size: 0.8rem; }
   .dsi-namebox span { font-size: 0.6rem; }
 }
+
+/* ── launch effects ──
+   One layer per screen, above whatever app is in it. Empty except while a
+   transition is running.                                                  */
+.dsi-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dsi-fx-icon {
+  position: absolute;
+  margin: 0;
+  opacity: 1;
+  transform-origin: 50% 50%;
+  transition: none;
+  will-change: transform;
+}
+.dsi-fx-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+}
+
+/* ── Projects: upper screen, the selected card ── */
+.dsi-detail {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  color: var(--dsi-ink);
+}
+.dsi-detail-head { display: flex; align-items: center; gap: 8px; }
+.dsi-detail h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.dsi-detail p {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+.dsi-badge {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  background: #5b6d78;
+}
+.dsi-badge[data-status='live'] { background: #237a45; }
+.dsi-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dsi-tags li {
+  padding: 1px 6px;
+  border: 1px solid var(--dsi-panel-line);
+  border-radius: 4px;
+  background: var(--dsi-panel);
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+/* ── Projects: lower screen, the game card select ── */
+.dsi-cards {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 1px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.dsi-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 7px;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 6px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dsi-card[aria-pressed='true'] {
+  border-color: var(--dsi-start);
+  box-shadow: inset 0 0 0 1.5px var(--dsi-start);
+}
+.dsi-card:focus-visible,
+.dsi-action:focus-visible {
+  outline: 2px solid var(--dsi-start);
+  outline-offset: 2px;
+}
+.dsi-card-art {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  color: #26303a;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.dsi-card-text { flex: 1; min-width: 0; }
+.dsi-card-text b,
+.dsi-card-text span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dsi-card-text b { font-size: 0.82rem; font-weight: 800; }
+.dsi-card-text span,
+.dsi-card-status { font-size: 0.62rem; color: var(--dsi-muted); }
+.dsi-card-status { flex: none; font-weight: 700; }
+
+.dsi-actions {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+.dsi-action {
+  display: grid;
+  place-items: center;
+  padding: 4px 6px;
+  border: 1px solid var(--dsi-panel-line);
+  border-radius: 4px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.dsi-action-go {
+  border-color: var(--dsi-start-2);
+  background: linear-gradient(180deg, var(--dsi-start), var(--dsi-start-2));
+  color: #fff;
+}
+/* Greyed with colour rather than opacity, so the reason it gives still
+   reads at full contrast. */
+.dsi-action[aria-disabled='true'] {
+  border-style: dashed;
+  background: transparent;
+  color: var(--dsi-muted);
+  cursor: not-allowed;
+}
+
+@media (max-width: 620px) {
+  .dsi-detail { gap: 4px; padding: 5px 7px; }
+  .dsi-detail h2 { font-size: 0.82rem; }
+  .dsi-detail p { font-size: 0.6rem; line-height: 1.35; }
+  .dsi-card { gap: 6px; padding: 3px 5px; }
+  .dsi-card-art { width: 26px; height: 26px; font-size: 0.85rem; }
+  .dsi-card-text b { font-size: 0.68rem; }
+  .dsi-card-text span, .dsi-card-status { font-size: 0.55rem; }
+  .dsi-action { padding: 2px 4px; font-size: 0.6rem; }
+}
