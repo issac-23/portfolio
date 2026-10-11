@@ -128,7 +128,8 @@ test('the list scrolls inside the lower screen, never the page', async ({ page }
   await list.hover()
   await page.mouse.wheel(0, 300)
 
-  await expect.poll(() => list.evaluate(el => el.scrollTop)).toBeGreaterThan(0)
+  // The screen's body is what scrolls, not the list inside it.
+  await expect.poll(() => list.evaluate(el => el.closest('.dsi-app-body')!.scrollTop)).toBeGreaterThan(0)
   expect(await page.evaluate(() => window.scrollY)).toBe(0)
 })
 
