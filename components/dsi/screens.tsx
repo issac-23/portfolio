@@ -8,6 +8,8 @@ import { ProfileCard, ProfileStats } from './ProfileApp'
 import { Album, PhotoView } from './CameraApp'
 import { galleryPhotos } from '@/data/gallery'
 import { NowPlayingCard, RecentlyPlayed } from './SoundApp'
+import { ShelfItem, ShelfList } from './ShelfApp'
+import { mediaItems } from '@/data/media'
 import { AppTop } from './screen'
 
 /**
@@ -62,5 +64,13 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
       </AppTop>
     ),
     bottom: c => <RecentlyPlayed onBack={c.back} />,
+  },
+  shelf: {
+    top: c => (
+      <AppTop>
+        <ShelfItem item={mediaItems[c.sel]} />
+      </AppTop>
+    ),
+    bottom: c => <ShelfList items={mediaItems} selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
   },
 }
