@@ -21,7 +21,6 @@ const GROW_MS = 340
 const FLASH_IN_MS = 110
 const FLASH_OUT_MS = 240
 
-
 function fxLayers(from: Element): HTMLElement[] {
   const device = from.closest('.dsi-device')
   return device ? Array.from(device.querySelectorAll<HTMLElement>('.dsi-fx')) : []
@@ -40,8 +39,11 @@ async function fadeOut(nodes: HTMLElement[]) {
   )
 }
 
-function clear(layers: HTMLElement[]) {
-  for (const l of layers) l.replaceChildren()
+// Only the nodes this transition drew. Input is live again from the swap, so
+// a second transition can start while this one is still fading, and must
+// not have its white pulled out from under it.
+function clear(nodes: HTMLElement[]) {
+  for (const n of nodes) n.remove()
 }
 
 /**
@@ -66,6 +68,7 @@ export async function playLaunch(icon: HTMLElement, swap: () => void) {
   }
   const scale = ((reach * 1.08) / Math.min(r.width, r.height)) * 2
 
+  const drawn: HTMLElement[] = []
   try {
     const grows = layers.map(layer => {
       const at = layer.getBoundingClientRect()
@@ -78,6 +81,7 @@ export async function playLaunch(icon: HTMLElement, swap: () => void) {
         height: `${r.height}px`,
       })
       layer.appendChild(copy)
+      drawn.push(copy)
       return copy.animate(
         [
           { transform: 'scale(1)', borderRadius: radius },
@@ -89,14 +93,15 @@ export async function playLaunch(icon: HTMLElement, swap: () => void) {
     await Promise.all(grows)
 
     const whites = layers.map(flash)
+    drawn.push(...whites)
     await Promise.all(whites.map(w => w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FLASH_IN_MS, fill: 'forwards' }).finished))
 
     // Behind the white, so the swap itself is never seen.
     swap()
-    for (const l of layers) l.querySelectorAll('.dsi-fx-icon').forEach(n => n.remove())
+    clear(drawn.filter(n => n.classList.contains('dsi-fx-icon')))
     await fadeOut(whites)
   } finally {
-    clear(layers)
+    clear(drawn)
   }
 }
 
@@ -105,12 +110,13 @@ export async function playReturn(from: Element, swap: () => void) {
   const layers = fxLayers(from)
   if (lessMotion() || !layers.length) return swap()
 
+  const whites: HTMLElement[] = []
   try {
-    const whites = layers.map(flash)
+    whites.push(...layers.map(flash))
     await Promise.all(whites.map(w => w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FLASH_IN_MS, fill: 'forwards' }).finished))
     swap()
     await fadeOut(whites)
   } finally {
-    clear(layers)
+    clear(whites)
   }
 }

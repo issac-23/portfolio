@@ -38,12 +38,16 @@ export default function DsiMenu() {
     const id = APPS[index].id
     if (busy.current || !SCREENS[id]) return
     busy.current = true
-    playLaunch(icon, () =>
+    // Busy only until the swap. The white fading off afterwards is just
+    // paint, and holding input through it dropped a quick Escape or Enter.
+    playLaunch(icon, () => {
       flushSync(() => {
         setSel(0)
         setOpen(id)
-      }),
-    ).finally(() => {
+      })
+      busy.current = false
+    }).catch(() => {
+      // Failed before reaching the swap: let the next press through.
       busy.current = false
     })
   }, [])
@@ -53,7 +57,11 @@ export default function DsiMenu() {
     busy.current = true
     returning.current = true
     const from = document.querySelector('.dsi-device') ?? document.body
-    playReturn(from, () => flushSync(() => setOpen(null))).finally(() => {
+    playReturn(from, () => {
+      flushSync(() => setOpen(null))
+      busy.current = false
+    }).catch(() => {
+      // Failed before reaching the swap: let the next press through.
       busy.current = false
     })
   }, [])
