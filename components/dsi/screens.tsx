@@ -7,6 +7,7 @@ import { ProjectDetail, ProjectList } from './ProjectsApp'
 import { ProfileCard, ProfileStats } from './ProfileApp'
 import { Album, PhotoView } from './CameraApp'
 import { galleryPhotos } from '@/data/gallery'
+import { NowPlayingCard, RecentlyPlayed } from './SoundApp'
 import { AppTop } from './screen'
 
 /**
@@ -53,5 +54,13 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
       </AppTop>
     ),
     bottom: c => <Album photos={galleryPhotos} selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
+  },
+  sound: {
+    top: () => (
+      <AppTop>
+        <NowPlayingCard />
+      </AppTop>
+    ),
+    bottom: c => <RecentlyPlayed onBack={c.back} />,
   },
 }
