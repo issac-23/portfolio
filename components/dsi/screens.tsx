@@ -10,6 +10,7 @@ import { galleryPhotos } from '@/data/gallery'
 import { NowPlayingCard, RecentlyPlayed } from './SoundApp'
 import { ShelfItem, ShelfList } from './ShelfApp'
 import { mediaItems } from '@/data/media'
+import { ChatRoom, Channels } from './ChatApp'
 import { AppTop } from './screen'
 
 /**
@@ -72,5 +73,13 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
       </AppTop>
     ),
     bottom: c => <ShelfList items={mediaItems} selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
+  },
+  chat: {
+    top: () => (
+      <AppTop>
+        <ChatRoom />
+      </AppTop>
+    ),
+    bottom: c => <Channels selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
   },
 }
