@@ -29,6 +29,8 @@ export interface Action {
   /** Opens in a new tab. On by default for links off the site. */
   external?: boolean
   primary?: boolean
+  /** Saves the file instead of opening it. */
+  download?: boolean
   /**
    * Why the action is unavailable. A greyed button that says why beats a
    * dead link or a button that silently disappears.
@@ -49,6 +51,7 @@ function ActionButton({ action: a }: { action: Action }) {
         className={cls}
         href={a.href}
         aria-label={a.name}
+        download={a.download || undefined}
         {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       >
         {a.label}

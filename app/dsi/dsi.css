@@ -403,6 +403,8 @@
   --dsi-start: #2a7fd4;
   --dsi-start-2: #1a5da8;
   --dsi-track: #cfe7f4;
+  /* Coloured text, not fills. The START blues are too light for small type. */
+  --dsi-accent-ink: #1a5da8;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) .dsi-root {
@@ -417,6 +419,7 @@
     --dsi-start: #3f9ae0;
     --dsi-start-2: #1f6cb5;
     --dsi-track: #1d4558;
+    --dsi-accent-ink: #7cbcf0;
   }
 }
 :root[data-theme='dark'] .dsi-root {
@@ -431,6 +434,7 @@
   --dsi-start: #3f9ae0;
   --dsi-start-2: #1f6cb5;
   --dsi-track: #1d4558;
+  --dsi-accent-ink: #7cbcf0;
 }
 
 /* ── status bar ── */
@@ -1093,4 +1097,52 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   .dsi-chat { gap: 3px; padding: 5px; }
   .dsi-bubble { font-size: 0.6rem; }
   .dsi-bubble b { padding: 0 5px; font-size: 0.55rem; }
+}
+
+/* ── Resume: the instruction booklet ── */
+.dsi-booklet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: 10px;
+  border: 2px solid var(--dsi-panel-line);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, transparent 70%, rgba(42, 127, 212, 0.14)),
+    var(--dsi-panel);
+  text-align: center;
+}
+.dsi-booklet h2 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+.dsi-booklet-kicker {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dsi-accent-ink);
+}
+.dsi-contents {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 6px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+}
+.dsi-contents li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.dsi-contents li + li { border-top: 1px dotted var(--dsi-panel-line); }
+.dsi-contents li span:last-child { color: var(--dsi-muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 620px) {
+  .dsi-booklet { margin: 6px; }
+  .dsi-booklet h2 { font-size: 0.95rem; }
+  .dsi-contents li { padding: 2px 6px; font-size: 0.6rem; }
 }
