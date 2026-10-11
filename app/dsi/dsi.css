@@ -699,6 +699,19 @@
   .dsi-namebox span { font-size: 0.6rem; }
 }
 
+/* ── app screens: the layout every app shares ──
+   Both halves scroll inside their own screen when the content runs long,
+   so the page never does.                                                */
+.dsi-app-top,
+.dsi-app-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.dsi-app-top { display: flex; flex-direction: column; color: var(--dsi-ink); }
+.dsi-app-body { padding: 1px; }
+
 /* ── launch effects ──
    One layer per screen, above whatever app is in it. Empty except while a
    transition is running.                                                  */
@@ -837,10 +850,12 @@
 .dsi-card-status { font-size: 0.62rem; color: var(--dsi-muted); }
 .dsi-card-status { flex: none; font-weight: 700; }
 
+/* As many equal columns as the app has actions, Back always last. */
 .dsi-actions {
   flex: none;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 5px;
 }
 .dsi-action {
