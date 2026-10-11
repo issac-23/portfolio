@@ -929,3 +929,34 @@
   .dsi-sub { font-size: 0.58rem; }
   .dsi-stats div { padding: 2px 6px; font-size: 0.6rem; }
 }
+
+/* ── Camera album ── */
+.dsi-album {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.dsi-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 5px;
+  background: #09141b;
+  cursor: pointer;
+}
+.dsi-thumb img { object-fit: cover; }
+.dsi-thumb[aria-pressed='true'] {
+  border-color: var(--dsi-start);
+  box-shadow: inset 0 0 0 1.5px var(--dsi-start);
+}
+.dsi-thumb:focus-visible {
+  outline: 2px solid var(--dsi-start);
+  outline-offset: 2px;
+}
