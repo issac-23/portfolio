@@ -6,6 +6,11 @@
  *
  * Light is the Light Blue colourway, dark is the matte black one. Both are real
  * DSi shells, so neither theme is invented.
+ *
+ * Dark keys off the .dark class on <html>, the same switch the rest of the
+ * site uses. The inline script in the root layout sets it before first paint
+ * from the stored choice, or the OS preference when there is none, so one
+ * rule covers both and a choice made on / carries over here.
  */
 
 .dsi-root {
@@ -28,24 +33,7 @@
   --dsi-aspect: 1.25;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .dsi-root {
-    --dsi-page: #0a0e11;
-    --dsi-desk: #14191d;
-    --dsi-shell: #2f3337;
-    --dsi-shell-hi: #43484d;
-    --dsi-shell-lo: #1c2023;
-    --dsi-shell-edge: #101315;
-    --dsi-emboss: rgba(255, 255, 255, 0.14);
-    --dsi-engrave: rgba(0, 0, 0, 0.6);
-    --dsi-chrome-ink: #c3ccd2;
-    --dsi-bezel: #000;
-    --dsi-screen-a: #0d2838;
-    --dsi-screen-b: #0a2130;
-  }
-}
-
-:root[data-theme='dark'] .dsi-root {
+:root.dark .dsi-root {
   --dsi-page: #0a0e11;
   --dsi-desk: #14191d;
   --dsi-shell: #2f3337;
@@ -406,23 +394,7 @@
   /* Coloured text, not fills. The START blues are too light for small type. */
   --dsi-accent-ink: #1a5da8;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .dsi-root {
-    --dsi-navy: #091b3a;
-    --dsi-navy-2: #16356b;
-    --dsi-rail-a: #0c2a3a;
-    --dsi-rail-b: #0a2130;
-    --dsi-panel: #112d3c;
-    --dsi-panel-line: #2f6a8a;
-    --dsi-ink: #dbeef8;
-    --dsi-muted: #9ec0d0;
-    --dsi-start: #3f9ae0;
-    --dsi-start-2: #1f6cb5;
-    --dsi-track: #1d4558;
-    --dsi-accent-ink: #7cbcf0;
-  }
-}
-:root[data-theme='dark'] .dsi-root {
+:root.dark .dsi-root {
   --dsi-navy: #091b3a;
   --dsi-navy-2: #16356b;
   --dsi-rail-a: #0c2a3a;
