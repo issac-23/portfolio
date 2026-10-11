@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, type ReactNode, type RefObject } from 'react'
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import StatusBar from './StatusBar'
 
 /**
@@ -69,6 +69,16 @@ interface AppLowerProps {
 }
 
 export function AppLower({ children, actions = [], onBack }: AppLowerProps) {
+  const root = useRef<HTMLDivElement>(null)
+
+  // The rail that had focus is gone once an app opens. A list inside takes
+  // focus itself (its effect runs first); anything else lands on the first
+  // control here, so the keyboard is never dropped back to the page.
+  useEffect(() => {
+    if (root.current?.contains(document.activeElement)) return
+    root.current?.querySelector<HTMLElement>('a[href], button:not([disabled])')?.focus({ preventScroll: true })
+  }, [])
+
   // Escape is B: back out from anywhere in the app.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -81,7 +91,7 @@ export function AppLower({ children, actions = [], onBack }: AppLowerProps) {
   }, [onBack])
 
   return (
-    <div className="dsi-lower dsi-app-lower">
+    <div className="dsi-lower dsi-app-lower" ref={root}>
       <div className="dsi-app-body">{children}</div>
       <div className="dsi-actions">
         {actions.map(a => <ActionButton key={a.label} action={a} />)}
