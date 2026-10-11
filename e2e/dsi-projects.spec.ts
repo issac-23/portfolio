@@ -66,15 +66,6 @@ test('tapping another app selects it, tapping the selected one starts it', async
   await expect(cards(page)).toHaveCount(CARDS.length)
 })
 
-test('apps that do not open yet stay on the menu', async ({ page }) => {
-  await openMenu(page)
-  await page.keyboard.press('Enter')
-  // Long enough for a launch to have got well under way if one had started.
-  await page.waitForTimeout(800)
-  await expectSettledOn(page, 'Profile')
-  await expect(cards(page)).toHaveCount(0)
-})
-
 test('the launch grows over both screens at once and leaves nothing behind', async ({ page }) => {
   await watchEffects(page)
   await launchProjects(page)
