@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
@@ -10,6 +10,7 @@ import { playLaunch, playReturn } from './launch'
 import PhotoFrame from './PhotoFrame'
 import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
+import { rememberedView } from './view'
 
 /**
  * Owns both screens. Selection state has to drive the top and bottom screen
@@ -26,6 +27,12 @@ export default function DsiMenu() {
   // Only hand focus back to the rail when coming back from an app, never on
   // first load, where it would steal the skip link's place.
   const returning = useRef(false)
+
+  // Someone who chose plain view last time gets it again without hunting
+  // for the setting. Plain view links back here and clears the choice.
+  useEffect(() => {
+    if (rememberedView() === 'plain') window.location.replace('/dsi?view=plain')
+  }, [])
 
   const launch = useCallback((index: number, icon: HTMLElement) => {
     const id = APPS[index].id

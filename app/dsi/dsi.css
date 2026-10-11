@@ -1230,3 +1230,21 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   .dsi-plain-switch { display: none; }
   .dsi-plain { max-width: none; padding: 0; }
 }
+
+/* The stage's way out to plain view: small, but always first in line. */
+.dsi-stage { position: relative; }
+.dsi-plain-link {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--dsi-panel);
+  color: var(--dsi-accent-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.dsi-plain-link:hover { text-decoration: underline; }
+.dsi-plain-link:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; }
