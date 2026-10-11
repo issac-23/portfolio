@@ -11,6 +11,7 @@ import { NowPlayingCard, RecentlyPlayed } from './SoundApp'
 import { ShelfItem, ShelfList } from './ShelfApp'
 import { mediaItems } from '@/data/media'
 import { ChatRoom, Channels } from './ChatApp'
+import { BookletContents, BookletCover } from './ResumeApp'
 import { AppTop } from './screen'
 
 /**
@@ -81,5 +82,13 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
       </AppTop>
     ),
     bottom: c => <Channels selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
+  },
+  resume: {
+    top: () => (
+      <AppTop>
+        <BookletCover />
+      </AppTop>
+    ),
+    bottom: c => <BookletContents onBack={c.back} />,
   },
 }
