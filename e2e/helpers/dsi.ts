@@ -88,6 +88,9 @@ export async function openMenu(page: Page) {
  * running off both edges, and no page scroll.
  */
 export async function expectSettledOn(page: Page, app: string) {
+  // The rail may not exist yet: coming back from an app it remounts behind
+  // the white flash, so wait for it before reading anything off it.
+  await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: SETTLE_TIMEOUT })
   // 10s, not the default 5. Settling takes about 0.3s. The extra time only
   // absorbs a renderer starved by parallel workers, which paints late but
   // lands in the right place. A real mis-centre never recovers, so it still
