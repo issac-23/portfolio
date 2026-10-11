@@ -6,6 +6,11 @@
  *
  * Light is the Light Blue colourway, dark is the matte black one. Both are real
  * DSi shells, so neither theme is invented.
+ *
+ * Dark keys off the .dark class on <html>, the same switch the rest of the
+ * site uses. The inline script in the root layout sets it before first paint
+ * from the stored choice, or the OS preference when there is none, so one
+ * rule covers both and a choice made on / carries over here.
  */
 
 .dsi-root {
@@ -28,24 +33,7 @@
   --dsi-aspect: 1.25;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .dsi-root {
-    --dsi-page: #0a0e11;
-    --dsi-desk: #14191d;
-    --dsi-shell: #2f3337;
-    --dsi-shell-hi: #43484d;
-    --dsi-shell-lo: #1c2023;
-    --dsi-shell-edge: #101315;
-    --dsi-emboss: rgba(255, 255, 255, 0.14);
-    --dsi-engrave: rgba(0, 0, 0, 0.6);
-    --dsi-chrome-ink: #c3ccd2;
-    --dsi-bezel: #000;
-    --dsi-screen-a: #0d2838;
-    --dsi-screen-b: #0a2130;
-  }
-}
-
-:root[data-theme='dark'] .dsi-root {
+:root.dark .dsi-root {
   --dsi-page: #0a0e11;
   --dsi-desk: #14191d;
   --dsi-shell: #2f3337;
@@ -406,23 +394,7 @@
   /* Coloured text, not fills. The START blues are too light for small type. */
   --dsi-accent-ink: #1a5da8;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .dsi-root {
-    --dsi-navy: #091b3a;
-    --dsi-navy-2: #16356b;
-    --dsi-rail-a: #0c2a3a;
-    --dsi-rail-b: #0a2130;
-    --dsi-panel: #112d3c;
-    --dsi-panel-line: #2f6a8a;
-    --dsi-ink: #dbeef8;
-    --dsi-muted: #9ec0d0;
-    --dsi-start: #3f9ae0;
-    --dsi-start-2: #1f6cb5;
-    --dsi-track: #1d4558;
-    --dsi-accent-ink: #7cbcf0;
-  }
-}
-:root[data-theme='dark'] .dsi-root {
+:root.dark .dsi-root {
   --dsi-navy: #091b3a;
   --dsi-navy-2: #16356b;
   --dsi-rail-a: #0c2a3a;
@@ -519,6 +491,9 @@
 @media (prefers-reduced-motion: reduce) {
   .dsi-photo-shot { animation: none; }
 }
+/* The same again for the System Settings switch, which can ask for less
+   motion than the device does. */
+:root[data-motion='reduce'] .dsi-photo-shot { animation: none; }
 
 /* ── lower screen: the app rail ── */
 .dsi-lower {
@@ -640,6 +615,8 @@
 @media (prefers-reduced-motion: reduce) {
   .dsi-rail, .dsi-ico { transition: none; }
 }
+:root[data-motion='reduce'] .dsi-rail,
+:root[data-motion='reduce'] .dsi-ico { transition: none; }
 
 /* ── name box: the app's title over its "publisher" line ── */
 .dsi-namebox {
@@ -1039,6 +1016,7 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 @media (prefers-reduced-motion: reduce) {
   .dsi-bars i { animation: none; }
 }
+:root[data-motion='reduce'] .dsi-bars i { animation: none; }
 
 /* ── Shelf ── */
 .dsi-note {
@@ -1146,3 +1124,127 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   .dsi-booklet h2 { font-size: 0.95rem; }
   .dsi-contents li { padding: 2px 6px; font-size: 0.6rem; }
 }
+
+/* ── System Settings ── */
+.dsi-setting-value {
+  flex: none;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--dsi-accent-ink);
+}
+.dsi-switch {
+  flex: none;
+  position: relative;
+  width: 30px;
+  height: 16px;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 999px;
+  background: var(--dsi-track);
+  transition: background-color 0.15s ease;
+}
+.dsi-switch::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease;
+}
+[aria-checked='true'] > .dsi-switch { background: var(--dsi-start-2); border-color: var(--dsi-start-2); }
+[aria-checked='true'] > .dsi-switch::after { transform: translateX(14px); }
+@media (prefers-reduced-motion: reduce) {
+  .dsi-switch, .dsi-switch::after { transition: none; }
+}
+:root[data-motion='reduce'] .dsi-switch,
+:root[data-motion='reduce'] .dsi-switch::after { transition: none; }
+@media (max-width: 620px) {
+  .dsi-setting-value { font-size: 0.6rem; }
+}
+
+/* ── Plain view ──
+   An ordinary document: one column, real headings, underlined links, and
+   the page scrolls like any other. Same tokens as the screens, so it is
+   themed but never dressed up.                                          */
+.dsi-plain {
+  min-height: 100svh;
+  max-width: 68ch;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+  line-height: 1.6;
+}
+.dsi-root:has(.dsi-plain) { background: var(--dsi-panel); }
+.dsi-plain h1 { margin: 0; font-size: 2rem; font-weight: 800; line-height: 1.15; }
+.dsi-plain h2 {
+  margin: 40px 0 10px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--dsi-panel-line);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.dsi-plain h3 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 800; }
+.dsi-plain p { margin: 0 0 10px; }
+/* Underlined on purpose: the site's Tailwind reset strips it, and colour
+   alone is not enough to tell a link from the text around it. */
+.dsi-plain a { color: var(--dsi-accent-ink); text-decoration: underline; text-underline-offset: 2px; }
+.dsi-plain a:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; border-radius: 2px; }
+.dsi-plain ul { margin: 0; padding-left: 20px; }
+.dsi-plain-head p { margin: 4px 0 12px; color: var(--dsi-muted); }
+.dsi-plain-head nav { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; font-weight: 700; }
+.dsi-plain-switch { font-size: 0.9rem; }
+.dsi-plain-stats { margin: 12px 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 2px 16px; }
+.dsi-plain-stats div { display: contents; }
+.dsi-plain-stats dt { color: var(--dsi-muted); font-weight: 700; }
+.dsi-plain-stats dd { margin: 0; }
+.dsi-plain-card + .dsi-plain-card { margin-top: 20px; }
+.dsi-plain-badge {
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #237a45;
+  color: #fff;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+.dsi-plain-meta { color: var(--dsi-muted); font-size: 0.9rem; }
+.dsi-plain-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.dsi-plain-photos {
+  list-style: none;
+  padding: 0 !important;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.dsi-plain-photos img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.dsi-plain-photos span { display: block; margin-top: 2px; font-size: 0.8rem; color: var(--dsi-muted); }
+.dsi-plain-shelf li + li { margin-top: 10px; }
+.dsi-plain-shelf .dsi-plain-meta, .dsi-plain-shelf q { display: block; }
+.dsi-plain-shelf q { font-style: italic; }
+
+@media print {
+  .dsi-plain-switch { display: none; }
+  .dsi-plain { max-width: none; padding: 0; }
+}
+
+/* The stage's way out to plain view: small, but always first in line. */
+.dsi-stage { position: relative; }
+.dsi-plain-link {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--dsi-panel);
+  color: var(--dsi-accent-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.dsi-plain-link:hover { text-decoration: underline; }
+.dsi-plain-link:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; }

@@ -55,6 +55,8 @@ test('Tab lands on the selected app, and a second Tab leaves the rail', async ({
 
   await page.keyboard.press('Tab') // skip link comes first, correctly
   await expect(page.locator(':focus')).toHaveText('Skip to content')
+  await page.keyboard.press('Tab') // then the way out to plain view
+  await expect(page.locator(':focus')).toHaveText('Plain view')
   await page.keyboard.press('Tab')
   await expect(page.locator(':focus')).toHaveAttribute('aria-label', APPS[1])
 
@@ -71,9 +73,8 @@ for (const [dir, key, d] of [
     // With overflow: hidden, focusing a slot past the right edge scrolled the
     // viewport and shoved the selection 279px off centre.
     await openMenu(page)
-    await page.keyboard.press('Tab')
-    await page.keyboard.press('Tab')
-    await expect(page.locator(':focus')).toHaveAttribute('aria-label', APPS[0])
+    // Straight onto the rail; the Tab order itself has its own test.
+    await page.getByRole('button', { name: APPS[0], exact: true }).focus()
 
     let L = 0
     for (let k = 0; k < 10; k++) {

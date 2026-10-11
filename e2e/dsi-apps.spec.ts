@@ -1,6 +1,6 @@
 import type { Page, Route } from '@playwright/test'
 import { expect, test } from './fixtures'
-import { APPS, expectSettledOn, openMenu } from './helpers/dsi'
+import { APPS, effectsEmpty, expectSettledOn, openApp, openMenu } from './helpers/dsi'
 
 /**
  * Every app on the rail that opens, and what each one is for. Content is
@@ -8,23 +8,8 @@ import { APPS, expectSettledOn, openMenu } from './helpers/dsi'
  * broke rather than just "something changed".
  */
 
-const OPENING = APPS.filter(a => a !== 'System Settings')
 
-const effectsEmpty = (page: Page) =>
-  page.evaluate(() => [...document.querySelectorAll('.dsi-fx')].map(l => l.childElementCount))
-
-/** Starts `app` from a cold menu by walking the rail to it. */
-async function openApp(page: Page, app: (typeof APPS)[number]) {
-  await openMenu(page)
-  const steps = APPS.indexOf(app)
-  for (let i = 0; i < steps; i++) await page.keyboard.press('ArrowRight')
-  await expectSettledOn(page, app)
-  await page.keyboard.press('Enter')
-  await page.locator('.dsi-app-lower').waitFor()
-  await expect.poll(() => effectsEmpty(page)).toEqual([0, 0])
-}
-
-for (const app of OPENING) {
+for (const app of APPS) {
   test(`${app} opens, and Escape brings the rail back centred on it`, async ({ page }) => {
     await openApp(page, app)
     // Focus lands inside the app, never back on the page.
@@ -37,17 +22,6 @@ for (const app of OPENING) {
     await expect.poll(() => effectsEmpty(page)).toEqual([0, 0])
   })
 }
-
-test('System Settings, which lands in #15, stays on the menu', async ({ page }) => {
-  await openMenu(page)
-  await page.keyboard.press('ArrowLeft')
-  await expectSettledOn(page, 'System Settings')
-  await page.keyboard.press('Enter')
-  // Long enough for a launch to have got well under way if one had started.
-  await page.waitForTimeout(800)
-  await expectSettledOn(page, 'System Settings')
-  await expect(page.locator('.dsi-app-lower')).toHaveCount(0)
-})
 
 test('Profile lists the stats and links the resume', async ({ page }) => {
   await openApp(page, 'Profile')

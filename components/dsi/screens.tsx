@@ -12,6 +12,7 @@ import { ShelfItem, ShelfList } from './ShelfApp'
 import { mediaItems } from '@/data/media'
 import { ChatRoom, Channels } from './ChatApp'
 import { BookletContents, BookletCover } from './ResumeApp'
+import { SettingInfo, SettingsList } from './SettingsApp'
 import { AppTop } from './screen'
 
 /**
@@ -90,5 +91,13 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
       </AppTop>
     ),
     bottom: c => <BookletContents onBack={c.back} />,
+  },
+  settings: {
+    top: c => (
+      <AppTop>
+        <SettingInfo index={c.sel} />
+      </AppTop>
+    ),
+    bottom: c => <SettingsList selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
   },
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
@@ -10,6 +10,7 @@ import { playLaunch, playReturn } from './launch'
 import PhotoFrame from './PhotoFrame'
 import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
+import { rememberedView } from './view'
 
 /**
  * Owns both screens. Selection state has to drive the top and bottom screen
@@ -27,16 +28,26 @@ export default function DsiMenu() {
   // first load, where it would steal the skip link's place.
   const returning = useRef(false)
 
+  // Someone who chose plain view last time gets it again without hunting
+  // for the setting. Plain view links back here and clears the choice.
+  useEffect(() => {
+    if (rememberedView() === 'plain') window.location.replace('/dsi?view=plain')
+  }, [])
+
   const launch = useCallback((index: number, icon: HTMLElement) => {
     const id = APPS[index].id
     if (busy.current || !SCREENS[id]) return
     busy.current = true
-    playLaunch(icon, () =>
+    // Busy only until the swap. The white fading off afterwards is just
+    // paint, and holding input through it dropped a quick Escape or Enter.
+    playLaunch(icon, () => {
       flushSync(() => {
         setSel(0)
         setOpen(id)
-      }),
-    ).finally(() => {
+      })
+      busy.current = false
+    }).catch(() => {
+      // Failed before reaching the swap: let the next press through.
       busy.current = false
     })
   }, [])
@@ -46,7 +57,11 @@ export default function DsiMenu() {
     busy.current = true
     returning.current = true
     const from = document.querySelector('.dsi-device') ?? document.body
-    playReturn(from, () => flushSync(() => setOpen(null))).finally(() => {
+    playReturn(from, () => {
+      flushSync(() => setOpen(null))
+      busy.current = false
+    }).catch(() => {
+      // Failed before reaching the swap: let the next press through.
       busy.current = false
     })
   }, [])
