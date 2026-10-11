@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["dom", "dom.iterable", "es2022"],
+    "incremental": false,
+    "plugins": []
+  },
+  "include": ["./**/*.ts", "../playwright.config.ts"],
+  "exclude": []
+}

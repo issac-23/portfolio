@@ -19,8 +19,9 @@ jobs:
 
       - run: npm ci
 
-      # Only Chromium. contrast.mjs is the only thing running here and that is
-      # all it launches; installing all three browsers roughly triples the step.
+      # Only Chromium. contrast.mjs and the e2e suite are all that run here, and
+      # playwright.config.ts only defines Chromium projects; installing all three
+      # browsers roughly triples the step.
       - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
 
@@ -48,3 +49,20 @@ jobs:
 
       - name: Check contrast
         run: npm run check:contrast
+
+      # Kept out of the app's tsconfig so a test can never break next build,
+      # which means nothing else type-checks it.
+      - run: npm run typecheck:e2e
+
+      # Starts its own next start on 3100 against the build above, so it does
+      # not share the server contrast.mjs used.
+      - name: End-to-end tests
+        run: npx playwright test
+
+      - name: Keep the trace when e2e fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7

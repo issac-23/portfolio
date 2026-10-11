@@ -141,9 +141,14 @@
 }
 
 /* ── screens ── */
+/* minmax(0, 1fr), not 1fr. A bare 1fr cannot shrink below its content, so
+   the POWER and SELECT labels set the side columns' width, and the screen got
+   whatever was left. The rounded face sets those labels wider than the
+   fallback, so the screen lost 3px when it swapped in, and the two sides
+   came out unequal, leaving the screen off centre in the shell.          */
 .dsi-half {
   display: grid;
-  grid-template-columns: 1fr minmax(0, var(--dsi-screen-pct)) 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--dsi-screen-pct)) minmax(0, 1fr);
   align-items: center;
   column-gap: 8px;
 }

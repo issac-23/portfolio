@@ -17,7 +17,8 @@
     "shots:notfound": "node scripts/notfound-shot.mjs",
     "og": "node scripts/og.mjs",
     "photos:optimize": "node scripts/optimize-photos.mjs",
-    "check:dsi": "node scripts/dsi-rail.mjs"
+    "test:e2e": "next build && playwright test",
+    "typecheck:e2e": "tsc -p e2e/tsconfig.json"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -26,6 +27,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

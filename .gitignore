@@ -25,3 +25,8 @@ next-env.d.ts
 
 # Full-resolution photo originals kept locally by scripts/optimize-photos.mjs
 /public/photos/gallery/_originals
+
+# Playwright Test output
+/test-results
+/playwright-report
+/blob-report
