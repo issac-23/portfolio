@@ -403,6 +403,8 @@
   --dsi-start: #2a7fd4;
   --dsi-start-2: #1a5da8;
   --dsi-track: #cfe7f4;
+  /* Coloured text, not fills. The START blues are too light for small type. */
+  --dsi-accent-ink: #1a5da8;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) .dsi-root {
@@ -417,6 +419,7 @@
     --dsi-start: #3f9ae0;
     --dsi-start-2: #1f6cb5;
     --dsi-track: #1d4558;
+    --dsi-accent-ink: #7cbcf0;
   }
 }
 :root[data-theme='dark'] .dsi-root {
@@ -431,6 +434,7 @@
   --dsi-start: #3f9ae0;
   --dsi-start-2: #1f6cb5;
   --dsi-track: #1d4558;
+  --dsi-accent-ink: #7cbcf0;
 }
 
 /* ── status bar ── */
@@ -699,6 +703,19 @@
   .dsi-namebox span { font-size: 0.6rem; }
 }
 
+/* ── app screens: the layout every app shares ──
+   Both halves scroll inside their own screen when the content runs long,
+   so the page never does.                                                */
+.dsi-app-top,
+.dsi-app-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.dsi-app-top { display: flex; flex-direction: column; color: var(--dsi-ink); }
+.dsi-app-body { padding: 1px; }
+
 /* ── launch effects ──
    One layer per screen, above whatever app is in it. Empty except while a
    transition is running.                                                  */
@@ -726,10 +743,6 @@
 
 /* ── Projects: upper screen, the selected card ── */
 .dsi-detail {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -778,16 +791,12 @@
 
 /* ── Projects: lower screen, the game card select ── */
 .dsi-cards {
-  flex: 1;
-  min-height: 0;
   margin: 0;
-  padding: 1px;
+  padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 .dsi-card {
   width: 100%;
@@ -837,10 +846,12 @@
 .dsi-card-status { font-size: 0.62rem; color: var(--dsi-muted); }
 .dsi-card-status { flex: none; font-weight: 700; }
 
+/* As many equal columns as the app has actions, Back always last. */
 .dsi-actions {
   flex: none;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 5px;
 }
 .dsi-action {
@@ -881,4 +892,257 @@
   .dsi-card-text b { font-size: 0.68rem; }
   .dsi-card-text span, .dsi-card-status { font-size: 0.55rem; }
   .dsi-action { padding: 2px 4px; font-size: 0.6rem; }
+}
+
+/* ── Profile ── */
+.dsi-avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #fdfdfd, #c9d3da);
+}
+.dsi-avatar svg { width: 26px; height: 26px; }
+.dsi-sub { font-size: 0.68rem; color: var(--dsi-muted); }
+.dsi-stats {
+  margin: 0 0 6px;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 6px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+  overflow: hidden;
+}
+.dsi-stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+.dsi-stats div + div { border-top: 1px solid var(--dsi-track); }
+.dsi-stats dt { color: var(--dsi-muted); font-weight: 700; }
+.dsi-stats dd { margin: 0; font-weight: 800; text-align: right; }
+.dsi-interests { color: var(--dsi-ink); }
+
+@media (max-width: 620px) {
+  .dsi-avatar { width: 30px; height: 30px; }
+  .dsi-avatar svg { width: 20px; height: 20px; }
+  .dsi-sub { font-size: 0.58rem; }
+  .dsi-stats div { padding: 2px 6px; font-size: 0.6rem; }
+}
+
+/* ── Camera album ── */
+.dsi-album {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.dsi-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 5px;
+  background: #09141b;
+  cursor: pointer;
+}
+.dsi-thumb img { object-fit: cover; }
+.dsi-thumb[aria-pressed='true'] {
+  border-color: var(--dsi-start);
+  box-shadow: inset 0 0 0 1.5px var(--dsi-start);
+}
+.dsi-thumb:focus-visible {
+  outline: 2px solid var(--dsi-start);
+  outline-offset: 2px;
+}
+
+/* ── Sound ── */
+.dsi-sound {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin: auto 0;
+}
+.dsi-art {
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.dsi-art img { width: 100%; height: 100%; object-fit: cover; }
+.dsi-art-empty {
+  background: linear-gradient(180deg, #e4f6e2, #9ed59a);
+  color: #2f6b3c;
+  font-weight: 800;
+}
+.dsi-sound-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 0.74rem; }
+.dsi-sound-text h2 { margin: 2px 0 0; font-size: 1rem; font-weight: 800; line-height: 1.2; }
+.dsi-sound-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsi-muted);
+}
+.dsi-bars { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 9px; }
+.dsi-bars i {
+  width: 2px;
+  height: 100%;
+  border-radius: 1px;
+  background: #237a45;
+  transform-origin: bottom;
+  animation: dsi-bar 0.9s ease-in-out infinite alternate;
+}
+.dsi-bars i:nth-child(2) { animation-delay: -0.3s; }
+.dsi-bars i:nth-child(3) { animation-delay: -0.6s; }
+@keyframes dsi-bar { from { transform: scaleY(0.35); } to { transform: scaleY(1); } }
+.dsi-sound-note {
+  margin: auto;
+  padding: 12px;
+  text-align: center;
+  font-size: 0.74rem;
+  color: var(--dsi-muted);
+}
+.dsi-tracks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+a.dsi-card { text-decoration: none; }
+a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 2px; }
+
+@media (max-width: 620px) {
+  .dsi-sound { gap: 8px; padding: 6px; }
+  .dsi-sound .dsi-art { width: 64px !important; height: 64px !important; }
+  .dsi-sound-text { font-size: 0.62rem; }
+  .dsi-sound-text h2 { font-size: 0.8rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsi-bars i { animation: none; }
+}
+
+/* ── Shelf ── */
+.dsi-note {
+  margin: 4px 0 0;
+  padding: 6px 9px;
+  border-left: 3px solid #c08a2e;
+  border-radius: 0 6px 6px 0;
+  background: var(--dsi-panel);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  font-style: italic;
+}
+@media (max-width: 620px) {
+  .dsi-note { padding: 4px 7px; font-size: 0.62rem; }
+}
+
+/* ── PictoChat ──
+   Ruled paper drawn from the panel tokens, so it follows the theme. */
+.dsi-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 5px;
+  padding: 8px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 15px, var(--dsi-track) 15px 16px),
+    var(--dsi-panel);
+}
+.dsi-bubble {
+  display: flex;
+  align-items: stretch;
+  margin: 0;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 5px;
+  background: var(--dsi-panel);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  overflow: hidden;
+}
+.dsi-bubble b {
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0 7px;
+  background: linear-gradient(180deg, #f5b878, #e0913f);
+  color: #3d1f05;
+  font-size: 0.66rem;
+}
+.dsi-bubble span { padding: 3px 7px; }
+.dsi-card[data-sel] {
+  border-color: var(--dsi-start);
+  box-shadow: inset 0 0 0 1.5px var(--dsi-start);
+}
+@media (max-width: 620px) {
+  .dsi-chat { gap: 3px; padding: 5px; }
+  .dsi-bubble { font-size: 0.6rem; }
+  .dsi-bubble b { padding: 0 5px; font-size: 0.55rem; }
+}
+
+/* ── Resume: the instruction booklet ── */
+.dsi-booklet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: 10px;
+  border: 2px solid var(--dsi-panel-line);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, transparent 70%, rgba(42, 127, 212, 0.14)),
+    var(--dsi-panel);
+  text-align: center;
+}
+.dsi-booklet h2 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+.dsi-booklet-kicker {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dsi-accent-ink);
+}
+.dsi-contents {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1.5px solid var(--dsi-panel-line);
+  border-radius: 6px;
+  background: var(--dsi-panel);
+  color: var(--dsi-ink);
+}
+.dsi-contents li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.dsi-contents li + li { border-top: 1px dotted var(--dsi-panel-line); }
+.dsi-contents li span:last-child { color: var(--dsi-muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 620px) {
+  .dsi-booklet { margin: 6px; }
+  .dsi-booklet h2 { font-size: 0.95rem; }
+  .dsi-contents li { padding: 2px 6px; font-size: 0.6rem; }
 }

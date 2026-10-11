@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import type { Project } from '@/data/projects'
+import { AppLower, useListNav } from './screen'
 
 const STATUS: Record<Project['status'], string> = {
   live: 'Live',
@@ -61,45 +62,27 @@ interface ProjectListProps {
 export function ProjectList({ projects, selected, onSelect, onBack }: ProjectListProps) {
   const list = useRef<HTMLUListElement>(null)
   const project = projects[selected]
-
-  // Arrive with focus on the selected card, so the keyboard carries on from
-  // the menu without a trip through the tab order.
-  useEffect(() => {
-    const row = list.current?.children[selected]?.querySelector('button')
-    row?.focus({ preventScroll: true })
-    // Only on arrival. Afterwards focus moves with the user.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        onBack()
-        return
-      }
-      const d = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0
-      if (!d) return
-      e.preventDefault()
-      const next = Math.min(projects.length - 1, Math.max(0, selected + d))
-      onSelect(next)
-      const row = list.current?.children[next]
-      row?.querySelector('button')?.focus({ preventScroll: true })
-      row?.scrollIntoView({ block: 'nearest' })
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [projects.length, selected, onSelect, onBack])
+  useListNav({ container: list, count: projects.length, selected, onSelect })
 
   return (
-    <div className="dsi-lower dsi-cards-screen">
+    <AppLower
+      onBack={onBack}
+      actions={[
+        project.url
+          ? { label: 'Open', name: `Open ${project.title} (new tab)`, href: project.url, primary: true }
+          : { label: 'Open', unavailable: 'No live link' },
+        project.github
+          ? { label: 'GitHub', name: `${project.title} on GitHub (new tab)`, href: project.github }
+          : { label: 'GitHub', unavailable: 'No repo' },
+      ]}
+    >
       <ul className="dsi-cards" ref={list} aria-label="Game cards">
         {projects.map((p, i) => (
           <li key={p.title}>
             <button
               type="button"
               className="dsi-card"
+              data-idx={i}
               aria-pressed={i === selected}
               tabIndex={i === selected ? 0 : -1}
               onClick={() => onSelect(i)}
@@ -114,27 +97,6 @@ export function ProjectList({ projects, selected, onSelect, onBack }: ProjectLis
           </li>
         ))}
       </ul>
-
-      <div className="dsi-actions">
-        {project.url ? (
-          <a className="dsi-action dsi-action-go" href={project.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${project.title} (new tab)`}>
-            Open
-          </a>
-        ) : (
-          // Greyed and saying why, rather than a dead link or a missing button.
-          <span className="dsi-action" aria-disabled="true">No live link</span>
-        )}
-        {project.github ? (
-          <a className="dsi-action" href={project.github} target="_blank" rel="noopener noreferrer" aria-label={`${project.title} on GitHub (new tab)`}>
-            GitHub
-          </a>
-        ) : (
-          <span className="dsi-action" aria-disabled="true">No repo</span>
-        )}
-        <button type="button" className="dsi-action" onClick={onBack}>
-          Back
-        </button>
-      </div>
-    </div>
+    </AppLower>
   )
 }

@@ -3,18 +3,13 @@
 import { useCallback, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { galleryPhotos } from '@/data/gallery'
-import { projects } from '@/data/projects'
 import AppRail from './AppRail'
 import { APPS, type AppId } from './apps'
 import Device from './Device'
 import { playLaunch, playReturn } from './launch'
 import PhotoFrame from './PhotoFrame'
-import { ProjectDetail, ProjectList } from './ProjectsApp'
+import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
-
-// Apps that open. The rest of the rail lands in #14; until then starting one
-// does nothing rather than opening an empty screen.
-const OPENS: AppId[] = ['projects']
 
 /**
  * Owns both screens. Selection state has to drive the top and bottom screen
@@ -24,7 +19,7 @@ const OPENS: AppId[] = ['projects']
 export default function DsiMenu() {
   const [open, setOpen] = useState<AppId | null>(null)
   const [app, setApp] = useState(0)
-  const [card, setCard] = useState(0)
+  const [sel, setSel] = useState(0)
   // Set while a transition is running, so a second press cannot start
   // another one on top of it.
   const busy = useRef(false)
@@ -34,9 +29,14 @@ export default function DsiMenu() {
 
   const launch = useCallback((index: number, icon: HTMLElement) => {
     const id = APPS[index].id
-    if (busy.current || !OPENS.includes(id)) return
+    if (busy.current || !SCREENS[id]) return
     busy.current = true
-    playLaunch(icon, () => flushSync(() => setOpen(id))).finally(() => {
+    playLaunch(icon, () =>
+      flushSync(() => {
+        setSel(0)
+        setOpen(id)
+      }),
+    ).finally(() => {
       busy.current = false
     })
   }, [])
@@ -51,18 +51,12 @@ export default function DsiMenu() {
     })
   }, [])
 
-  if (open === 'projects') {
-    return (
-      <Device
-        top={
-          <>
-            <StatusBar user="Issac" />
-            <ProjectDetail project={projects[card]} index={card} />
-          </>
-        }
-        bottom={<ProjectList projects={projects} selected={card} onSelect={setCard} onBack={back} />}
-      />
-    )
+  // The same Device element whichever app is open, so the shell and its
+  // effects layers survive the swap that happens mid-launch.
+  const screen = open ? SCREENS[open] : undefined
+  if (screen) {
+    const ctx: ScreenCtx = { sel, setSel, back }
+    return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} />
   }
 
   return (
