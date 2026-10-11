@@ -132,3 +132,18 @@ export async function expectSettledOn(page: Page, app: string) {
   expect(s.pageScrolls, 'page itself never scrolls').toBe(false)
   return s
 }
+
+/** What each screen's launch effects layer holds. Empty means no leftovers. */
+export const effectsEmpty = (page: Page) =>
+  page.evaluate(() => [...document.querySelectorAll('.dsi-fx')].map(l => l.childElementCount))
+
+/** Starts `app` from a cold menu by walking the rail to it. */
+export async function openApp(page: Page, app: (typeof APPS)[number]) {
+  await openMenu(page)
+  const steps = APPS.indexOf(app)
+  for (let i = 0; i < steps; i++) await page.keyboard.press('ArrowRight')
+  await expectSettledOn(page, app)
+  await page.keyboard.press('Enter')
+  await page.locator('.dsi-app-lower').waitFor()
+  await expect.poll(() => effectsEmpty(page)).toEqual([0, 0])
+}
