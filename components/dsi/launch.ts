@@ -1,3 +1,5 @@
+import { lessMotion } from './prefs'
+
 /**
  * The DSi's launch: the selected icon blows up past the edges of both screens
  * at once, its corners squaring off as it goes, the screens flash white, and
@@ -19,7 +21,6 @@ const GROW_MS = 340
 const FLASH_IN_MS = 110
 const FLASH_OUT_MS = 240
 
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 function fxLayers(from: Element): HTMLElement[] {
   const device = from.closest('.dsi-device')
@@ -49,7 +50,7 @@ function clear(layers: HTMLElement[]) {
  */
 export async function playLaunch(icon: HTMLElement, swap: () => void) {
   const layers = fxLayers(icon)
-  if (reducedMotion() || !layers.length) return swap()
+  if (lessMotion() || !layers.length) return swap()
 
   const r = icon.getBoundingClientRect()
   const cx = r.left + r.width / 2
@@ -102,7 +103,7 @@ export async function playLaunch(icon: HTMLElement, swap: () => void) {
 /** Going back home: just the white, out and in, around the swap. */
 export async function playReturn(from: Element, swap: () => void) {
   const layers = fxLayers(from)
-  if (reducedMotion() || !layers.length) return swap()
+  if (lessMotion() || !layers.length) return swap()
 
   try {
     const whites = layers.map(flash)

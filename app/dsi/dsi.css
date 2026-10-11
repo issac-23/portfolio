@@ -491,6 +491,9 @@
 @media (prefers-reduced-motion: reduce) {
   .dsi-photo-shot { animation: none; }
 }
+/* The same again for the System Settings switch, which can ask for less
+   motion than the device does. */
+:root[data-motion='reduce'] .dsi-photo-shot { animation: none; }
 
 /* ── lower screen: the app rail ── */
 .dsi-lower {
@@ -612,6 +615,8 @@
 @media (prefers-reduced-motion: reduce) {
   .dsi-rail, .dsi-ico { transition: none; }
 }
+:root[data-motion='reduce'] .dsi-rail,
+:root[data-motion='reduce'] .dsi-ico { transition: none; }
 
 /* ── name box: the app's title over its "publisher" line ── */
 .dsi-namebox {
@@ -1011,6 +1016,7 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 @media (prefers-reduced-motion: reduce) {
   .dsi-bars i { animation: none; }
 }
+:root[data-motion='reduce'] .dsi-bars i { animation: none; }
 
 /* ── Shelf ── */
 .dsi-note {

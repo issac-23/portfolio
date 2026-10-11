@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import type { GalleryPhoto } from '@/data/gallery'
+import { lessMotion, useMotion } from './prefs'
 
 const INTERVAL = 6000
 
@@ -16,13 +17,15 @@ const INTERVAL = 6000
 export default function PhotoFrame({ photos }: { photos: GalleryPhoto[] }) {
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
+  // Re-checked when System Settings changes the motion choice mid-visit.
+  const motion = useMotion()
 
   useEffect(() => {
     if (paused || photos.length < 2) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (lessMotion()) return
     const id = setInterval(() => setI(n => (n + 1) % photos.length), INTERVAL)
     return () => clearInterval(id)
-  }, [paused, photos.length])
+  }, [paused, photos.length, motion])
 
   const photo = photos[i]
   if (!photo) return <div className="dsi-photo" />
