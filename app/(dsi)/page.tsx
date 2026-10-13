@@ -9,7 +9,9 @@ export default function DsiPage({ searchParams }: { searchParams: { view?: strin
 
   return (
     <main className="dsi-stage" id="main-content">
-      <h1 className="sr-only">Issac Ip — DSi menu</h1>
+      {/* What a search result or a screen reader should lead with: who, not
+          which console. */}
+      <h1 className="sr-only">Issac Ip — CS + Economics at Northeastern</h1>
       {/* The way out comes before the device in the tab order, so nobody has
           to learn the DSi to skip it. */}
       <ViewLink to="plain" className="dsi-plain-link">

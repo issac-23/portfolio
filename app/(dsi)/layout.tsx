@@ -16,10 +16,11 @@ const rounded = M_PLUS_Rounded_1c({
   fallback: ['M PLUS Rounded Fallback', 'Trebuchet MS', 'system-ui', 'sans-serif'],
 })
 
+// The home page now, so it takes the root layout's title and description
+// and is indexed. Plain view (?view=plain) is the same content, so both point
+// search engines at / as the one canonical address.
 export const metadata: Metadata = {
-  title: 'DSi Menu — Issac Ip',
-  // Work in progress behind the real site. Index it at cutover, not before.
-  robots: { index: false, follow: false },
+  alternates: { canonical: '/' },
 }
 
 // Applies the stored motion choice before the device paints, the way the
