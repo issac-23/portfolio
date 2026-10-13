@@ -13,6 +13,20 @@
  * rule covers both and a choice made on / carries over here.
  */
 
+/* Arial resized to M PLUS Rounded 1c's measurements, so text set in the
+   fallback takes the same room the real face will and nothing jumps when it
+   swaps in. Width from the plain view's own text at 100px (81901 vs 77666),
+   ascent and descent from fontBoundingBox, both divided by the size-adjust.
+   Liberation Sans shares Arial's metrics, which covers Linux.             */
+@font-face {
+  font-family: 'M PLUS Rounded Fallback';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans');
+  size-adjust: 105.45%;
+  ascent-override: 102.42%;
+  descent-override: 30.35%;
+  line-gap-override: 0%;
+}
+
 .dsi-root {
   --dsi-page: #d3dde3;
   --dsi-desk: #c2ced6;
