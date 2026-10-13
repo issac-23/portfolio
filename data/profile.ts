@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────
-// Who's behind the site. Read by the DSi menu's Profile and PictoChat
-// screens; the classic layout still has its own copy in About.tsx and
-// Contact.tsx until the cutover decides which one stays.
+// Who's behind the site. The DSi menu reads all of it; the classic layout
+// reads the interests and channels. Its bio is worded differently on
+// purpose, so it still lives in About.tsx.
 // ─────────────────────────────────────────────────────────────────
 
 export const profile = {
