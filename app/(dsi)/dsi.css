@@ -88,8 +88,48 @@
    height. It used to stop at 680px, which left a 1080p screen mostly
    margin. */
 .dsi-device {
+  /* Above the ambient backdrop. */
+  position: relative;
+  z-index: 1;
   width: min(860px, 100%, calc((100svh - 16px - var(--dsi-top-reserve)) / var(--dsi-aspect)));
 }
+
+/* ── ambient backdrop ──
+   The top screen's photo, softened by being stretched across the whole
+   page. Opacity sits on the shot rather than the layer so the vignette stays
+   solid, and the fade only names its start so it ends at that opacity. */
+.dsi-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dsi-ambient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 35%, var(--dsi-page) 100%);
+}
+.dsi-ambient-shot {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  animation: dsi-ambient-in 1.2s ease both;
+}
+:root.dark .dsi-ambient-shot { opacity: 0.6; }
+.dsi-ambient-shot img {
+  object-fit: cover;
+  /* No filter: a blur this wide over the whole viewport is re-rasterised on
+     every frame of the cross-fade. The 64px source, stretched to the page,
+     is already soft, and the scale hides its edge. */
+  transform: scale(1.1);
+}
+@keyframes dsi-ambient-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .dsi-ambient-shot { animation: none; }
+}
+:root[data-motion='reduce'] .dsi-ambient-shot { animation: none; }
 
 /* ── shell ── */
 .dsi-lid,
@@ -1277,7 +1317,10 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
    Above the device by default; in the corner beside it once the screen is
    wide enough that the corner is empty anyway. */
 .dsi-stage { position: relative; }
+/* Positioned at every width so they paint above the ambient backdrop. */
 .dsi-shortcuts {
+  position: relative;
+  z-index: 1;
   justify-self: end;
   display: flex;
   gap: 6px;
@@ -1285,7 +1328,7 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   align-items: center;
 }
 @media (min-aspect-ratio: 7/5) {
-  .dsi-shortcuts { position: absolute; top: 8px; right: 12px; z-index: 1; }
+  .dsi-shortcuts { position: absolute; top: 8px; right: 12px; }
 }
 .dsi-shortcuts a {
   padding: 3px 10px;

@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import type { GalleryPhoto } from '@/data/gallery'
+import { setAmbientPhoto } from './ambientPhoto'
 import { lessMotion, useMotion } from './prefs'
 
 const INTERVAL = 6000
@@ -28,6 +29,11 @@ export default function PhotoFrame({ photos }: { photos: GalleryPhoto[] }) {
   }, [paused, photos.length, motion])
 
   const photo = photos[i]
+  // The page backdrop follows whichever photo is showing.
+  useEffect(() => {
+    if (photo) setAmbientPhoto(photo)
+  }, [photo])
+
   if (!photo) return <div className="dsi-photo" />
 
   // Same sizes on both layers, so they resolve to one variant and one download.
