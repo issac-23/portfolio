@@ -31,7 +31,7 @@ export default function DsiMenu() {
   // Someone who chose plain view last time gets it again without hunting
   // for the setting. Plain view links back here and clears the choice.
   useEffect(() => {
-    if (rememberedView() === 'plain') window.location.replace('/dsi?view=plain')
+    if (rememberedView() === 'plain') window.location.replace('/?view=plain')
   }, [])
 
   const launch = useCallback((index: number, icon: HTMLElement) => {

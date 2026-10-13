@@ -82,7 +82,7 @@ export function SettingsList({ selected, onSelect, onBack }: SettingsListProps) 
           </button>
         </li>
         <li>
-          <a className="dsi-card" href="/dsi?view=plain" data-sel={selected === 2 || undefined} onClick={() => rememberView('plain')} {...row(2)}>
+          <a className="dsi-card" href="/?view=plain" data-sel={selected === 2 || undefined} onClick={() => rememberView('plain')} {...row(2)}>
             <span className="dsi-card-text"><b>Plain view</b></span>
             <span className="dsi-setting-value" aria-hidden="true">Open ▸</span>
           </a>
