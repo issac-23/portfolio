@@ -5,6 +5,10 @@ interface DeviceProps {
   top?: ReactNode
   /** Rendered inside the lower screen. */
   bottom?: ReactNode
+  /** Whether the console is switched on. */
+  power: boolean
+  /** The POWER button was pressed. */
+  onPower: () => void
 }
 
 /**
@@ -14,9 +18,9 @@ interface DeviceProps {
  * Everything here is chrome. The screens are slots, so the apps that fill them
  * stay unaware of the hardware around them.
  */
-export default function Device({ top, bottom }: DeviceProps) {
+export default function Device({ top, bottom, power, onPower }: DeviceProps) {
   return (
-    <div className="dsi-device">
+    <div className="dsi-device" data-power={power ? undefined : 'off'}>
       <span className="dsi-shoulder dsi-shoulder-l" aria-hidden="true">L</span>
       <span className="dsi-shoulder dsi-shoulder-r" aria-hidden="true">R</span>
 
@@ -69,17 +73,8 @@ export default function Device({ top, bottom }: DeviceProps) {
         <span className="dsi-screw" style={{ bottom: 7, right: 9 }} aria-hidden="true" />
 
         <div className="dsi-half">
-          <div aria-hidden="true">
+          <div className="dsi-pad" aria-hidden="true">
             <div className="dsi-dpad"><i className="u" /><i className="d" /><i className="l" /><i className="r" /></div>
-            <div className="dsi-power">
-              POWER
-              <i>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                  <path d="M12 3v8" />
-                  <path d="M6.2 6.4a8.5 8.5 0 1 0 11.6 0" />
-                </svg>
-              </i>
-            </div>
           </div>
 
           <div className="dsi-frame">
@@ -89,6 +84,18 @@ export default function Device({ top, bottom }: DeviceProps) {
               <div className="dsi-boot" aria-hidden="true" />
             </div>
           </div>
+
+          {/* After the screen in the DOM, so it is not a Tab stop ahead of the
+              rail, and placed back beside the d-pad by the grid. */}
+          <button type="button" className="dsi-power" aria-label={power ? 'Power off' : 'Power on'} onClick={onPower}>
+            POWER
+            <i aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                <path d="M12 3v8" />
+                <path d="M6.2 6.4a8.5 8.5 0 1 0 11.6 0" />
+              </svg>
+            </i>
+          </button>
 
           <div aria-hidden="true">
             <div className="dsi-face">

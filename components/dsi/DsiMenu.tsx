@@ -8,10 +8,11 @@ import { APPS, type AppId } from './apps'
 import { appFromHash, writeHash } from './deepLink'
 import Device from './Device'
 import { playLaunch, playReturn } from './launch'
+import { lessMotion } from './prefs'
 import PhotoFrame from './PhotoFrame'
 import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
-import { useBoot } from './useBoot'
+import { startBoot, useBoot } from './useBoot'
 import { rememberedView } from './view'
 
 /**
@@ -23,6 +24,9 @@ export default function DsiMenu() {
   const [open, setOpen] = useState<AppId | null>(null)
   const [app, setApp] = useState(0)
   const [sel, setSel] = useState(0)
+  const [power, setPower] = useState(true)
+  // Read by the hashchange listener, whose effect runs once.
+  const powered = useRef(true)
   // Set while a transition is running, so a second press cannot start
   // another one on top of it.
   const busy = useRef(false)
@@ -43,7 +47,8 @@ export default function DsiMenu() {
   useEffect(() => {
     const go = () => {
       const id = appFromHash(location.hash)
-      if (!id || !SCREENS[id]) return
+      // A dark console opens nothing; switching on clears the address anyway.
+      if (!powered.current || !id || !SCREENS[id]) return
       setApp(APPS.findIndex(a => a.id === id))
       setSel(0)
       setOpen(id)
@@ -87,16 +92,40 @@ export default function DsiMenu() {
     })
   }, [])
 
+  // Off closes whatever is open, so switching on always lands on the menu with
+  // the rail back on Profile. The boot screen plays again unless motion is off.
+  const togglePower = useCallback(() => {
+    if (busy.current) return
+    returning.current = false
+    powered.current = !power
+    setOpen(null)
+    setApp(0)
+    setSel(0)
+    writeHash(null)
+    if (power) {
+      setPower(false)
+    } else {
+      setPower(true)
+      if (!lessMotion()) startBoot()
+    }
+  }, [power])
+
   // The same Device element whichever app is open, so the shell and its
-  // effects layers survive the swap that happens mid-launch.
+  // effects layers survive the swap that happens mid-launch. Off renders
+  // nothing in either screen, so no handler from the rail or an app is left
+  // listening to a dark console.
+  if (!power) return <Device top={null} bottom={null} power={false} onPower={togglePower} />
+
   const screen = open ? SCREENS[open] : undefined
   if (screen) {
     const ctx: ScreenCtx = { sel, setSel, back }
-    return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} />
+    return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} power onPower={togglePower} />
   }
 
   return (
     <Device
+      power
+      onPower={togglePower}
       top={
         <>
           <StatusBar user="Issac" />
