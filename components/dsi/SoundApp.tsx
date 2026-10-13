@@ -4,10 +4,13 @@ import Image from 'next/image'
 import { AppLower } from './screen'
 import { dedupe, useNowPlaying, type Track } from './useNowPlaying'
 
-function Art({ src, size }: { src?: string; size: number }) {
-  if (!src) return <span className="dsi-art dsi-art-empty" style={{ width: size, height: size }} aria-hidden="true">♪</span>
+// The box size lives in CSS, so it can change per screen size; `size` is
+// only the intrinsic size handed to next/image.
+function Art({ src, size, big }: { src?: string; size: number; big?: boolean }) {
+  const cls = `dsi-art ${big ? 'dsi-art-big' : 'dsi-art-small'}`
+  if (!src) return <span className={`${cls} dsi-art-empty`} aria-hidden="true">♪</span>
   return (
-    <span className="dsi-art" style={{ width: size, height: size }}>
+    <span className={cls}>
       <Image src={src} alt="" width={size} height={size} />
     </span>
   )
@@ -28,7 +31,7 @@ export function NowPlayingCard() {
 
   return (
     <div className="dsi-sound">
-      <Art src={t.albumImageUrl} size={96} />
+      <Art src={t.albumImageUrl} size={96} big />
       <div className="dsi-sound-text">
         <span className="dsi-sound-state">
           {d.isPlaying ? (

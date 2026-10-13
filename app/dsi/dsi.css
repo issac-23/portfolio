@@ -973,6 +973,8 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 .dsi-art img { width: 100%; height: 100%; object-fit: cover; }
+.dsi-art-big { width: 96px; height: 96px; }
+.dsi-art-small { width: 30px; height: 30px; }
 .dsi-art-empty {
   background: linear-gradient(180deg, #e4f6e2, #9ed59a);
   color: #2f6b3c;
@@ -1022,7 +1024,7 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 
 @media (max-width: 620px) {
   .dsi-sound { gap: 8px; padding: 6px; }
-  .dsi-sound .dsi-art { width: 64px !important; height: 64px !important; }
+  .dsi-art-big { width: 64px; height: 64px; }
   .dsi-sound-text { font-size: 0.62rem; }
   .dsi-sound-text h2 { font-size: 0.8rem; }
 }
