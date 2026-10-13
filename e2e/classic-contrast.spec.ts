@@ -26,7 +26,7 @@ for (const theme of ['light', 'dark'] as const) {
   test(`text meets AA in the ${theme} theme`, async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'contrast does not change with width')
     await page.addInitScript(t => localStorage.setItem('theme', t), theme)
-    await page.goto('/')
+    await page.goto('/classic')
     await page.evaluate(() => document.querySelectorAll('.section-fade').forEach(n => n.classList.add('visible')))
 
     const rows = await page.evaluate(checks => {

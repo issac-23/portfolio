@@ -14,7 +14,7 @@ test.describe('mobile menu', () => {
   test.beforeEach(({}, info) => test.skip(info.project.name !== 'mobile', 'the menu only exists at phone width'))
 
   test('stays out of the tab order while closed', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/classic')
     // Nav sets inert from an effect, so this holds from hydration on. The old
     // script waited 600ms for the same reason; this waits for the attribute.
     await page.locator('#mobile-menu[inert]').waitFor({ state: 'attached' })
@@ -27,7 +27,7 @@ test.describe('mobile menu', () => {
   })
 
   test('opens, locks the page, navigates, closes and marks the section', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/classic')
     const menu = page.locator('#mobile-menu')
     await page.getByRole('button', { name: /menu/i }).click()
     await expect.poll(() => menu.evaluate(n => n.getBoundingClientRect().height)).toBeGreaterThan(50)
@@ -51,7 +51,7 @@ test.describe('desktop', () => {
   test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'checked once, at desktop width'))
 
   test('theme toggle switches, adapts the chrome and persists', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/classic')
     const before = await page.evaluate(() => document.documentElement.className)
     await page.locator('button[aria-label*="mode"]').click()
     const after = await page.evaluate(() => document.documentElement.className)
@@ -77,7 +77,7 @@ test.describe('desktop', () => {
   })
 
   test('the media filter exposes its state, filters and animates', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/classic')
     await reveal(page)
     const tabs = page.locator('#media button')
     expect(await tabs.count()).toBeGreaterThan(1)
@@ -103,7 +103,7 @@ test.describe('desktop', () => {
   })
 
   test('the gallery lightbox loads right-sized images and behaves as a dialog', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/classic')
     await reveal(page)
     // Thumbnails are lazy, so one below the fold never loads until it is
     // scrolled to. Linux renders taller text than Windows, which is enough to
@@ -166,7 +166,7 @@ test.describe('desktop', () => {
   })
 
   test('skip link, link previews, favicon, one h1 and a legible footer', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/classic')
     await expect(page.getByRole('link', { name: 'Skip to content' })).toBeAttached()
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /.+/)
     await expect(page.locator('link[rel*="icon"]').first()).toBeAttached()
