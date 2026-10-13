@@ -12,11 +12,14 @@ export default function DsiPage({ searchParams }: { searchParams: { view?: strin
       {/* What a search result or a screen reader should lead with: who, not
           which console. */}
       <h1 className="sr-only">Issac Ip — CS + Economics at Northeastern</h1>
-      {/* The way out comes before the device in the tab order, so nobody has
-          to learn the DSi to skip it. */}
-      <ViewLink to="plain" className="dsi-plain-link">
-        Plain view
-      </ViewLink>
+      {/* The two things a recruiter is most likely here for, ahead of the
+          device in the tab order, so nobody has to learn the DSi to get them. */}
+      <nav className="dsi-shortcuts" aria-label="Shortcuts">
+        <a href="/resume.pdf" target="_blank" rel="noopener noreferrer">
+          Resume
+        </a>
+        <ViewLink to="plain">Plain view</ViewLink>
+      </nav>
       <DsiMenu />
     </main>
   )
