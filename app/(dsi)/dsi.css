@@ -1270,3 +1270,35 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 }
 .dsi-shortcuts a:hover { text-decoration: underline; }
 .dsi-shortcuts a:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; }
+
+/* ── boot screen ──
+   What the DSi showed when you switched it on: both screens white, the
+   maker's name in grey in a rounded outline on the top one, then the menu.
+   The name here is the site's owner. Shown only while <html> has data-boot,
+   which the layout's inline script sets before first paint, once a visit. */
+.dsi-boot { display: none; }
+:root[data-boot] .dsi-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  animation: dsi-boot-out 0.5s ease 1.8s forwards;
+}
+.dsi-boot-mark {
+  padding: 0.12em 0.7em 0.18em;
+  border: 0.14em solid #8f8f8f;
+  border-radius: 999px;
+  color: #8f8f8f;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  opacity: 0;
+  animation: dsi-boot-in 0.5s ease 0.25s forwards;
+}
+@keyframes dsi-boot-in { to { opacity: 1; } }
+@keyframes dsi-boot-out { to { opacity: 0; visibility: hidden; } }
+@media (max-width: 620px) {
+  .dsi-boot-mark { font-size: 1.3rem; }
+}
