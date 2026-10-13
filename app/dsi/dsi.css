@@ -1185,7 +1185,9 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
    themed but never dressed up.                                          */
 .dsi-plain {
   min-height: 100svh;
-  max-width: 68ch;
+  /* rem, not ch: a ch is the font's own 0, so the column changed width
+     the moment the real face swapped in and the whole page shifted. */
+  max-width: 42rem;
   margin: 0 auto;
   padding: 32px 20px 64px;
   background: var(--dsi-panel);
