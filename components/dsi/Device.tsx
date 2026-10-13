@@ -33,6 +33,9 @@ export default function Device({ top, bottom }: DeviceProps) {
             <div className="dsi-screen">
               {top}
               <div className="dsi-fx" aria-hidden="true" />
+              <div className="dsi-boot" aria-hidden="true">
+                <span className="dsi-boot-mark">Issac Ip</span>
+              </div>
             </div>
           </div>
           <div aria-hidden="true">
@@ -83,6 +86,7 @@ export default function Device({ top, bottom }: DeviceProps) {
             <div className="dsi-screen">
               {bottom}
               <div className="dsi-fx" aria-hidden="true" />
+              <div className="dsi-boot" aria-hidden="true" />
             </div>
           </div>
 
