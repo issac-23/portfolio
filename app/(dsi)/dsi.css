@@ -1249,12 +1249,16 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   .dsi-plain { max-width: none; padding: 0; }
 }
 
-/* The stage's way out to plain view: small, but always first in line. */
+/* The stage's shortcuts, resume and plain view: small, but first in line. */
 .dsi-stage { position: relative; }
-.dsi-plain-link {
+.dsi-shortcuts {
   position: absolute;
   top: 8px;
   right: 12px;
+  display: flex;
+  gap: 6px;
+}
+.dsi-shortcuts a {
   padding: 3px 10px;
   border-radius: 999px;
   background: var(--dsi-panel);
@@ -1264,5 +1268,5 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   text-decoration: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
-.dsi-plain-link:hover { text-decoration: underline; }
-.dsi-plain-link:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; }
+.dsi-shortcuts a:hover { text-decoration: underline; }
+.dsi-shortcuts a:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; }

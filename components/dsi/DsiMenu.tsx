@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
 import { APPS, type AppId } from './apps'
+import { appFromHash, writeHash } from './deepLink'
 import Device from './Device'
 import { playLaunch, playReturn } from './launch'
 import PhotoFrame from './PhotoFrame'
@@ -31,7 +32,22 @@ export default function DsiMenu() {
   // Someone who chose plain view last time gets it again without hunting
   // for the setting. Plain view links back here and clears the choice.
   useEffect(() => {
-    if (rememberedView() === 'plain') window.location.replace('/dsi?view=plain')
+    if (rememberedView() === 'plain') window.location.replace('/?view=plain')
+  }, [])
+
+  // Arriving on, or switching to, an app's address opens it straight away:
+  // the link was the click, so there is nothing to animate from.
+  useEffect(() => {
+    const go = () => {
+      const id = appFromHash(location.hash)
+      if (!id || !SCREENS[id]) return
+      setApp(APPS.findIndex(a => a.id === id))
+      setSel(0)
+      setOpen(id)
+    }
+    go()
+    window.addEventListener('hashchange', go)
+    return () => window.removeEventListener('hashchange', go)
   }, [])
 
   const launch = useCallback((index: number, icon: HTMLElement) => {
@@ -45,6 +61,7 @@ export default function DsiMenu() {
         setSel(0)
         setOpen(id)
       })
+      writeHash(id)
       busy.current = false
     }).catch(() => {
       // Failed before reaching the swap: let the next press through.
@@ -59,6 +76,7 @@ export default function DsiMenu() {
     const from = document.querySelector('.dsi-device') ?? document.body
     playReturn(from, () => {
       flushSync(() => setOpen(null))
+      writeHash(null)
       busy.current = false
     }).catch(() => {
       // Failed before reaching the swap: let the next press through.

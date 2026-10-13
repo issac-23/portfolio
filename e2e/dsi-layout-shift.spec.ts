@@ -14,8 +14,8 @@ import { expect, test } from './fixtures'
 const BUDGET = 0.01
 
 for (const [where, path] of [
-  ['the menu', '/dsi'],
-  ['plain view', '/dsi?view=plain'],
+  ['the menu', '/'],
+  ['plain view', '/?view=plain'],
 ] as const) {
   test(`the font swap barely moves ${where}`, async ({ page }) => {
     await page.route(/\.woff2$/, async route => {

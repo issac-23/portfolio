@@ -4,7 +4,8 @@ import { SITE_URL } from './site'
 /**
  * Served at /sitemap.xml.
  *
- * The site is a single page of anchored sections, so there is one entry. The
+ * One entry: / is the DSi, and its apps are #addresses on it, not pages.
+ * /classic is left out on purpose, it is not indexed. The
  * Spotify /callback route is deliberately absent — it's a dev-time OAuth
  * helper, not content (see app/callback/layout.tsx and robots.ts).
  */

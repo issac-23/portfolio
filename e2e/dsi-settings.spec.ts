@@ -85,7 +85,7 @@ test('Reduce motion turns off every effect from then on, and is remembered', asy
   await page.locator('.dsi-app-lower').waitFor()
   expect(await added(), 'neither the return nor the launch drew anything').toBe(before)
 
-  await page.goto('/dsi')
+  await page.goto('/')
   expect(await page.evaluate(() => document.documentElement.dataset.motion)).toBe('reduce')
   const railTransition = await page.evaluate(() => getComputedStyle(document.querySelector('.dsi-rail')!).transitionDuration)
   expect(railTransition).toBe('0s')
@@ -98,16 +98,16 @@ test('Plain view opens from Settings, is remembered, and the DSi is one link awa
   await expect(page.getByRole('list', { name: 'Settings' }).getByRole('link', { name: /Plain view/ })).toBeFocused()
   await page.keyboard.press('Enter')
 
-  await page.waitForURL('**/dsi?view=plain')
+  await page.waitForURL('**/?view=plain')
   await expect(page.locator('.dsi-device')).toHaveCount(0)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Issac Ip')
 
-  // A bare /dsi next time goes straight to plain.
-  await page.goto('/dsi')
-  await page.waitForURL('**/dsi?view=plain')
+  // A bare / next time goes straight to plain.
+  await page.goto('/')
+  await page.waitForURL('**/?view=plain')
 
   await page.getByRole('link', { name: 'Back to the DSi' }).click()
-  await page.waitForURL(/\/dsi$/)
+  await page.waitForURL(url => url.pathname === '/' && !url.search)
   await openMenu(page)
   expect(await stored(page, 'dsi-view')).toBeNull()
 })

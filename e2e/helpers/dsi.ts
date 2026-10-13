@@ -77,7 +77,7 @@ export function railState(page: Page): Promise<RailState> {
  * only then hold it to the strict centring check.
  */
 export async function openMenu(page: Page) {
-  await page.goto('/dsi')
+  await page.goto('/')
   await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 20_000 })
   await expectSettledOn(page, APPS[0])
 }
