@@ -28,6 +28,11 @@ export const metadata: Metadata = {
 // sees one frame of it.
 const motionScript = `(function(){try{if(localStorage.getItem('dsi-motion')==='reduce')document.documentElement.dataset.motion='reduce'}catch(e){}})()`
 
+// The boot screen, decided before first paint so the menu never flashes up
+// ahead of it. Once a visit, and never when it would only be in the way:
+// less motion asked for, plain view, or a link straight to an app.
+const bootScript = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem('dsi-booted'))return;if(d.dataset.motion==='reduce'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;if(location.search.indexOf('view=plain')>-1||location.hash)return;d.dataset.boot=''}catch(e){}})()`
+
 export default function DsiLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -35,6 +40,7 @@ export default function DsiLayout({ children }: { children: React.ReactNode }) {
       style={{ fontFamily: 'var(--font-rounded)' }}
     >
       <script dangerouslySetInnerHTML={{ __html: motionScript }} />
+      <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       <PrefsSync />
       {children}
     </div>
