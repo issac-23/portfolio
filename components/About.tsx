@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-
-const tags = ['Music', 'Photography', 'Economics', 'Tech', 'Podcasts', 'Friends']
+import { profile } from '@/data/profile'
 
 export default function About() {
   const ref = useRef<HTMLElement>(null)
@@ -47,7 +46,7 @@ export default function About() {
             </p>
 
             <div className="flex flex-wrap gap-2 pt-2">
-              {tags.map((tag) => (
+              {profile.interests.map((tag) => (
                 <span
                   key={tag}
                   className="text-xs text-muted border border-border rounded-full px-3 py-1 hover:border-accent hover:text-accent transition-all cursor-default"

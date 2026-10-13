@@ -10,7 +10,10 @@ const rounded = M_PLUS_Rounded_1c({
   weight: ['400', '500', '700', '800'],
   variable: '--font-rounded',
   display: 'swap',
-  fallback: ['Trebuchet MS', 'system-ui', 'sans-serif'],
+  // next/font has no metric overrides for this face, so it cannot build a
+  // matched fallback itself. dsi.css declares one instead.
+  adjustFontFallback: false,
+  fallback: ['M PLUS Rounded Fallback', 'Trebuchet MS', 'system-ui', 'sans-serif'],
 })
 
 export const metadata: Metadata = {

@@ -13,6 +13,20 @@
  * rule covers both and a choice made on / carries over here.
  */
 
+/* Arial resized to M PLUS Rounded 1c's measurements, so text set in the
+   fallback takes the same room the real face will and nothing jumps when it
+   swaps in. Width from the plain view's own text at 100px (81901 vs 77666),
+   ascent and descent from fontBoundingBox, both divided by the size-adjust.
+   Liberation Sans shares Arial's metrics, which covers Linux.             */
+@font-face {
+  font-family: 'M PLUS Rounded Fallback';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans');
+  size-adjust: 105.45%;
+  ascent-override: 102.42%;
+  descent-override: 30.35%;
+  line-gap-override: 0%;
+}
+
 .dsi-root {
   --dsi-page: #d3dde3;
   --dsi-desk: #c2ced6;
@@ -959,6 +973,8 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 .dsi-art img { width: 100%; height: 100%; object-fit: cover; }
+.dsi-art-big { width: 96px; height: 96px; }
+.dsi-art-small { width: 30px; height: 30px; }
 .dsi-art-empty {
   background: linear-gradient(180deg, #e4f6e2, #9ed59a);
   color: #2f6b3c;
@@ -1008,7 +1024,7 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 
 @media (max-width: 620px) {
   .dsi-sound { gap: 8px; padding: 6px; }
-  .dsi-sound .dsi-art { width: 64px !important; height: 64px !important; }
+  .dsi-art-big { width: 64px; height: 64px; }
   .dsi-sound-text { font-size: 0.62rem; }
   .dsi-sound-text h2 { font-size: 0.8rem; }
 }
@@ -1171,7 +1187,9 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
    themed but never dressed up.                                          */
 .dsi-plain {
   min-height: 100svh;
-  max-width: 68ch;
+  /* rem, not ch: a ch is the font's own 0, so the column changed width
+     the moment the real face swapped in and the whole page shifted. */
+  max-width: 42rem;
   margin: 0 auto;
   padding: 32px 20px 64px;
   background: var(--dsi-panel);
