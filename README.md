@@ -1,6 +1,14 @@
 # issac-ip.com
 
-Personal portfolio site built with Next.js and Tailwind CSS.
+Personal portfolio site built with Next.js and Tailwind CSS. The home page is
+a Nintendo DSi home menu: each section is an app on the rail.
+
+| Address | What it is |
+|---|---|
+| `/` | The DSi menu |
+| `/#projects`, `/#profile`, … | Opens that app directly. The old `#about`, `#music`, `#media`, `#gallery` and `#contact` anchors still work |
+| `/?view=plain` | The same content as an ordinary page, no DSi (also in System Settings) |
+| `/classic` | The site before the DSi, kept for old bookmarks, not indexed |
 
 ## Stack
 
@@ -12,6 +20,7 @@ Personal portfolio site built with Next.js and Tailwind CSS.
 
 ## Features
 
+- DSi home menu with a launch transition, eight apps, a plain view and System Settings (theme, reduce motion)
 - Live Spotify integration (currently playing + recently played, updates every 30s)
 - Manually curated media shelf (articles, videos, podcasts)
 - Photography gallery with lightbox
@@ -22,10 +31,13 @@ Personal portfolio site built with Next.js and Tailwind CSS.
 
 ```
 ├── app/
-│   ├── api/spotify/       # Spotify API routes
-│   └── page.tsx           # Main page
-├── components/            # UI components (Nav, Hero, About, etc.)
+│   ├── (dsi)/             # The home page: the DSi menu and plain view
+│   ├── classic/           # The previous site, at /classic
+│   └── api/spotify/       # Spotify API routes
+├── components/            # Classic UI components (Nav, Hero, About, etc.)
+│   └── dsi/               # The DSi: shell, rail, apps, launch transition
 ├── data/
+│   ├── profile.ts         # Bio, stats and contact channels
 │   ├── media.ts           # Curated media items — edit this to update the shelf
 │   ├── gallery.ts         # Gallery photos — edit this to add photos
 │   └── projects.ts        # Projects — edit this to add projects
