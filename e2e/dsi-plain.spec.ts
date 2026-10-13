@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/spotify/now-playing', r =>
     r.fulfill({ contentType: 'application/json', body: JSON.stringify({ isPlaying: false, recentTracks: [] }) }),
   )
-  await page.goto('/dsi?view=plain')
+  await page.goto('/?view=plain')
 })
 
 test('renders without the shell, as one document with one h1', async ({ page }) => {

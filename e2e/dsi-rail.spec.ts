@@ -26,7 +26,7 @@ test('slot widths do not change when the rounded font swaps in', async ({ page }
       }
     }).observe(document, { childList: true, subtree: true })
   })
-  await page.goto('/dsi')
+  await page.goto('/')
   await page.evaluate(() => document.fonts.ready)
 
   const { first, after } = await page.evaluate(() => ({
@@ -55,7 +55,9 @@ test('Tab lands on the selected app, and a second Tab leaves the rail', async ({
 
   await page.keyboard.press('Tab') // skip link comes first, correctly
   await expect(page.locator(':focus')).toHaveText('Skip to content')
-  await page.keyboard.press('Tab') // then the way out to plain view
+  await page.keyboard.press('Tab') // then the shortcuts: resume, plain view
+  await expect(page.locator(':focus')).toHaveText('Resume')
+  await page.keyboard.press('Tab')
   await expect(page.locator(':focus')).toHaveText('Plain view')
   await page.keyboard.press('Tab')
   await expect(page.locator(':focus')).toHaveAttribute('aria-label', APPS[1])
@@ -127,7 +129,7 @@ test('re-centres when the screen resizes without a window resize', async ({ page
 })
 
 test('the device fits the viewport without the page scrolling', async ({ page }) => {
-  await page.goto('/dsi')
+  await page.goto('/')
   const r = await page.evaluate(() => {
     const de = document.documentElement
     const d = document.querySelector('.dsi-device')!.getBoundingClientRect()
@@ -146,7 +148,7 @@ test.describe('short laptop screens', () => {
     test(`device fits at ${w}x${h}`, async ({ page }) => {
       test.skip(test.info().project.name !== 'desktop', 'sets its own viewport, once is enough')
       await page.setViewportSize({ width: w, height: h })
-      await page.goto('/dsi')
+      await page.goto('/')
       const scrolls = await page.evaluate(
         () => document.documentElement.scrollHeight > document.documentElement.clientHeight + 1,
       )

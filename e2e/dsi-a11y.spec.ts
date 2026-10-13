@@ -4,7 +4,7 @@ import { expect, test } from './fixtures'
 import { APPS, openApp, openMenu } from './helpers/dsi'
 
 /**
- * The bar /dsi has to clear before it can replace /: WCAG 2 AA by axe in
+ * The bar the home page has to clear: WCAG 2 AA by axe in
  * both themes, on the menu, inside every app, and in plain view, plus the
  * keyboard basics axe cannot see.
  */
@@ -43,7 +43,7 @@ for (const theme of ['light', 'dark'] as const) {
     }
 
     test('plain view', async ({ page }) => {
-      await page.goto('/dsi?view=plain')
+      await page.goto('/?view=plain')
       await expectNoViolations(page, 'plain view')
     })
   })
@@ -52,7 +52,7 @@ for (const theme of ['light', 'dark'] as const) {
 test('one h1 on the menu and in plain view', async ({ page }) => {
   await openMenu(page)
   await expect(page.locator('h1')).toHaveCount(1)
-  await page.goto('/dsi?view=plain')
+  await page.goto('/?view=plain')
   await expect(page.locator('h1')).toHaveCount(1)
 })
 
@@ -63,7 +63,10 @@ test('the skip link is the first stop and moves focus into the page', async ({ p
   await expect(skip).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#main-content$/)
-  // The next Tab carries on from inside main, so the way out is right there.
+  // The next Tab carries on from inside main, so the resume and the way out
+  // are right there.
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('link', { name: 'Resume' })).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(page.getByRole('link', { name: 'Plain view' })).toBeFocused()
 })
