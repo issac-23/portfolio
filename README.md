@@ -72,15 +72,14 @@ After any change: `git add . && git commit -m "your message" && git push` — Ve
 
 ## UX / accessibility checks
 
-Playwright-driven audit scripts. Start the dev server first, then:
+The checks live in `e2e/` as Playwright tests and run in CI on every PR. They
+build the site and serve it themselves, so nothing needs to be running first:
 
 ```bash
-node scripts/journeys.mjs        # 29 interaction + a11y checks across the core flows
+npm run test:e2e                 # journeys, contrast, axe and the DSi, both widths
 ```
 
-```bash
-node scripts/contrast.mjs        # WCAG AA contrast in both light and dark themes
-```
+The screenshot scripts below still want a server on port 3000 (`npm run dev`):
 
 ```bash
 node scripts/shots.mjs <label>   # desktop + mobile screenshots, both themes
@@ -93,10 +92,10 @@ node scripts/og.mjs              # regenerate public/og.png
 Output lands in `shots/<label>/` (gitignored).
 
 If port 3000 is already taken by another project, start this one elsewhere and
-point the scripts at it — otherwise they will happily audit the wrong app:
+point the scripts at it — otherwise they will happily shoot the wrong app:
 
 ```bash
-SITE=http://localhost:3009 node scripts/journeys.mjs
+SITE=http://localhost:3009 node scripts/shots.mjs <label>
 ```
 
 > **Don't run `npm run build` while `npm run dev` is running** — they share
