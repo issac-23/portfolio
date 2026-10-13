@@ -133,6 +133,11 @@ export default function Gallery() {
                       width={photo.width}
                       height={photo.height}
                       sizes="(max-width: 640px) 45vw, 200px"
+                      // Eager on purpose. Chrome can fail to start a lazy image
+                      // that sits in a CSS column layout: on Linux the last
+                      // thumbnail stayed blank while fully on screen. Seven
+                      // 200px thumbnails are cheap enough to just fetch.
+                      loading="eager"
                       className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
                     />
                   </button>
