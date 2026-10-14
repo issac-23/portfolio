@@ -1,11 +1,14 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
+import { mockSpotifyQuiet } from './helpers/spotify'
 
 /**
  * The classic site at /, ported from scripts/journeys.mjs. Each check there
  * was a bug once, so each one is still here, now failing the build instead
  * of printing FAIL into a log nobody reads.
  */
+
+test.beforeEach(({ page }) => mockSpotifyQuiet(page))
 
 const reveal = (page: Page) =>
   page.evaluate(() => document.querySelectorAll('.section-fade').forEach(n => n.classList.add('visible')))
