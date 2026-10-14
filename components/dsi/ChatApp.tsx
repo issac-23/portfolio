@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import { isExternal } from '@/data/links'
 import { channels, type Channel } from '@/data/profile'
 import { AppLower, useListNav } from './screen'
 
@@ -42,7 +43,7 @@ export function Channels({ selected, onSelect, onBack }: ChannelsProps) {
     <AppLower onBack={onBack}>
       <ul className="dsi-cards" ref={list} aria-label="Channels">
         {channels.map((c: Channel, i) => {
-          const external = /^https?:/.test(c.href)
+          const external = isExternal(c.href)
           return (
             <li key={c.label}>
               <a

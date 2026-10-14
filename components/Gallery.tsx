@@ -3,23 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { galleryPhotos } from '@/data/gallery'
+import { useReveal } from './useReveal'
 
 export default function Gallery() {
   const [selected, setSelected] = useState<number | null>(null)
   const [closing, setClosing] = useState(false)
   const [imgReady, setImgReady] = useState(false)
-  const ref = useRef<HTMLElement>(null)
+  const ref = useReveal<HTMLElement>(0.05)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) entry.target.classList.add('visible') },
-      { threshold: 0.05 }
-    )
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [])
 
   const open = (i: number, el: HTMLButtonElement) => {
     triggerRef.current = el

@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures'
+import { mockSpotifyQuiet } from './helpers/spotify'
 
 /**
  * Text contrast on the classic site against WCAG AA (4.5:1 body, 3:1 large),
@@ -10,6 +11,8 @@ import { expect, test } from './fixtures'
  * those once read 0.93 as the digits 0 and 93 and reported ratios in the
  * millions. Canvas does not care about notation, and layering handles alpha.
  */
+
+test.beforeEach(({ page }) => mockSpotifyQuiet(page))
 
 const CHECKS = [
   { label: 'body copy (About)', sel: '#about p', on: 'body' },

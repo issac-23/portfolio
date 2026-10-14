@@ -1,14 +1,8 @@
 'use client'
 
 import { useRef } from 'react'
-import type { Project } from '@/data/projects'
+import { statusLabels, type Project } from '@/data/projects'
 import { AppLower, useListNav } from './screen'
-
-const STATUS: Record<Project['status'], string> = {
-  live: 'Live',
-  wip: 'In progress',
-  concept: 'Concept',
-}
 
 // Cartridge label colours, cycled. A project has no artwork of its own, so
 // its card gets a colour and its initial, the way an unlabelled card would.
@@ -36,7 +30,7 @@ export function ProjectDetail({ project, index }: { project: Project; index: num
         <CardArt project={project} index={index} />
         <div>
           <h2>{project.title}</h2>
-          <span className="dsi-badge" data-status={project.status}>{STATUS[project.status]}</span>
+          <span className="dsi-badge" data-status={project.status}>{statusLabels[project.status]}</span>
         </div>
       </div>
       <p>{project.description}</p>
@@ -92,7 +86,7 @@ export function ProjectList({ projects, selected, onSelect, onBack }: ProjectLis
                 <b>{p.title}</b>
                 <span>{p.tags.slice(0, 3).join(' · ')}</span>
               </span>
-              <span className="dsi-card-status">{STATUS[p.status]}</span>
+              <span className="dsi-card-status">{statusLabels[p.status]}</span>
             </button>
           </li>
         ))}

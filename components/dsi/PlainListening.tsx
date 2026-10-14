@@ -1,30 +1,27 @@
 'use client'
 
-import { dedupe, useNowPlaying } from './useNowPlaying'
+import { useNowPlaying } from '../useNowPlaying'
 
 /** The Sound app as a sentence and a short list. */
 export default function PlainListening() {
   const s = useNowPlaying()
-  if (s.status === 'loading') return <p>Checking Spotify…</p>
-  if (s.status === 'failed') return <p>Couldn&apos;t reach Spotify just now.</p>
+  if (s.kind === 'loading') return <p>Checking Spotify…</p>
+  if (s.kind === 'unreachable') return <p>Couldn&apos;t reach Spotify just now.</p>
+  if (s.kind === 'nothing') return <p>Nothing playing right now.</p>
 
-  const d = s.data
-  const recent = dedupe(d.recentTracks ?? [])
   return (
     <>
-      {d.isPlaying && d.title ? (
+      {s.kind === 'playing' && (
         <p>
           Now playing:{' '}
-          <a href={d.songUrl} target="_blank" rel="noopener noreferrer">{d.title}</a> by {d.artist}
+          <a href={s.track.songUrl} target="_blank" rel="noopener noreferrer">{s.track.title}</a> by {s.track.artist}
         </p>
-      ) : (
-        !recent.length && <p>Nothing playing right now.</p>
       )}
-      {recent.length > 0 && (
+      {s.recent.length > 0 && (
         <>
           <p>Recently played:</p>
           <ul>
-            {recent.map(t => (
+            {s.recent.map(t => (
               <li key={`${t.title}|${t.artist}`}>
                 <a href={t.songUrl} target="_blank" rel="noopener noreferrer">{t.title}</a> by {t.artist}
               </li>
