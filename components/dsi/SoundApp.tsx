@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { AppLower } from './screen'
-import { dedupe, useNowPlaying, type Track } from './useNowPlaying'
+import { useNowPlaying } from '../useNowPlaying'
 
 // The box size lives in CSS, so it can change per screen size; `size` is
 // only the intrinsic size handed to next/image.
@@ -20,21 +20,17 @@ function Art({ src, size, big }: { src?: string; size: number; big?: boolean }) 
 export function NowPlayingCard() {
   const s = useNowPlaying()
 
-  if (s.status === 'loading') return <p className="dsi-sound-note">Tuning in…</p>
-  if (s.status === 'failed') return <p className="dsi-sound-note">Couldn&apos;t reach Spotify just now.</p>
+  if (s.kind === 'loading') return <p className="dsi-sound-note">Tuning in…</p>
+  if (s.kind === 'unreachable') return <p className="dsi-sound-note">Couldn&apos;t reach Spotify just now.</p>
+  if (s.kind === 'nothing') return <p className="dsi-sound-note">Nothing playing right now.</p>
 
-  const d = s.data
-  const last = d.recentTracks?.[0]
-  const t = d.isPlaying && d.title ? { title: d.title, artist: d.artist ?? '', album: d.album ?? '', albumImageUrl: d.albumImageUrl ?? '' } : last
-
-  if (!t) return <p className="dsi-sound-note">Nothing playing right now.</p>
-
+  const t = s.track
   return (
     <div className="dsi-sound">
       <Art src={t.albumImageUrl} size={96} big />
       <div className="dsi-sound-text">
         <span className="dsi-sound-state">
-          {d.isPlaying ? (
+          {s.kind === 'playing' ? (
             <>
               <span className="dsi-bars" aria-hidden="true"><i /><i /><i /></span>
               Now playing
@@ -54,15 +50,15 @@ export function NowPlayingCard() {
 /** Lower screen: recently played, each one a link out to Spotify. */
 export function RecentlyPlayed({ onBack }: { onBack: () => void }) {
   const s = useNowPlaying()
-  const d = s.status === 'ready' ? s.data : undefined
-  const recent: Track[] = dedupe(d?.recentTracks ?? [])
+  const playing = s.kind === 'playing' ? s.track : undefined
+  const recent = s.kind === 'playing' || s.kind === 'last' ? s.recent : []
 
   return (
     <AppLower
       onBack={onBack}
       actions={[
-        d?.isPlaying && d.songUrl
-          ? { label: 'Spotify', name: `${d.title} on Spotify (new tab)`, href: d.songUrl, primary: true }
+        playing?.songUrl
+          ? { label: 'Spotify', name: `${playing.title} on Spotify (new tab)`, href: playing.songUrl, primary: true }
           : { label: 'Spotify', unavailable: 'Not playing' },
       ]}
     >
@@ -82,7 +78,7 @@ export function RecentlyPlayed({ onBack }: { onBack: () => void }) {
         </ul>
       ) : (
         <p className="dsi-sound-note">
-          {d?.isPlaying ? 'Recently played shows up once the music stops.' : 'No recent plays to show.'}
+          {playing ? 'Recently played shows up once the music stops.' : 'No recent plays to show.'}
         </p>
       )}
     </AppLower>
