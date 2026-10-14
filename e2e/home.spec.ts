@@ -13,7 +13,7 @@ const OWN = [
   ['camera', 'Nintendo DSi Camera'],
   ['sound', 'Nintendo DSi Sound'],
   ['shelf', 'Shelf'],
-  ['chat', 'PictoChat'],
+  ['chat', 'Contact'],
   ['resume', 'Resume'],
   ['settings', 'System Settings'],
 ] as const
@@ -25,7 +25,7 @@ const CLASSIC = [
   ['gallery', 'Nintendo DSi Camera'],
   ['music', 'Nintendo DSi Sound'],
   ['media', 'Shelf'],
-  ['contact', 'PictoChat'],
+  ['contact', 'Contact'],
 ] as const
 
 test.beforeEach(async ({ page }) => {

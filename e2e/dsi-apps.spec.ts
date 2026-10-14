@@ -108,8 +108,8 @@ test('Shelf shows the note for the selected item and opens it', async ({ page })
   await expect(page.getByRole('link', { name: `Open ${title} (new tab)` })).toHaveAttribute('target', '_blank')
 })
 
-test('PictoChat offers email, LinkedIn and GitHub as channels', async ({ page }) => {
-  await openApp(page, 'PictoChat')
+test('Contact offers email, LinkedIn and GitHub as channels', async ({ page }) => {
+  await openApp(page, 'Contact')
   await expect(page.getByRole('log', { name: 'Messages' }).locator('.dsi-bubble')).not.toHaveCount(0)
   const links = page.getByRole('list', { name: 'Channels' }).getByRole('link')
   await expect(links).toHaveCount(3)
