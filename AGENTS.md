@@ -1,7 +1,11 @@
 # Working in this repo
 
+Issac's personal portfolio site, built with Next.js App Router, TypeScript and
+Tailwind. The DSi redesign lives at `/` and the previous site is kept at
+`/classic`.
+
 `npm run check` runs lint and then `test:e2e`. Playwright runs against a
-production build with 4 workers locally. Tests are E2E only, there are no unit
+production build with 4 workers locally. Tests are E2E only; there are no unit
 tests.
 
 ## Agent skills
