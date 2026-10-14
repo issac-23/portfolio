@@ -7,6 +7,13 @@ export interface Project {
   status: 'live' | 'wip' | 'concept'
 }
 
+/** How each status reads on every screen, classic and DSi alike. */
+export const statusLabels: Record<Project['status'], string> = {
+  live: 'Live',
+  wip: 'In progress',
+  concept: 'Concept',
+}
+
 // ─────────────────────────────────────────────────────────────────
 // HOW TO ADD PROJECTS:
 // Add new entries to the top of this array.
