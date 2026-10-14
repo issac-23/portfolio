@@ -44,6 +44,19 @@ for (const [hash, app] of [...OWN, ...CLASSIC]) {
   })
 }
 
+test('Contact answers to /#contact and to the old /#chat, and is never called PictoChat', async ({ page }) => {
+  for (const hash of ['contact', 'chat']) {
+    await page.goto(`/#${hash}`)
+    await page.locator('.dsi-app-lower').waitFor()
+    await expect(page.getByRole('log', { name: 'Messages' })).toBeVisible()
+    await expect(page.getByRole('list', { name: 'Channels' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expectSettledOn(page, 'Contact')
+    await expect(page.locator('.dsi-namebox b')).toHaveText('Contact')
+    await expect(page.getByText('PictoChat')).toHaveCount(0)
+  }
+})
+
 test('opening an app puts its address in the bar, without a history entry', async ({ page }) => {
   await openMenu(page)
   const before = await page.evaluate(() => history.length)

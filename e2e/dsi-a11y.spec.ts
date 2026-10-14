@@ -25,6 +25,15 @@ for (const theme of ['light', 'dark'] as const) {
           body: JSON.stringify({
             isPlaying: false,
             recentTracks: [{ title: 'Ivy', artist: 'Frank Ocean', album: 'Blonde', albumImageUrl: '', songUrl: 'https://open.spotify.com/track/x' }],
+            // The week's lists are part of Sound, so axe has to see them too.
+            week: {
+              since: '2026-10-06T00:00:00.000Z',
+              plays: 3,
+              topArtists: [{ name: 'Frank Ocean', plays: 2, imageUrl: '' }],
+              topTracks: [
+                { title: 'Ivy', artist: 'Frank Ocean', album: 'Blonde', albumImageUrl: '', songUrl: 'https://open.spotify.com/track/x', plays: 1 },
+              ],
+            },
           }),
         }),
       )
