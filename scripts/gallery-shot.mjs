@@ -1,4 +1,4 @@
-/** Captures just the gallery section at desktop and mobile widths. */
+/** Captures just the classic site's gallery section at desktop and mobile widths. */
 import { chromium } from 'playwright'
 import { mkdir } from 'node:fs/promises'
 
@@ -10,7 +10,7 @@ await mkdir(`shots/${label}`, { recursive: true })
 const browser = await chromium.launch()
 for (const [w, h, name] of [[1440, 900, 'desktop'], [390, 844, 'mobile']]) {
   const page = await browser.newPage({ viewport: { width: w, height: h } })
-  await page.goto(SITE, { waitUntil: 'domcontentloaded' })
+  await page.goto(`${SITE}/classic`, { waitUntil: 'domcontentloaded' })
   await page.evaluate(() => document.querySelectorAll('.section-fade').forEach((n) => n.classList.add('visible')))
   await page.locator('#gallery').scrollIntoViewIfNeeded()
   await page.waitForTimeout(2500)
