@@ -1,8 +1,9 @@
 'use client'
 
 import Image from 'next/image'
+import { plural } from './apps'
 import { AppLower } from './screen'
-import { useNowPlaying } from '../useNowPlaying'
+import { useListeningWeek, useNowPlaying } from '../useNowPlaying'
 
 // The box size lives in CSS, so it can change per screen size; `size` is
 // only the intrinsic size handed to next/image.
@@ -47,11 +48,13 @@ export function NowPlayingCard() {
   )
 }
 
-/** Lower screen: recently played, each one a link out to Spotify. */
-export function RecentlyPlayed({ onBack }: { onBack: () => void }) {
+/** Lower screen: the week's most played, then recently played, each song a link out to Spotify. */
+export function SoundLists({ onBack }: { onBack: () => void }) {
   const s = useNowPlaying()
+  const answer = useListeningWeek()
   const playing = s.kind === 'playing' ? s.track : undefined
   const recent = s.kind === 'playing' || s.kind === 'last' ? s.recent : []
+  const week = answer && answer.plays > 0 ? answer : undefined
 
   return (
     <AppLower
@@ -62,24 +65,71 @@ export function RecentlyPlayed({ onBack }: { onBack: () => void }) {
           : { label: 'Spotify', unavailable: 'Not playing' },
       ]}
     >
-      {recent.length ? (
-        <ul className="dsi-tracks" aria-label="Recently played">
-          {recent.map(t => (
-            <li key={`${t.title}|${t.artist}`}>
-              <a className="dsi-card" href={t.songUrl} target="_blank" rel="noopener noreferrer">
-                <Art src={t.albumImageUrl} size={30} />
-                <span className="dsi-card-text">
-                  <b>{t.title}</b>
-                  <span>{t.artist}</span>
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="dsi-sound-note">
-          {playing ? 'Recently played shows up once the music stops.' : 'No recent plays to show.'}
-        </p>
+      {/* While the first answer is out the lower screen stays quiet; the upper one says why. */}
+      {s.kind === 'unreachable' && <p className="dsi-sound-note">No recent plays to show.</p>}
+      {s.kind !== 'loading' && s.kind !== 'unreachable' && !week && (
+        <p className="dsi-sound-note">No plays this week yet.</p>
+      )}
+      {week && (
+        <>
+          <h3 className="dsi-list-head">Top artists this week</h3>
+          <ul className="dsi-tracks">
+            {week.topArtists.slice(0, 3).map(a => (
+              <li key={a.name}>
+                <div className="dsi-card dsi-card-static">
+                  <Art src={a.imageUrl} size={30} />
+                  <span className="dsi-card-text">
+                    <b>{a.name}</b>
+                  </span>
+                  <span className="dsi-card-status">{plural(a.plays, 'play', 'plays')}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <h3 className="dsi-list-head">Top songs this week</h3>
+          <ul className="dsi-tracks">
+            {week.topTracks.slice(0, 5).map(t => {
+              // A local or partial item has no Spotify page, so it stays plain text.
+              const inner = (
+                <>
+                  <Art src={t.albumImageUrl} size={30} />
+                  <span className="dsi-card-text">
+                    <b>{t.title}</b>
+                    <span>{t.artist}</span>
+                  </span>
+                  <span className="dsi-card-status">{plural(t.plays, 'play', 'plays')}</span>
+                </>
+              )
+              return (
+                <li key={`${t.title}|${t.artist}`}>
+                  {t.songUrl ? (
+                    <a className="dsi-card" href={t.songUrl} target="_blank" rel="noopener noreferrer">{inner}</a>
+                  ) : (
+                    <div className="dsi-card dsi-card-static">{inner}</div>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
+      {recent.length > 0 && (
+        <>
+          <h3 className="dsi-list-head">Recently played</h3>
+          <ul className="dsi-tracks" aria-label="Recently played">
+            {recent.map(t => (
+              <li key={`${t.title}|${t.artist}`}>
+                <a className="dsi-card" href={t.songUrl} target="_blank" rel="noopener noreferrer">
+                  <Art src={t.albumImageUrl} size={30} />
+                  <span className="dsi-card-text">
+                    <b>{t.title}</b>
+                    <span>{t.artist}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </AppLower>
   )

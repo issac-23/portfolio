@@ -41,10 +41,45 @@
   --dsi-screen-a: #eaf7ff;
   --dsi-screen-b: #a9d9f2;
 
-  /* Device proportions. The height is driven by the screens, so the stage can
-     solve for a width that always fits the viewport. */
+  /* Device proportions. Every piece of the shell's height that is not a
+     screen has a fixed size here, so the stage can work out exactly how big
+     the two 4:3 screens can be and still fit the window.
+     pad-out is the lid's top and the base's bottom, pad-in the two sides
+     next to the hinge. The LED row and the stylus edge are rows of their own
+     on a tall window and float in the corners on a wide one. */
   --dsi-screen-pct: 70%;
-  --dsi-aspect: 1.25;
+  /* The shell is never more than this many screens wide, about what the
+     DSi XL measures (161mm of shell round an 85mm screen). Past it the
+     window is wider than the console would be, and the rest is page. */
+  --dsi-shell-ratio: 1.9;
+  --dsi-pad-out: 14px;
+  --dsi-pad-in: 10px;
+  --dsi-pad-x: 14px;
+  --dsi-frame-y: 7px;
+  --dsi-frame-x: 6px;
+  --dsi-hinge-h: 26px;
+  --dsi-leds-h: 18px;
+  --dsi-edge-h: 19px;
+  /* The four shell borders, plus 2px so rounding never tips the page into
+     scrolling. */
+  --dsi-chrome-y: calc(
+    6px + 2 * (var(--dsi-pad-out) + var(--dsi-pad-in)) + 4 * var(--dsi-frame-y) +
+      var(--dsi-hinge-h) + var(--dsi-leds-h) + var(--dsi-edge-h)
+  );
+  /* What the controls are drawn at. 1px is their design size; a wide window
+     with tall screens grows them with the screens, up to a point. */
+  --dsi-u: 1px;
+  /* The shortcuts' row and the gap under it. A shell this wide always runs
+     under the top corner, so the row is kept at every size. */
+  --dsi-top-reserve: 40px;
+  /* As wide as the screens can be at this height: the window less the
+     stage's padding, the shortcuts and the chrome, shared by two screens
+     three quarters as tall as they are wide. */
+  --dsi-screen-w: calc((100svh - 12px - var(--dsi-top-reserve) - var(--dsi-chrome-y)) / 1.5);
+  /* The window's width, or the XL's proportions round screens that size,
+     whichever is narrower. A percentage, so it resolves against the stage's
+     content box wherever it is used: the device and the shortcuts row. */
+  --dsi-device-w: min(100%, var(--dsi-shell-ratio) * var(--dsi-screen-w));
 }
 
 :root.dark .dsi-root {
@@ -63,73 +98,53 @@
 }
 
 /* ── stage ───────────────────────────────────────────────────────────────
-   The device is sized from whichever runs out first: the 680px design width,
-   the viewport width, or the viewport height divided by the device's aspect.
-   Sizing from width alone makes the device ~770px tall, which fits a 1080p
-   screen but not a 768p laptop, and the page would start scrolling.
+   Width and height are solved separately. The screens take whatever
+   height is left once the shortcuts and the shell's fixed chrome are
+   accounted for, and never more than their share of the shell's width, so
+   a phone still gets screens at 70% of the device. The shell takes the
+   window's width, but stops at the DSi XL's proportions round those
+   screens; edge to edge on a wide window it was mostly empty plastic.
+   Sizing from width alone once made the device taller than a 768p laptop,
+   and the page started scrolling; sizing the whole device from the height
+   left a 1080p screen mostly margin.
    svh rather than vh so mobile browser chrome is accounted for.            */
 .dsi-stage {
-  /* Room kept above the device for the shortcuts. Only needed when the
-     screen is too narrow for them to sit in the empty corner beside it. */
-  --dsi-top-reserve: 40px;
   min-height: 100svh;
   display: grid;
   grid-template-rows: auto 1fr;
+  /* Enough that the R shoulder, which stands 7px proud of the lid, clears
+     the Plain view pill above it. */
+  row-gap: 12px;
   justify-items: center;
   align-items: center;
-  padding: 8px;
+  padding: 4px clamp(8px, 1.25vw, 24px) 8px;
   background: radial-gradient(120% 90% at 50% 0%, var(--dsi-page), var(--dsi-desk));
 }
-@media (min-aspect-ratio: 7/5) {
-  .dsi-stage { --dsi-top-reserve: 0px; grid-template-rows: 1fr; }
-}
 
-/* As big as the screen allows: 860px wide at most, otherwise the full
-   height. It used to stop at 680px, which left a 1080p screen mostly
-   margin. */
+/* Positioned so the shoulder buttons hang off its top edge, and isolated so
+   their z-index tucks them behind the lid rather than behind the page. */
 .dsi-device {
-  /* Above the ambient backdrop. */
   position: relative;
-  z-index: 1;
-  width: min(860px, 100%, calc((100svh - 16px - var(--dsi-top-reserve)) / var(--dsi-aspect)));
+  isolation: isolate;
+  width: var(--dsi-device-w);
 }
 
-/* ── ambient backdrop ──
-   The top screen's photo, softened by being stretched across the whole
-   page. Opacity sits on the shot rather than the layer so the vignette stays
-   solid, and the fade only names its start so it ends at that opacity. */
-.dsi-ambient {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
+/* A landscape window, 5:4 or wider. The height runs out before the width
+   here (it does down to about square), so the screens are exactly
+   --dsi-screen-w, and the chrome above and below them is trimmed to give
+   them more of it. The LEDs and the stylus edge move into the corners,
+   where the side panels have room to spare. */
+@media (min-aspect-ratio: 5/4) {
+  .dsi-root {
+    --dsi-pad-out: 10px;
+    --dsi-pad-in: 6px;
+    --dsi-frame-y: 5px;
+    --dsi-hinge-h: 20px;
+    --dsi-leds-h: 0px;
+    --dsi-edge-h: 0px;
+    --dsi-u: clamp(1px, var(--dsi-screen-w) / 380, 1.6px);
+  }
 }
-.dsi-ambient::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 35%, var(--dsi-page) 100%);
-}
-.dsi-ambient-shot {
-  position: absolute;
-  inset: 0;
-  opacity: 0.45;
-  animation: dsi-ambient-in 1.2s ease both;
-}
-:root.dark .dsi-ambient-shot { opacity: 0.6; }
-.dsi-ambient-shot img {
-  object-fit: cover;
-  /* No filter: a blur this wide over the whole viewport is re-rasterised on
-     every frame of the cross-fade. The 64px source, stretched to the page,
-     is already soft, and the scale hides its edge. */
-  transform: scale(1.1);
-}
-@keyframes dsi-ambient-in { from { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) {
-  .dsi-ambient-shot { animation: none; }
-}
-:root[data-motion='reduce'] .dsi-ambient-shot { animation: none; }
 
 /* ── shell ── */
 .dsi-lid,
@@ -148,18 +163,18 @@
 }
 .dsi-lid {
   border-radius: 22px 22px 7px 7px;
-  padding: 14px 14px 10px;
+  padding: var(--dsi-pad-out) var(--dsi-pad-x) var(--dsi-pad-in);
 }
 .dsi-base {
   border-radius: 7px 7px 22px 22px;
-  padding: 10px 14px 14px;
+  padding: var(--dsi-pad-in) var(--dsi-pad-x) var(--dsi-pad-out);
 }
 
 .dsi-shoulder {
   position: absolute;
   top: -7px;
   z-index: -1;
-  width: 66px;
+  width: calc(66 * var(--dsi-u));
   height: 12px;
   padding-bottom: 3px;
   border: 1px solid var(--dsi-shell-edge);
@@ -198,17 +213,23 @@
    the POWER and SELECT labels set the side columns' width, and the screen got
    whatever was left. The rounded face sets those labels wider than the
    fallback, so the screen lost 3px when it swapped in, and the two sides
-   came out unequal, leaving the screen off centre in the shell.          */
+   came out unequal, leaving the screen off centre in the shell.
+   The screen's column is its share of the shell or what the height allows,
+   whichever is smaller. On a wide window that is the height, and the side
+   columns take the rest.                                                  */
 .dsi-half {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, var(--dsi-screen-pct)) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, min(var(--dsi-screen-pct), var(--dsi-screen-w) + 2 * var(--dsi-frame-x)))
+    minmax(0, 1fr);
   align-items: center;
   column-gap: 8px;
 }
 .dsi-frame {
   background: var(--dsi-bezel);
   border-radius: 6px;
-  padding: 7px 6px;
+  padding: var(--dsi-frame-y) var(--dsi-frame-x);
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
 }
 .dsi-screen {
@@ -225,7 +246,7 @@
 /* ── hinge ── */
 .dsi-hinge {
   margin: 0 10px;
-  height: 26px;
+  height: var(--dsi-hinge-h);
   border: 1px solid var(--dsi-shell-edge);
   border-block: 0;
   border-radius: 4px;
@@ -270,8 +291,8 @@
 .dsi-speaker { display: flex; justify-content: center; }
 .dsi-speaker i {
   display: block;
-  width: 16px;
-  height: 4px;
+  width: calc(16 * var(--dsi-u));
+  height: calc(4 * var(--dsi-u));
   border-radius: 2px;
   background: var(--dsi-engrave);
   box-shadow: 0 1px 0 var(--dsi-emboss);
@@ -280,6 +301,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  height: var(--dsi-leds-h);
   padding: 7px 2px 0;
   color: var(--dsi-chrome-ink);
 }
@@ -292,11 +314,15 @@
   box-shadow: 0 0 5px #43b26b;
 }
 
-/* ── controls ── */
+/* ── controls ──
+   Measured in --dsi-u rather than px, so on a wide window they grow with the
+   screens as one piece, offsets included, and POWER stays under the d-pad.
+   Labels never drop below their rem size, so a larger default font still
+   reaches them. */
 .dsi-dpad {
   position: relative;
-  width: 50px;
-  height: 50px;
+  width: calc(50 * var(--dsi-u));
+  height: calc(50 * var(--dsi-u));
   justify-self: center;
 }
 .dsi-dpad::before,
@@ -304,59 +330,66 @@
   content: '';
   position: absolute;
   border: 1px solid var(--dsi-shell-edge);
-  border-radius: 4px;
+  border-radius: calc(4 * var(--dsi-u));
   background: linear-gradient(180deg, var(--dsi-shell-hi), var(--dsi-shell-lo));
   box-shadow: inset 0 1px 0 var(--dsi-emboss);
 }
 .dsi-dpad::before { left: 0; right: 0; top: 33.5%; height: 33%; }
 .dsi-dpad::after { top: 0; bottom: 0; left: 33.5%; width: 33%; }
 .dsi-dpad i {
+  --l: calc(8 * var(--dsi-u));
+  --w: calc(2 * var(--dsi-u));
   position: absolute;
   z-index: 2;
   background: var(--dsi-engrave);
   border-radius: 1px;
 }
-.dsi-dpad .u { top: 8px; left: 50%; width: 2px; height: 8px; margin-left: -1px; }
-.dsi-dpad .d { bottom: 8px; left: 50%; width: 2px; height: 8px; margin-left: -1px; }
-.dsi-dpad .l { left: 8px; top: 50%; width: 8px; height: 2px; margin-top: -1px; }
-.dsi-dpad .r { right: 8px; top: 50%; width: 8px; height: 2px; margin-top: -1px; }
+.dsi-dpad .u,
+.dsi-dpad .d { left: 50%; width: var(--w); height: var(--l); margin-left: calc(var(--w) / -2); }
+.dsi-dpad .l,
+.dsi-dpad .r { top: 50%; width: var(--l); height: var(--w); margin-top: calc(var(--w) / -2); }
+.dsi-dpad .u { top: var(--l); }
+.dsi-dpad .d { bottom: var(--l); }
+.dsi-dpad .l { left: var(--l); }
+.dsi-dpad .r { right: var(--l); }
 
 .dsi-face {
+  --b: calc(17 * var(--dsi-u));
   position: relative;
-  width: 58px;
-  height: 52px;
+  width: calc(58 * var(--dsi-u));
+  height: calc(52 * var(--dsi-u));
   justify-self: center;
 }
 .dsi-btn {
   position: absolute;
-  width: 17px;
-  height: 17px;
+  width: var(--b);
+  height: var(--b);
   border: 1px solid var(--dsi-shell-edge);
   border-radius: 50%;
   background: linear-gradient(180deg, var(--dsi-shell-hi), var(--dsi-shell-lo));
   box-shadow: inset 0 1px 0 var(--dsi-emboss);
   display: grid;
   place-items: center;
-  font-size: 0.46rem;
+  font-size: max(0.46rem, 7.36 * var(--dsi-u));
   font-weight: 700;
   color: var(--dsi-chrome-ink);
 }
-.dsi-btn-x { top: 0; left: 50%; margin-left: -8.5px; }
-.dsi-btn-y { top: 17px; left: 2px; }
-.dsi-btn-a { top: 17px; right: 2px; }
-.dsi-btn-b { top: 34px; left: 50%; margin-left: -8.5px; }
+.dsi-btn-x { top: 0; left: 50%; margin-left: calc(var(--b) / -2); }
+.dsi-btn-y { top: var(--b); left: calc(2 * var(--dsi-u)); }
+.dsi-btn-a { top: var(--b); right: calc(2 * var(--dsi-u)); }
+.dsi-btn-b { top: calc(2 * var(--b)); left: 50%; margin-left: calc(var(--b) / -2); }
 
 .dsi-startsel {
   display: grid;
-  gap: 5px;
-  margin-top: 9px;
+  gap: calc(5 * var(--dsi-u));
+  margin-top: calc(9 * var(--dsi-u));
   justify-items: end;
 }
 .dsi-startsel div {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.44rem;
+  gap: calc(5 * var(--dsi-u));
+  font-size: max(0.44rem, 7.04 * var(--dsi-u));
   letter-spacing: 0.06em;
   color: var(--dsi-chrome-ink);
 }
@@ -366,16 +399,16 @@
   background: linear-gradient(180deg, var(--dsi-shell-hi), var(--dsi-shell-lo));
   box-shadow: inset 0 1px 0 var(--dsi-emboss);
 }
-.dsi-startsel i { width: 15px; height: 8px; border-radius: 5px; }
+.dsi-startsel i { width: calc(15 * var(--dsi-u)); height: calc(8 * var(--dsi-u)); border-radius: 999px; }
 /* The d-pad's cell keeps room under it for POWER, which sits in the same
    cell of the grid (it follows the screen in the DOM so it is not a Tab stop
-   ahead of the rail). 72px is the old stack: 50 pad, 9 gap, 13 button. */
-.dsi-pad { grid-area: 1 / 1; padding-bottom: 22px; }
+   ahead of the rail). 72 units is the old stack: 50 pad, 9 gap, 13 button. */
+.dsi-pad { grid-area: 1 / 1; padding-bottom: calc(22 * var(--dsi-u)); }
 .dsi-power {
   grid-area: 1 / 1;
   align-self: center;
   justify-self: start;
-  margin: 59px 0 0;
+  margin: calc(59 * var(--dsi-u)) 0 0;
   padding: 0;
   border: 0;
   background: none;
@@ -383,27 +416,30 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.44rem;
+  gap: calc(5 * var(--dsi-u));
+  font-size: max(0.44rem, 7.04 * var(--dsi-u));
   letter-spacing: 0.06em;
   color: var(--dsi-chrome-ink);
 }
 .dsi-power:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 3px; border-radius: 4px; }
 .dsi-power i {
-  width: 13px;
-  height: 13px;
+  width: calc(13 * var(--dsi-u));
+  height: calc(13 * var(--dsi-u));
   border-radius: 50%;
   display: grid;
   place-items: center;
 }
-.dsi-power svg { width: 7px; height: 7px; }
+.dsi-power svg { width: calc(7 * var(--dsi-u)); height: calc(7 * var(--dsi-u)); }
 
 /* ── bottom edge: stylus silo and game card slot ── */
 .dsi-edge {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 9px;
+  /* Fixed, not the labels' line height, so the font swapping in cannot
+     change how tall the device is. */
+  height: 10px;
+  margin-top: calc(var(--dsi-edge-h) - 10px);
   padding-inline: 4px;
 }
 .dsi-silo,
@@ -434,10 +470,43 @@
   box-shadow: 0 1px 0 var(--dsi-emboss);
 }
 
+/* On a wide window the LEDs and the stylus edge leave the stack for the
+   corners, out past the screens, so they no longer cost the screens height. */
+@media (min-aspect-ratio: 5/4) {
+  .dsi-leds {
+    position: absolute;
+    left: calc(var(--dsi-pad-x) + 10px);
+    bottom: 9px;
+    height: auto;
+    padding: 0;
+  }
+  .dsi-edge {
+    position: absolute;
+    inset: auto calc(var(--dsi-pad-x) + 14px) 12px;
+    margin: 0;
+  }
+  /* The side panels are wide here, so the controls gather in the middle of
+     theirs instead of hugging the screen and the shell's edge, and the
+     speakers become grilles of holes rather than a single slot. */
+  .dsi-power,
+  .dsi-buttons { justify-self: center; }
+  .dsi-speaker i {
+    --h: calc(6 * var(--dsi-u));
+    width: calc(5 * var(--h));
+    height: calc(3 * var(--h));
+    border-radius: 0;
+    background: radial-gradient(circle, var(--dsi-engrave) 0 30%, transparent 36%) 0 0 / var(--h) var(--h);
+    box-shadow: none;
+  }
+}
+
 @media (max-width: 620px) {
-  .dsi-root { --dsi-screen-pct: 76%; }
-  .dsi-lid { padding: 10px 9px 7px; }
-  .dsi-base { padding: 7px 9px 10px; }
+  .dsi-root {
+    --dsi-screen-pct: 76%;
+    --dsi-pad-out: 10px;
+    --dsi-pad-in: 7px;
+    --dsi-pad-x: 9px;
+  }
   .dsi-half { column-gap: 5px; }
   .dsi-shoulder { width: 48px; }
   .dsi-dpad { width: 34px; height: 34px; }
@@ -548,30 +617,78 @@
   inset: 0;
   animation: dsi-fade 0.6s ease both;
 }
+/* A slow zoom over the photo's time on screen. Transform only, on the image,
+   and the frame clips it, so nothing around it moves. The shot is re-keyed
+   per photo, which restarts it. */
+.dsi-photo-front {
+  object-fit: contain;
+  transform-origin: center;
+  animation: dsi-kenburns 5s linear both;
+}
 .dsi-photo-back {
   object-fit: cover;
   filter: blur(14px) brightness(0.7);
   transform: scale(1.15);
 }
-.dsi-photo-front { object-fit: contain; }
+.dsi-photo[data-held] .dsi-photo-front { animation-play-state: paused; }
+.dsi-photo-next {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
 .dsi-photo-tag {
   position: absolute;
-  inset: auto 6px 4px;
+  inset: auto 0 0;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 6px 4px;
   font-size: 0.56rem;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
   pointer-events: none;
 }
+.dsi-photo-dots {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+.dsi-photo-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-sizing: border-box;
+}
+.dsi-photo-dots i[data-on] { background: #fff; }
+.dsi-photo-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+}
+.dsi-photo-line > span:last-child { flex: none; }
+.dsi-photo-alt {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
 @keyframes dsi-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dsi-kenburns { from { transform: scale(1); } to { transform: scale(1.08); } }
 
 @media (prefers-reduced-motion: reduce) {
   .dsi-photo-shot { animation: none; }
+  .dsi-photo-front { animation: none; }
 }
 /* The same again for the System Settings switch, which can ask for less
    motion than the device does. */
-:root[data-motion='reduce'] .dsi-photo-shot { animation: none; }
+:root[data-motion='reduce'] .dsi-photo-shot,
+:root[data-motion='reduce'] .dsi-photo-front { animation: none; }
 
 /* ── lower screen: the app rail ── */
 .dsi-lower {
@@ -1084,6 +1201,16 @@
   gap: 4px;
 }
 a.dsi-card { text-decoration: none; }
+.dsi-card-static { cursor: default; }
+.dsi-list-head {
+  margin: 8px 0 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsi-muted);
+}
+.dsi-list-head:first-child { margin-top: 0; }
 a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 2px; }
 
 @media (max-width: 620px) {
@@ -1181,6 +1308,14 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   text-transform: uppercase;
   color: var(--dsi-accent-ink);
 }
+.dsi-preview {
+  display: block;
+  flex: none;
+  background: #fff;
+}
+.dsi-preview canvas { display: block; width: 100%; height: 100%; }
+.dsi-preview:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: -2px; }
+.dsi-pages { margin-bottom: 4px; }
 .dsi-contents {
   margin: 0;
   padding: 0;
@@ -1314,21 +1449,17 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 }
 
 /* The stage's shortcuts, resume and plain view: small, but first in line.
-   Above the device by default; in the corner beside it once the screen is
-   wide enough that the corner is empty anyway. */
-.dsi-stage { position: relative; }
-/* Positioned at every width so they paint above the ambient backdrop. */
+   Always in their own row above the device, aligned with its right edge.
+   The shell can span the window, so the corner beside it is not always
+   empty, and one place at every size means nothing jumps on a resize.
+   28px plus the stage's 12px row gap is --dsi-top-reserve. */
 .dsi-shortcuts {
-  position: relative;
-  z-index: 1;
-  justify-self: end;
+  width: var(--dsi-device-w);
   display: flex;
+  justify-content: flex-end;
   gap: 6px;
-  height: 32px;
+  height: 28px;
   align-items: center;
-}
-@media (min-aspect-ratio: 7/5) {
-  .dsi-shortcuts { position: absolute; top: 8px; right: 12px; }
 }
 .dsi-shortcuts a {
   padding: 3px 10px;

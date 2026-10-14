@@ -97,7 +97,7 @@ export default function Device({ top, bottom, power, onPower }: DeviceProps) {
             </i>
           </button>
 
-          <div aria-hidden="true">
+          <div className="dsi-buttons" aria-hidden="true">
             <div className="dsi-face">
               <span className="dsi-btn dsi-btn-x">X</span>
               <span className="dsi-btn dsi-btn-y">Y</span>

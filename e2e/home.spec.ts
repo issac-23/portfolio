@@ -13,7 +13,7 @@ const OWN = [
   ['camera', 'Nintendo DSi Camera'],
   ['sound', 'Nintendo DSi Sound'],
   ['shelf', 'Shelf'],
-  ['chat', 'PictoChat'],
+  ['chat', 'Contact'],
   ['resume', 'Resume'],
   ['settings', 'System Settings'],
 ] as const
@@ -25,7 +25,7 @@ const CLASSIC = [
   ['gallery', 'Nintendo DSi Camera'],
   ['music', 'Nintendo DSi Sound'],
   ['media', 'Shelf'],
-  ['contact', 'PictoChat'],
+  ['contact', 'Contact'],
 ] as const
 
 test.beforeEach(async ({ page }) => {
@@ -43,6 +43,19 @@ for (const [hash, app] of [...OWN, ...CLASSIC]) {
     expect(new URL(page.url()).hash, 'leaving the app clears its address').toBe('')
   })
 }
+
+test('Contact answers to /#contact and to the old /#chat, and is never called PictoChat', async ({ page }) => {
+  for (const hash of ['contact', 'chat']) {
+    await page.goto(`/#${hash}`)
+    await page.locator('.dsi-app-lower').waitFor()
+    await expect(page.getByRole('log', { name: 'Messages' })).toBeVisible()
+    await expect(page.getByRole('list', { name: 'Channels' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expectSettledOn(page, 'Contact')
+    await expect(page.locator('.dsi-namebox b')).toHaveText('Contact')
+    await expect(page.getByText('PictoChat')).toHaveCount(0)
+  }
+})
 
 test('opening an app puts its address in the bar, without a history entry', async ({ page }) => {
   await openMenu(page)

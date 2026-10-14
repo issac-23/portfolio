@@ -87,7 +87,7 @@ const Wrench = () => (
   </svg>
 )
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+export const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 // Counts come from the data files, so adding a project or photo updates the
 // menu without anyone remembering to touch this list.
@@ -97,7 +97,7 @@ export const APPS: DsiApp[] = [
   { id: 'camera', name: 'Nintendo DSi Camera', publisher: plural(galleryPhotos.length, 'photo', 'photos'), short: 'Camera', face: ['#ffe9f1', '#f2aec8'], Glyph: Camera },
   { id: 'sound', name: 'Nintendo DSi Sound', publisher: 'Live from Spotify', short: 'Sound', face: ['#e4f6e2', '#9ed59a'], Glyph: Note },
   { id: 'shelf', name: 'Shelf', publisher: 'Articles, podcasts, video', short: 'Shelf', face: ['#fff2d9', '#f0ca85'], Glyph: Book },
-  { id: 'chat', name: 'PictoChat', publisher: 'Say hi', short: 'PictoChat', face: ['#ffeede', '#f5b878'], Glyph: Chat },
+  { id: 'chat', name: 'Contact', publisher: 'Say hi', short: 'Contact', face: ['#ffeede', '#f5b878'], Glyph: Chat },
   { id: 'resume', name: 'Resume', publisher: 'Instruction booklet', short: 'Resume', face: ['#e7f1fb', '#a9c6e4'], Glyph: Doc },
   { id: 'settings', name: 'System Settings', publisher: 'Theme, motion, sound', short: 'Settings', face: ['#f1f3f4', '#bcc4ca'], Glyph: Wrench },
 ]

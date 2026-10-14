@@ -7,7 +7,7 @@ export const APPS = [
   'Nintendo DSi Camera',
   'Nintendo DSi Sound',
   'Shelf',
-  'PictoChat',
+  'Contact',
   'Resume',
   'System Settings',
 ] as const

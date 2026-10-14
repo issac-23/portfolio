@@ -1,6 +1,9 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
+import type { Week } from '@/app/api/spotify/now-playing/week'
+
+export type { Week, WeekTrack } from '@/app/api/spotify/now-playing/week'
 
 export interface Track {
   title: string
@@ -39,6 +42,8 @@ interface NowPlayingBody {
   albumImageUrl?: string
   songUrl?: string
   recentTracks?: Track[]
+  /** Counted from the last 50 plays that fall inside the past 7 days. */
+  week?: Week
 }
 
 /** Recently played repeats a track once per play. */
@@ -83,21 +88,31 @@ const POLL_MS = 30_000
  */
 const loading: Listening = { kind: 'loading' }
 let state: Listening = loading
+/** The week from the same answer as `state`, kept apart so `Listening` stays about right now. */
+let week: Week | undefined
 const listeners = new Set<() => void>()
 let timer: ReturnType<typeof setInterval> | undefined
 
-function set(next: Listening) {
+function set(next: Listening, nextWeek = week) {
   state = next
+  week = nextWeek
   listeners.forEach(l => l())
 }
 
+function answered(s: Listening) {
+  return s.kind !== 'loading' && s.kind !== 'unreachable'
+}
+
 async function poll() {
+  // Each poll costs two Spotify calls, so a background tab that already has
+  // an answer waits until it is looked at again.
+  if (document.hidden && answered(state)) return
   try {
     const res = await fetch('/api/spotify/now-playing')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const body = (await res.json()) as NowPlayingBody
     if (body.error) throw new Error(body.error)
-    set(derive(body))
+    set(derive(body), body.week)
   } catch {
     if (state.kind === 'loading' || state.kind === 'unreachable') set({ kind: 'unreachable' })
   }
@@ -114,12 +129,22 @@ function subscribe(listener: () => void) {
     if (listeners.size === 0) {
       clearInterval(timer)
       state = loading
+      week = undefined
     }
   }
 }
 
 export function useNowPlaying(): Listening {
   return useSyncExternalStore(subscribe, () => state, () => loading)
+}
+
+/**
+ * The week's most played, from the same shared poll as `useNowPlaying`.
+ * Undefined until an answer lands, and kept through a failed poll like the
+ * rest of the answer.
+ */
+export function useListeningWeek(): Week | undefined {
+  return useSyncExternalStore(subscribe, () => week, () => undefined)
 }
 
 /** Ask again now, from the unreachable state. Shows loading until the answer lands. */

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { galleryPhotos } from '@/data/gallery'
-import Ambient from './Ambient'
 import AppRail from './AppRail'
 import { APPS, type AppId } from './apps'
 import { appFromHash, writeHash } from './deepLink'
@@ -114,46 +113,30 @@ export default function DsiMenu() {
   // The same Device element whichever app is open, so the shell and its
   // effects layers survive the swap that happens mid-launch. Off renders
   // nothing in either screen, so no handler from the rail or an app is left
-  // listening to a dark console. Ambient sits before it in every branch so
-  // Device keeps its place in the tree.
-  if (!power) {
-    return (
-      <>
-        <Ambient />
-        <Device top={null} bottom={null} power={false} onPower={togglePower} />
-      </>
-    )
-  }
+  // listening to a dark console.
+  if (!power) return <Device top={null} bottom={null} power={false} onPower={togglePower} />
 
   const screen = open ? SCREENS[open] : undefined
   if (screen) {
     const ctx: ScreenCtx = { sel, setSel, back }
-    return (
-      <>
-        <Ambient />
-        <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} power onPower={togglePower} />
-      </>
-    )
+    return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} power onPower={togglePower} />
   }
 
   return (
-    <>
-      <Ambient />
-      <Device
-        power
-        onPower={togglePower}
-        top={
-          <>
-            <StatusBar user="Issac" />
-            <PhotoFrame photos={galleryPhotos} />
-          </>
-        }
-        bottom={
-          <div className="dsi-lower">
-            <AppRail apps={APPS} initial={app} autoFocus={returning.current} onChange={setApp} onLaunch={launch} />
-          </div>
-        }
-      />
-    </>
+    <Device
+      power
+      onPower={togglePower}
+      top={
+        <>
+          <StatusBar user="Issac" />
+          <PhotoFrame photos={galleryPhotos} />
+        </>
+      }
+      bottom={
+        <div className="dsi-lower">
+          <AppRail apps={APPS} initial={app} autoFocus={returning.current} onChange={setApp} onLaunch={launch} />
+        </div>
+      }
+    />
   )
 }

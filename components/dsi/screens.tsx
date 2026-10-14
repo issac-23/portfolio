@@ -7,7 +7,7 @@ import { ProjectDetail, ProjectList } from './ProjectsApp'
 import { ProfileCard, ProfileStats } from './ProfileApp'
 import { Album, PhotoView } from './CameraApp'
 import { galleryPhotos } from '@/data/gallery'
-import { NowPlayingCard, RecentlyPlayed } from './SoundApp'
+import { NowPlayingCard, SoundLists } from './SoundApp'
 import { ShelfItem, ShelfList } from './ShelfApp'
 import { mediaItems } from '@/data/media'
 import { ChatRoom, Channels } from './ChatApp'
@@ -66,7 +66,7 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
         <NowPlayingCard />
       </AppTop>
     ),
-    bottom: c => <RecentlyPlayed onBack={c.back} />,
+    bottom: c => <SoundLists onBack={c.back} />,
   },
   shelf: {
     top: c => (
@@ -85,12 +85,12 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
     bottom: c => <Channels selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
   },
   resume: {
-    top: () => (
+    top: c => (
       <AppTop>
-        <BookletCover />
+        <BookletCover page={c.sel} />
       </AppTop>
     ),
-    bottom: c => <BookletContents onBack={c.back} />,
+    bottom: c => <BookletContents selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
   },
   settings: {
     top: c => (

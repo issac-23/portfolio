@@ -114,7 +114,9 @@ test('Open and GitHub point at the selected card, in a new tab', async ({ page }
 test('the list scrolls inside the lower screen, never the page', async ({ page }) => {
   await launchProjects(page)
   // Two cards fit on every screen size, so make them tall enough to overflow.
-  await page.addStyleTag({ content: '.dsi-card { min-height: 160px; }' })
+  // 160px each stopped overflowing once the screens grew to take the
+  // window's height: at 1280x900 the body is 342px tall.
+  await page.addStyleTag({ content: '.dsi-card { min-height: 260px; }' })
   const list = page.getByRole('list', { name: 'Game cards' })
   await list.hover()
   await page.mouse.wheel(0, 300)
