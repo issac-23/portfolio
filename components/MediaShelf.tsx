@@ -1,24 +1,24 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { mediaItems, type MediaType } from '@/data/media'
+import { mediaItems, mediaTypeLabels, type MediaType } from '@/data/media'
 
-const typeConfig: Record<string, { label: string; symbol: string }> = {
-  all:     { label: 'All',       symbol: '◈' },
-  article: { label: 'Articles',  symbol: '✦' },
-  video:   { label: 'Videos',    symbol: '▶' },
-  podcast: { label: 'Podcasts',  symbol: '◎' },
-  book:    { label: 'Books',     symbol: '◻' },
-  film:    { label: 'Film & TV', symbol: '◇' },
-  other:   { label: 'Other',     symbol: '○' },
+// Wording lives in data/media.ts; the symbols are only this page's.
+const typeSymbol: Record<MediaType | 'all', string> = {
+  all: '◈',
+  article: '✦',
+  video: '▶',
+  podcast: '◎',
+  book: '◻',
+  film: '◇',
+  other: '○',
 }
 
 function Badge({ type }: { type: MediaType }) {
-  const c = typeConfig[type] ?? typeConfig.other
   return (
     <span className="inline-flex items-center gap-1 text-xs text-muted border border-border rounded-full px-2.5 py-0.5">
-      <span>{c.symbol}</span>
-      {c.label}
+      <span>{typeSymbol[type]}</span>
+      {mediaTypeLabels[type].one}
     </span>
   )
 }
@@ -28,7 +28,7 @@ export default function MediaShelf() {
   const [swapping, setSwapping] = useState(false)
   const ref = useRef<HTMLElement>(null)
 
-  const availableTypes = ['all', ...Array.from(new Set(mediaItems.map((m) => m.type)))]
+  const availableTypes: (MediaType | 'all')[] = ['all', ...Array.from(new Set(mediaItems.map((m) => m.type)))]
   const filtered = filter === 'all' ? mediaItems : mediaItems.filter((m) => m.type === filter)
 
   const pickFilter = (type: string) => {
@@ -74,7 +74,6 @@ export default function MediaShelf() {
             {/* Filter tabs */}
             <div className="flex flex-wrap gap-2 mb-8" role="group" aria-label="Filter media by type">
               {availableTypes.map((type) => {
-                const c = typeConfig[type] ?? typeConfig.other
                 return (
                   <button
                     key={type}
@@ -87,7 +86,7 @@ export default function MediaShelf() {
                     }`}
                     style={filter === type ? { background: 'rgba(200,149,108,0.1)' } : {}}
                   >
-                    {c.label}
+                    {type === 'all' ? 'All' : mediaTypeLabels[type].many}
                   </button>
                 )
               })}

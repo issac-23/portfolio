@@ -1,12 +1,10 @@
 import Image from 'next/image'
 import { galleryPhotos } from '@/data/gallery'
-import { mediaItems } from '@/data/media'
+import { mediaItems, mediaTypeLabels } from '@/data/media'
 import { channels, profile } from '@/data/profile'
-import { projects } from '@/data/projects'
+import { projects, statusLabels } from '@/data/projects'
 import PlainListening from './PlainListening'
 import ViewLink from './ViewLink'
-
-const STATUS = { live: 'Live', wip: 'In progress', concept: 'Concept' } as const
 
 /**
  * Plain view: everything the DSi holds, as an ordinary document. For anyone
@@ -50,7 +48,7 @@ export default function PlainView() {
         {projects.map(p => (
           <article key={p.title} className="dsi-plain-card">
             <h3>
-              {p.title} <span className="dsi-plain-badge">{STATUS[p.status]}</span>
+              {p.title} <span className="dsi-plain-badge">{statusLabels[p.status]}</span>
             </h3>
             <p>{p.description}</p>
             <p className="dsi-plain-meta">{p.tags.join(' · ')}</p>
@@ -86,7 +84,7 @@ export default function PlainView() {
             <li key={m.url}>
               <a href={m.url} target="_blank" rel="noopener noreferrer">{m.title}</a>
               <span className="dsi-plain-meta">
-                {m.type} by {m.creator}
+                {mediaTypeLabels[m.type].one} by {m.creator}
                 {m.date ? `, ${m.date}` : ''}
               </span>
               {m.note && <q>{m.note}</q>}

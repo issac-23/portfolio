@@ -1,24 +1,15 @@
 'use client'
 
 import { useRef } from 'react'
-import type { MediaItem, MediaType } from '@/data/media'
+import { mediaTypeLabels, type MediaItem } from '@/data/media'
 import { AppLower, useListNav } from './screen'
-
-const TYPE: Record<MediaType, string> = {
-  article: 'Article',
-  video: 'Video',
-  podcast: 'Podcast',
-  book: 'Book',
-  film: 'Film',
-  other: 'Other',
-}
 
 /** Upper screen: the selected item, with my note on it as the centrepiece. */
 export function ShelfItem({ item }: { item: MediaItem }) {
   return (
     <div className="dsi-detail">
       <span className="dsi-sub">
-        {TYPE[item.type]}
+        {mediaTypeLabels[item.type].one}
         {item.date ? ` · ${item.date}` : ''}
       </span>
       <h2>{item.title}</h2>
@@ -61,7 +52,7 @@ export function ShelfList({ items, selected, onSelect, onBack }: ShelfListProps)
                 <b>{m.title}</b>
                 <span>{m.creator}</span>
               </span>
-              <span className="dsi-card-status">{TYPE[m.type]}</span>
+              <span className="dsi-card-status">{mediaTypeLabels[m.type].one}</span>
             </button>
           </li>
         ))}

@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { projects, type Project } from '@/data/projects'
+import { projects, statusLabels, type Project } from '@/data/projects'
 
 // Colours resolve per theme so the badges stay legible in light mode too.
-const statusLabel: Record<Project['status'], { text: string; color: string }> = {
-  live:    { text: 'Live',        color: 'var(--status-ok)' },
-  wip:     { text: 'In Progress', color: 'var(--accent)' },
-  concept: { text: 'Concept',     color: 'var(--muted)' },
+const statusColor: Record<Project['status'], string> = {
+  live: 'var(--status-ok)',
+  wip: 'var(--accent)',
+  concept: 'var(--muted)',
 }
 
 export default function Projects() {
@@ -53,7 +53,7 @@ export default function Projects() {
             ) : (
               <div className="space-y-4">
                 {projects.map((project, i) => {
-                  const s = statusLabel[project.status]
+                  const color = statusColor[project.status]
                   return (
                     <div
                       key={i}
@@ -65,12 +65,12 @@ export default function Projects() {
                         <span
                           className="text-xs rounded-full px-2.5 py-0.5 flex-shrink-0"
                           style={{
-                            color: s.color,
-                            background: `color-mix(in srgb, ${s.color} 12%, transparent)`,
-                            border: `1px solid color-mix(in srgb, ${s.color} 30%, transparent)`,
+                            color,
+                            background: `color-mix(in srgb, ${color} 12%, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
                           }}
                         >
-                          {s.text}
+                          {statusLabels[project.status]}
                         </span>
                       </div>
                       <p className="text-muted text-sm leading-relaxed mb-4">{project.description}</p>
