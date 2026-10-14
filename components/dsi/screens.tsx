@@ -7,7 +7,7 @@ import { ProjectDetail, ProjectList } from './ProjectsApp'
 import { ProfileCard, ProfileStats } from './ProfileApp'
 import { Album, PhotoView } from './CameraApp'
 import { galleryPhotos } from '@/data/gallery'
-import { NowPlayingCard, RecentlyPlayed } from './SoundApp'
+import { NowPlayingCard, SoundLists } from './SoundApp'
 import { ShelfItem, ShelfList } from './ShelfApp'
 import { mediaItems } from '@/data/media'
 import { ChatRoom, Channels } from './ChatApp'
@@ -66,7 +66,7 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
         <NowPlayingCard />
       </AppTop>
     ),
-    bottom: c => <RecentlyPlayed onBack={c.back} />,
+    bottom: c => <SoundLists onBack={c.back} />,
   },
   shelf: {
     top: c => (

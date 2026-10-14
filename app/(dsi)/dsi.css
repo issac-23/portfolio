@@ -1153,6 +1153,16 @@
   gap: 4px;
 }
 a.dsi-card { text-decoration: none; }
+.dsi-card-static { cursor: default; }
+.dsi-list-head {
+  margin: 8px 0 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsi-muted);
+}
+.dsi-list-head:first-child { margin-top: 0; }
 a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 2px; }
 
 @media (max-width: 620px) {

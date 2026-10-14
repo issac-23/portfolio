@@ -87,7 +87,7 @@ const Wrench = () => (
   </svg>
 )
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+export const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 // Counts come from the data files, so adding a project or photo updates the
 // menu without anyone remembering to touch this list.
