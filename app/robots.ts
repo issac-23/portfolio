@@ -8,9 +8,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        // Neither is content: /callback is the Spotify OAuth helper and /api
-        // only returns JSON.
-        disallow: ['/callback', '/api/'],
+        // Not content: /api only returns JSON.
+        disallow: ['/api/'],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

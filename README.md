@@ -94,7 +94,7 @@ npm run test:e2e                 # journeys, contrast, axe and the DSi, both wid
 The screenshot scripts below still want a server on port 3000 (`npm run dev`):
 
 ```bash
-node scripts/shots.mjs <label>   # desktop + mobile screenshots, both themes
+node scripts/shots.mjs <label>   # /classic at desktop + mobile, both themes
 ```
 
 ```bash
