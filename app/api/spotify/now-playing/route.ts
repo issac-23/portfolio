@@ -26,12 +26,16 @@ async function getAccessToken() {
 export const dynamic = 'force-dynamic'
 
 /**
- * Failure has its own status and body so the client can tell "Spotify did not
- * answer" from "nothing is playing". Both used to come back as a 200 with
- * isPlaying false, which made an outage or a bad token look like a quiet day.
+ * Failure has its own body so the client can tell "Spotify did not answer"
+ * from "nothing is playing". Both used to look the same: a 200 with isPlaying
+ * false, so an outage or a bad token read as a quiet day.
+ *
+ * It stays a 200 on purpose. A non-2xx fetch is logged by the browser as a
+ * console error on every poll of an outage, and the shared poll already
+ * treats the body as the answer, so the field is enough to carry it.
  */
 function unavailable() {
-  return Response.json({ error: 'spotify_unavailable' }, { status: 502, headers: { 'Cache-Control': 'no-store' } })
+  return Response.json({ error: 'spotify_unavailable' }, { headers: { 'Cache-Control': 'no-store' } })
 }
 
 export async function GET() {

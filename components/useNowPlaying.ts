@@ -29,8 +29,9 @@ export type Listening =
   | { kind: 'last'; track: Track; recent: Track[] }
   | { kind: 'nothing' }
 
-/** The route's success body. A failure is a non-200 and never reaches this. */
+/** What the route sends back: an answer, or `error` when it could not get one. */
 interface NowPlayingBody {
+  error?: string
   isPlaying: boolean
   title?: string
   artist?: string
@@ -94,7 +95,9 @@ async function poll() {
   try {
     const res = await fetch('/api/spotify/now-playing')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    set(derive((await res.json()) as NowPlayingBody))
+    const body = (await res.json()) as NowPlayingBody
+    if (body.error) throw new Error(body.error)
+    set(derive(body))
   } catch {
     if (state.kind === 'loading' || state.kind === 'unreachable') set({ kind: 'unreachable' })
   }

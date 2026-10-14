@@ -13,14 +13,12 @@ export const track = (title: string, artist = 'Someone') => ({
 const respond = (body: object, status: number) => (route: Route) =>
   route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
 
-/**
- * Answer /api/spotify/now-playing from the test, so nothing depends on the
- * route's own credentials or on Spotify being up. A failure status is the
- * route's way of saying it could not reach Spotify; the browser logs it as a
- * console error, so a test that sends one lists it in `expectedErrors`.
- */
+/** Answer /api/spotify/now-playing from the test, so nothing depends on Spotify or the route's credentials. */
 export const mockSpotify = (page: Page, body: object, status = 200) =>
   page.route('**/api/spotify/now-playing', respond(body, status))
+
+/** The route's report that it could not get an answer out of Spotify. */
+export const spotifyDown = { error: 'spotify_unavailable' }
 
 /** Nothing playing and nothing recent, the quiet default for tests that are about something else. */
 export const mockSpotifyQuiet = (page: Page) => mockSpotify(page, { isPlaying: false, recentTracks: [] })
