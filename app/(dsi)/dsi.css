@@ -617,30 +617,78 @@
   inset: 0;
   animation: dsi-fade 0.6s ease both;
 }
+/* A slow zoom over the photo's time on screen. Transform only, on the image,
+   and the frame clips it, so nothing around it moves. The shot is re-keyed
+   per photo, which restarts it. */
+.dsi-photo-front {
+  object-fit: contain;
+  transform-origin: center;
+  animation: dsi-kenburns 5s linear both;
+}
 .dsi-photo-back {
   object-fit: cover;
   filter: blur(14px) brightness(0.7);
   transform: scale(1.15);
 }
-.dsi-photo-front { object-fit: contain; }
+.dsi-photo[data-held] .dsi-photo-front { animation-play-state: paused; }
+.dsi-photo-next {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
 .dsi-photo-tag {
   position: absolute;
-  inset: auto 6px 4px;
+  inset: auto 0 0;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 6px 4px;
   font-size: 0.56rem;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
   pointer-events: none;
 }
+.dsi-photo-dots {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+.dsi-photo-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-sizing: border-box;
+}
+.dsi-photo-dots i[data-on] { background: #fff; }
+.dsi-photo-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+}
+.dsi-photo-line > span:last-child { flex: none; }
+.dsi-photo-alt {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
 @keyframes dsi-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dsi-kenburns { from { transform: scale(1); } to { transform: scale(1.08); } }
 
 @media (prefers-reduced-motion: reduce) {
   .dsi-photo-shot { animation: none; }
+  .dsi-photo-front { animation: none; }
 }
 /* The same again for the System Settings switch, which can ask for less
    motion than the device does. */
-:root[data-motion='reduce'] .dsi-photo-shot { animation: none; }
+:root[data-motion='reduce'] .dsi-photo-shot,
+:root[data-motion='reduce'] .dsi-photo-front { animation: none; }
 
 /* ── lower screen: the app rail ── */
 .dsi-lower {
