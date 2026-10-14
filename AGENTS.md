@@ -1,6 +1,8 @@
 # Working in this repo
 
-Personal portfolio site — Next.js App Router, TypeScript, Tailwind.
+`npm run check` runs lint and then `test:e2e`. Playwright runs against a
+production build with 4 workers locally. Tests are E2E only, there are no unit
+tests.
 
 ## Agent skills
 
