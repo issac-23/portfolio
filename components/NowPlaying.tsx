@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { retryNowPlaying, useNowPlaying } from './useNowPlaying'
+import { useReveal } from './useReveal'
 
 function MusicBars() {
   return (
@@ -24,16 +24,7 @@ function MusicBars() {
 
 export default function NowPlaying() {
   const s = useNowPlaying()
-  const ref = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) entry.target.classList.add('visible') },
-      { threshold: 0.1 }
-    )
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [])
+  const ref = useReveal<HTMLElement>()
 
   return (
     <section id="music" ref={ref} className="section-fade py-24 px-6 border-t border-border">

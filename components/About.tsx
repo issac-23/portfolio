@@ -1,19 +1,10 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import { profile } from '@/data/profile'
+import { useReveal } from './useReveal'
 
 export default function About() {
-  const ref = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) entry.target.classList.add('visible') },
-      { threshold: 0.1 }
-    )
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [])
+  const ref = useReveal<HTMLElement>()
 
   return (
     <section id="about" ref={ref} className="section-fade py-24 px-6 border-t border-border">

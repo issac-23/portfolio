@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import { channels } from '@/data/profile'
 import { externalProps } from '@/data/links'
+import { useReveal } from './useReveal'
 
 // One icon per channel in data/profile.ts, keyed by its label.
 const ICONS: Record<string, React.ReactNode> = {
@@ -27,16 +27,7 @@ const ICONS: Record<string, React.ReactNode> = {
 }
 
 export default function Contact() {
-  const ref = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) entry.target.classList.add('visible') },
-      { threshold: 0.1 }
-    )
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [])
+  const ref = useReveal<HTMLElement>()
 
   return (
     <section id="contact" ref={ref} className="section-fade py-24 px-6 border-t border-border">

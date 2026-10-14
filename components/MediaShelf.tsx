@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { mediaItems, mediaTypeLabels, type MediaType } from '@/data/media'
+import { useReveal } from './useReveal'
 
 // Wording lives in data/media.ts; the symbols are only this page's.
 const typeSymbol: Record<MediaType | 'all', string> = {
@@ -26,7 +27,7 @@ function Badge({ type }: { type: MediaType }) {
 export default function MediaShelf() {
   const [filter, setFilter] = useState('all')
   const [swapping, setSwapping] = useState(false)
-  const ref = useRef<HTMLElement>(null)
+  const ref = useReveal<HTMLElement>()
 
   const availableTypes: (MediaType | 'all')[] = ['all', ...Array.from(new Set(mediaItems.map((m) => m.type)))]
   const filtered = filter === 'all' ? mediaItems : mediaItems.filter((m) => m.type === filter)
@@ -43,15 +44,6 @@ export default function MediaShelf() {
       setSwapping(false)
     }, ms)
   }
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) entry.target.classList.add('visible') },
-      { threshold: 0.1 }
-    )
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [])
 
   return (
     <section id="media" ref={ref} className="section-fade py-24 px-6 border-t border-border">

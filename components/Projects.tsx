@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import { projects, statusLabels, type Project } from '@/data/projects'
+import { useReveal } from './useReveal'
 
 // Colours resolve per theme so the badges stay legible in light mode too.
 const statusColor: Record<Project['status'], string> = {
@@ -11,16 +11,7 @@ const statusColor: Record<Project['status'], string> = {
 }
 
 export default function Projects() {
-  const ref = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) entry.target.classList.add('visible') },
-      { threshold: 0.1 }
-    )
-    if (ref.current) observer.observe(ref.current)
-    return () => observer.disconnect()
-  }, [])
+  const ref = useReveal<HTMLElement>()
 
   return (
     <section id="projects" ref={ref} className="section-fade py-24 px-6 border-t border-border">
