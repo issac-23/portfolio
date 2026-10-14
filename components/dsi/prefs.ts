@@ -62,6 +62,11 @@ export function setMotion(choice: MotionChoice) {
   emit()
 }
 
+/** True when the System Settings switch asks for less motion. The device's own preference is not counted: the boot only fades, so it plays under that. */
+export function chosenLessMotion() {
+  return document.documentElement.dataset.motion === 'reduce'
+}
+
 /** True when either the device or the setting asks for less motion. */
 export function lessMotion() {
   return document.documentElement.dataset.motion === 'reduce' || window.matchMedia('(prefers-reduced-motion: reduce)').matches

@@ -30,8 +30,10 @@ const motionScript = `(function(){try{if(localStorage.getItem('dsi-motion')==='r
 
 // The boot screen, decided before first paint so the menu never flashes up
 // ahead of it. Once a visit, and never when it would only be in the way:
-// less motion asked for, plain view, or a link straight to an app.
-const bootScript = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem('dsi-booted'))return;if(d.dataset.motion==='reduce'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;if(location.search.indexOf('view=plain')>-1||location.hash)return;d.dataset.boot=''}catch(e){}})()`
+// less motion chosen in the DSi's own System Settings, plain view, or a link
+// straight to an app. The system's reduced-motion setting does not skip it:
+// the boot only fades, with no movement.
+const bootScript = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem('dsi-booted'))return;if(d.dataset.motion==='reduce')return;if(location.search.indexOf('view=plain')>-1||location.hash)return;d.dataset.boot=''}catch(e){}})()`
 
 export default function DsiLayout({ children }: { children: React.ReactNode }) {
   return (

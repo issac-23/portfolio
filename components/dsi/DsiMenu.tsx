@@ -8,7 +8,7 @@ import { APPS, type AppId } from './apps'
 import { appFromHash, writeHash } from './deepLink'
 import Device from './Device'
 import { playLaunch, playReturn } from './launch'
-import { lessMotion } from './prefs'
+import { chosenLessMotion } from './prefs'
 import PhotoFrame from './PhotoFrame'
 import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
@@ -106,7 +106,7 @@ export default function DsiMenu() {
       setPower(false)
     } else {
       setPower(true)
-      if (!lessMotion()) startBoot()
+      if (!chosenLessMotion()) startBoot()
     }
   }, [power])
 

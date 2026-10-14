@@ -1503,7 +1503,9 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
    What the DSi showed when you switched it on: both screens white, the
    maker's name in grey in a rounded outline on the top one, then the menu.
    The name here is the site's owner. Shown only while <html> has data-boot,
-   which the layout's inline script sets before first paint, once a visit. */
+   which the layout's inline script sets before first paint, once a visit.
+   It only fades, so it plays under the system's reduced motion too; only the
+   System Settings switch skips it. */
 .dsi-boot { display: none; }
 :root[data-boot] .dsi-boot {
   position: absolute;
@@ -1527,6 +1529,12 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 }
 @keyframes dsi-boot-in { to { opacity: 1; } }
 @keyframes dsi-boot-out { to { opacity: 0; visibility: hidden; } }
+/* The global reduced-motion rule shrinks every animation to 0.01ms, which
+   would end the boot at once. Keep its fades, and so its animationend. */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-boot] .dsi-boot { animation-duration: 0.5s !important; }
+  :root[data-boot] .dsi-boot-mark { animation-duration: 0.5s !important; }
+}
 @media (max-width: 620px) {
   .dsi-boot-mark { font-size: 1.3rem; }
 }
