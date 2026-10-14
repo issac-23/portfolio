@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
 import { openApp, openMenu } from './helpers/dsi'
+import { mockSpotifyQuiet } from './helpers/spotify'
 
 /**
  * System Settings: the three switches that let the theme exist without
@@ -92,6 +93,7 @@ test('Reduce motion turns off every effect from then on, and is remembered', asy
 })
 
 test('Plain view opens from Settings, is remembered, and the DSi is one link away', async ({ page }) => {
+  await mockSpotifyQuiet(page)
   await openApp(page, 'System Settings')
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('ArrowDown')
