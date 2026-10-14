@@ -14,7 +14,7 @@ const COLS = 4
 
 /** Upper screen: the selected photo, letterboxed over a blur of itself. */
 export function PhotoView({ photo, index, total }: { photo: GalleryPhoto; index: number; total: number }) {
-  const sizes = '(max-width: 620px) 76vw, 450px'
+  const sizes = '(max-width: 620px) 76vw, 640px'
   return (
     <div className="dsi-photo">
       <div className="dsi-photo-shot" key={photo.src}>

@@ -3,8 +3,7 @@ import { expect, test } from './fixtures'
 import { effectsEmpty, expectSettledOn, openApp, openMenu, railState } from './helpers/dsi'
 
 /**
- * The boot screen, the POWER button, and the photo glow that fills the page
- * around the device.
+ * The boot screen, the POWER button, and the device filling the page.
  */
 
 test.beforeEach(async ({ page }) => {
@@ -153,55 +152,62 @@ test('the power button comes after the rail in the Tab order', async ({ page }) 
   expect(after, 'the power button follows the rail in the DOM').toBe(true)
 })
 
-test('an ambient copy of the top photo fills the page', async ({ page }) => {
+test('nothing but the page colour around the device', async ({ page }) => {
   await openMenu(page)
-  const ambient = page.locator('.dsi-ambient')
-  await expect(ambient).toHaveAttribute('aria-hidden', 'true')
-
-  const box = await ambient.boundingBox()
-  const vp = page.viewportSize()!
-  expect(box).toMatchObject({ x: 0, y: 0, width: vp.width, height: vp.height })
-
-  // The photo rotates every few seconds, so read both in one go and retry
-  // rather than compare two reads taken either side of a change.
-  await expect
-    .poll(() =>
-      page.evaluate(() => {
-        const name = (src: string | null | undefined) =>
-          /\/photos\/gallery\/[^&"]+/.exec(decodeURIComponent(src ?? ''))?.[0] ?? null
-        const ambientImgs = [...document.querySelectorAll('.dsi-ambient img')]
-        const front = name(document.querySelector('.dsi-photo-front')?.getAttribute('src'))
-        // Mid cross-fade there are two, and the newest is the last.
-        const ambientLast = name(ambientImgs[ambientImgs.length - 1]?.getAttribute('src'))
-        return { match: front !== null && front === ambientLast, front, ambientLast }
-      }),
-    )
-    .toMatchObject({ match: true })
-
-  await page.goto('/?view=plain')
-  await expect(page.locator('.dsi-plain')).toBeVisible()
   await expect(page.locator('.dsi-ambient')).toHaveCount(0)
 })
 
-test('the device uses the height of a 1080p screen', async ({ page }, testInfo) => {
+/** Whether the Shortcuts nav and the device's boxes intersect. */
+async function shortcutsOverlapDevice(page: Page) {
+  const [nav, dev] = await Promise.all([
+    page.getByRole('navigation', { name: 'Shortcuts' }).boundingBox(),
+    page.locator('.dsi-device').boundingBox(),
+  ])
+  return (
+    nav!.x < dev!.x + dev!.width &&
+    nav!.x + nav!.width > dev!.x &&
+    nav!.y < dev!.y + dev!.height &&
+    nav!.y + nav!.height > dev!.y
+  )
+}
+
+const screenWidths = (page: Page) =>
+  page.evaluate(() => [...document.querySelectorAll('.dsi-screen')].map(s => s.getBoundingClientRect().width))
+
+test('a 1080p screen gets tall screens in a DSi XL sized shell', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'sized for a desktop viewport')
 
   await page.setViewportSize({ width: 1920, height: 1080 })
   await openMenu(page)
   const device = await page.locator('.dsi-device').boundingBox()
-  expect(device!.width).toBeGreaterThanOrEqual(820)
+  for (const w of await screenWidths(page)) {
+    expect(w, 'screens take the height').toBeGreaterThanOrEqual(560)
+    // As wide as a DSi XL round screens that size, and no wider.
+    expect(device!.width / w, 'shell is about two screens wide').toBeGreaterThanOrEqual(1.8)
+    expect(device!.width / w).toBeLessThanOrEqual(2.2)
+  }
   expect((await railState(page)).pageScrolls).toBe(false)
 
-  await page.setViewportSize({ width: 1024, height: 768 })
-  await expectSettledOn(page, 'Profile')
-  const [nav, dev] = await Promise.all([
-    page.getByRole('navigation', { name: 'Shortcuts' }).boundingBox(),
-    page.locator('.dsi-device').boundingBox(),
-  ])
-  const overlap =
-    nav!.x < dev!.x + dev!.width &&
-    nav!.x + nav!.width > dev!.x &&
-    nav!.y < dev!.y + dev!.height &&
-    nav!.y + nav!.height > dev!.y
-  expect(overlap, 'the shortcuts do not sit on the device').toBe(false)
+  // A 768p laptop: still no scrolling, and the shell has to stay clear of
+  // the shortcuts above it.
+  for (const width of [1366, 1024]) {
+    await page.setViewportSize({ width, height: 768 })
+    await expectSettledOn(page, 'Profile')
+    expect(await shortcutsOverlapDevice(page), `the shortcuts do not sit on the device at ${width}x768`).toBe(false)
+  }
+})
+
+test('a phone keeps the stacked device with screens at most of its width', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile', 'sized for a phone viewport')
+
+  await openMenu(page)
+  const device = await page.locator('.dsi-device').boundingBox()
+  const vp = page.viewportSize()!
+  expect(device!.width, 'the device spans the phone').toBeGreaterThan(vp.width - 24)
+  for (const w of await screenWidths(page)) {
+    expect(w / device!.width, 'screens are about 70% of the device').toBeGreaterThan(0.6)
+    expect(w / device!.width).toBeLessThan(0.8)
+  }
+  expect((await railState(page)).pageScrolls).toBe(false)
+  expect(await shortcutsOverlapDevice(page)).toBe(false)
 })
