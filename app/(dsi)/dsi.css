@@ -69,16 +69,67 @@
    screen but not a 768p laptop, and the page would start scrolling.
    svh rather than vh so mobile browser chrome is accounted for.            */
 .dsi-stage {
+  /* Room kept above the device for the shortcuts. Only needed when the
+     screen is too narrow for them to sit in the empty corner beside it. */
+  --dsi-top-reserve: 40px;
   min-height: 100svh;
   display: grid;
-  place-items: center;
-  padding: 16px;
+  grid-template-rows: auto 1fr;
+  justify-items: center;
+  align-items: center;
+  padding: 8px;
   background: radial-gradient(120% 90% at 50% 0%, var(--dsi-page), var(--dsi-desk));
 }
-
-.dsi-device {
-  width: min(680px, 100%, calc((100svh - 32px) / var(--dsi-aspect)));
+@media (min-aspect-ratio: 7/5) {
+  .dsi-stage { --dsi-top-reserve: 0px; grid-template-rows: 1fr; }
 }
+
+/* As big as the screen allows: 860px wide at most, otherwise the full
+   height. It used to stop at 680px, which left a 1080p screen mostly
+   margin. */
+.dsi-device {
+  /* Above the ambient backdrop. */
+  position: relative;
+  z-index: 1;
+  width: min(860px, 100%, calc((100svh - 16px - var(--dsi-top-reserve)) / var(--dsi-aspect)));
+}
+
+/* ── ambient backdrop ──
+   The top screen's photo, softened by being stretched across the whole
+   page. Opacity sits on the shot rather than the layer so the vignette stays
+   solid, and the fade only names its start so it ends at that opacity. */
+.dsi-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dsi-ambient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 35%, var(--dsi-page) 100%);
+}
+.dsi-ambient-shot {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  animation: dsi-ambient-in 1.2s ease both;
+}
+:root.dark .dsi-ambient-shot { opacity: 0.6; }
+.dsi-ambient-shot img {
+  object-fit: cover;
+  /* No filter: a blur this wide over the whole viewport is re-rasterised on
+     every frame of the cross-fade. The 64px source, stretched to the page,
+     is already soft, and the scale hides its edge. */
+  transform: scale(1.1);
+}
+@keyframes dsi-ambient-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .dsi-ambient-shot { animation: none; }
+}
+:root[data-motion='reduce'] .dsi-ambient-shot { animation: none; }
 
 /* ── shell ── */
 .dsi-lid,
@@ -316,15 +367,28 @@
   box-shadow: inset 0 1px 0 var(--dsi-emboss);
 }
 .dsi-startsel i { width: 15px; height: 8px; border-radius: 5px; }
+/* The d-pad's cell keeps room under it for POWER, which sits in the same
+   cell of the grid (it follows the screen in the DOM so it is not a Tab stop
+   ahead of the rail). 72px is the old stack: 50 pad, 9 gap, 13 button. */
+.dsi-pad { grid-area: 1 / 1; padding-bottom: 22px; }
 .dsi-power {
+  grid-area: 1 / 1;
+  align-self: center;
+  justify-self: start;
+  margin: 59px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
-  margin-top: 9px;
   font-size: 0.44rem;
   letter-spacing: 0.06em;
   color: var(--dsi-chrome-ink);
 }
+.dsi-power:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 3px; border-radius: 4px; }
 .dsi-power i {
   width: 13px;
   height: 13px;
@@ -1249,14 +1313,22 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   .dsi-plain { max-width: none; padding: 0; }
 }
 
-/* The stage's shortcuts, resume and plain view: small, but first in line. */
+/* The stage's shortcuts, resume and plain view: small, but first in line.
+   Above the device by default; in the corner beside it once the screen is
+   wide enough that the corner is empty anyway. */
 .dsi-stage { position: relative; }
+/* Positioned at every width so they paint above the ambient backdrop. */
 .dsi-shortcuts {
-  position: absolute;
-  top: 8px;
-  right: 12px;
+  position: relative;
+  z-index: 1;
+  justify-self: end;
   display: flex;
   gap: 6px;
+  height: 32px;
+  align-items: center;
+}
+@media (min-aspect-ratio: 7/5) {
+  .dsi-shortcuts { position: absolute; top: 8px; right: 12px; }
 }
 .dsi-shortcuts a {
   padding: 3px 10px;
@@ -1270,3 +1342,60 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 }
 .dsi-shortcuts a:hover { text-decoration: underline; }
 .dsi-shortcuts a:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; }
+
+/* ── power off ──
+   Both screens go plain black, the LED goes dark, and a white line collapses
+   to nothing as they switch off, like a tube TV. */
+.dsi-device[data-power='off'] .dsi-screen { background: #000; }
+.dsi-device[data-power='off'] .dsi-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: #fff;
+  animation: dsi-crt-off 0.25s ease-in forwards;
+}
+.dsi-device[data-power='off'] .dsi-led-on {
+  background: #2b3a30;
+  box-shadow: none;
+}
+@keyframes dsi-crt-off {
+  60% { transform: scale(1, 0.01); opacity: 1; }
+  100% { transform: scale(0, 0.01); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsi-device[data-power='off'] .dsi-screen::after { display: none; }
+}
+:root[data-motion='reduce'] .dsi-device[data-power='off'] .dsi-screen::after { display: none; }
+
+/* ── boot screen ──
+   What the DSi showed when you switched it on: both screens white, the
+   maker's name in grey in a rounded outline on the top one, then the menu.
+   The name here is the site's owner. Shown only while <html> has data-boot,
+   which the layout's inline script sets before first paint, once a visit. */
+.dsi-boot { display: none; }
+:root[data-boot] .dsi-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  animation: dsi-boot-out 0.5s ease 1.8s forwards;
+}
+.dsi-boot-mark {
+  padding: 0.12em 0.7em 0.18em;
+  border: 0.14em solid #8f8f8f;
+  border-radius: 999px;
+  color: #8f8f8f;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  opacity: 0;
+  animation: dsi-boot-in 0.5s ease 0.25s forwards;
+}
+@keyframes dsi-boot-in { to { opacity: 1; } }
+@keyframes dsi-boot-out { to { opacity: 0; visibility: hidden; } }
+@media (max-width: 620px) {
+  .dsi-boot-mark { font-size: 1.3rem; }
+}
