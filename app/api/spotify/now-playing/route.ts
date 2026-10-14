@@ -16,7 +16,22 @@ async function getAccessToken() {
     }),
     cache: 'no-store',
   })
-  return res.json()
+  if (!res.ok) throw new Error(`token request failed: ${res.status}`)
+  const body = await res.json()
+  if (!body.access_token) throw new Error('token response had no access_token')
+  return body as { access_token: string }
+}
+
+// Answers come from Spotify on every request; nothing here is worth building ahead.
+export const dynamic = 'force-dynamic'
+
+/**
+ * Failure has its own status and body so the client can tell "Spotify did not
+ * answer" from "nothing is playing". Both used to come back as a 200 with
+ * isPlaying false, which made an outage or a bad token look like a quiet day.
+ */
+function unavailable() {
+  return Response.json({ error: 'spotify_unavailable' }, { status: 502, headers: { 'Cache-Control': 'no-store' } })
 }
 
 export async function GET() {
@@ -33,6 +48,7 @@ export async function GET() {
         'https://api.spotify.com/v1/me/player/recently-played?limit=5',
         { headers: { Authorization: `Bearer ${access_token}` }, cache: 'no-store' }
       )
+      if (!recentRes.ok) return unavailable()
       const recentData = await recentRes.json()
       const tracks = (recentData.items ?? []).map((item: any) => ({
         title: item.track.name,
@@ -44,9 +60,7 @@ export async function GET() {
       return Response.json({ isPlaying: false, recentTracks: tracks })
     }
 
-    if (!nowRes.ok) {
-      return Response.json({ isPlaying: false, recentTracks: [] })
-    }
+    if (!nowRes.ok) return unavailable()
 
     const data = await nowRes.json()
 
@@ -64,6 +78,6 @@ export async function GET() {
       recentTracks: [],
     })
   } catch {
-    return Response.json({ isPlaying: false, recentTracks: [] })
+    return unavailable()
   }
 }
