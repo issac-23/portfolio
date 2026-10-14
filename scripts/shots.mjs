@@ -1,9 +1,8 @@
 import { chromium, devices } from 'playwright'
 import { mkdir } from 'node:fs/promises'
+import { classicUrl } from './classic.mjs'
 
 const LABEL = process.argv[2] ?? 'before'
-// Override when 3000 is taken by another project: SITE=http://localhost:3009
-const URL = process.env.SITE ?? 'http://localhost:3000'
 const OUT = `shots/${LABEL}`
 
 const VIEWPORTS = [
@@ -28,8 +27,7 @@ async function run() {
       })
       await context.addInitScript(`localStorage.setItem('theme', '${theme}')`)
       const page = await context.newPage()
-      // The classic site. / is the DSi now, which has no .section-fade to reveal.
-      await page.goto(`${URL}/classic`, { waitUntil: 'domcontentloaded' })
+      await page.goto(classicUrl(), { waitUntil: 'domcontentloaded' })
       await page.waitForLoadState('load')
       // reveal all scroll-triggered sections so the full page is captured
       await page.evaluate(() => {
