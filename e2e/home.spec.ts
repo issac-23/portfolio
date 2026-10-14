@@ -66,6 +66,13 @@ test('/dsi, and /dsi?view=plain, redirect to their new homes', async ({ page }) 
   await expect(page.locator('.dsi-plain')).toBeVisible()
 })
 
+test('the Spotify token setup routes are gone', async ({ request }) => {
+  // The exchange endpoint traded codes for tokens with the client secret, for
+  // anyone who asked. Neither it nor its /callback page should come back.
+  expect((await request.post('/api/spotify/exchange', { data: { code: 'x' } })).status()).toBe(404)
+  expect((await request.get('/callback?code=x')).status()).toBe(404)
+})
+
 test('the home page is indexed and canonical; the classic one is kept but not indexed', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('meta[name="robots"]')).toHaveCount(0)
