@@ -28,7 +28,8 @@ async function run() {
       })
       await context.addInitScript(`localStorage.setItem('theme', '${theme}')`)
       const page = await context.newPage()
-      await page.goto(URL, { waitUntil: 'domcontentloaded' })
+      // The classic site. / is the DSi now, which has no .section-fade to reveal.
+      await page.goto(`${URL}/classic`, { waitUntil: 'domcontentloaded' })
       await page.waitForLoadState('load')
       // reveal all scroll-triggered sections so the full page is captured
       await page.evaluate(() => {
