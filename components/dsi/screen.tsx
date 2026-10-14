@@ -128,15 +128,21 @@ interface ListNavOptions {
 export function useListNav({ container, count, selected, onSelect, cols = 1 }: ListNavOptions) {
   const item = (i: number) => container.current?.querySelector<HTMLElement>(`[data-idx="${i}"]`)
 
+  // Arrival only, and when the list first has something to focus: a list
+  // that fills in late (the resume's pages) still gets it. Afterwards focus
+  // moves with the user.
+  const arrived = useRef(false)
   useEffect(() => {
+    if (!count || arrived.current) return
+    arrived.current = true
     item(selected)?.focus({ preventScroll: true })
-    // Arrival only. Afterwards focus moves with the user.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [count > 0])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return
+      // An empty list leaves the arrow keys alone, so the screen can scroll.
+      if (!count || e.metaKey || e.ctrlKey || e.altKey) return
       const step =
         e.key === 'ArrowDown' ? cols
         : e.key === 'ArrowUp' ? -cols

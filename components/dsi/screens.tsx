@@ -85,12 +85,12 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
     bottom: c => <Channels selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
   },
   resume: {
-    top: () => (
+    top: c => (
       <AppTop>
-        <BookletCover />
+        <BookletCover page={c.sel} />
       </AppTop>
     ),
-    bottom: c => <BookletContents onBack={c.back} />,
+    bottom: c => <BookletContents selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
   },
   settings: {
     top: c => (

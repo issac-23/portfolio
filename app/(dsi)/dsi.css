@@ -1260,6 +1260,14 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   text-transform: uppercase;
   color: var(--dsi-accent-ink);
 }
+.dsi-preview {
+  display: block;
+  flex: none;
+  background: #fff;
+}
+.dsi-preview canvas { display: block; width: 100%; height: 100%; }
+.dsi-preview:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: -2px; }
+.dsi-pages { margin-bottom: 4px; }
 .dsi-contents {
   margin: 0;
   padding: 0;
