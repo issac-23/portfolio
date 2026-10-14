@@ -1,3 +1,5 @@
+import { aggregateWeek, playable, toTrack } from './week'
+
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!
 const REFRESH_TOKEN = process.env.SPOTIFY_REFRESH_TOKEN!
@@ -41,27 +43,30 @@ function unavailable() {
 export async function GET() {
   try {
     const { access_token } = await getAccessToken()
+    const headers = { Authorization: `Bearer ${access_token}` }
 
-    const nowRes = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-      headers: { Authorization: `Bearer ${access_token}` },
-      cache: 'no-store',
-    })
+    // Recently played is always needed for the week's counts, so fetch it
+    // alongside currently-playing instead of after it.
+    const [nowRes, recentRes] = await Promise.all([
+      fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+        headers,
+        cache: 'no-store',
+      }),
+      fetch('https://api.spotify.com/v1/me/player/recently-played?limit=50', {
+        headers,
+        cache: 'no-store',
+      }),
+    ])
+
+    // Every answer carries the week, so without recent plays there is no answer.
+    if (!recentRes.ok) return unavailable()
+    const recentItems: any[] = (await recentRes.json()).items ?? []
+    const week = aggregateWeek(recentItems)
 
     if (nowRes.status === 204) {
-      const recentRes = await fetch(
-        'https://api.spotify.com/v1/me/player/recently-played?limit=5',
-        { headers: { Authorization: `Bearer ${access_token}` }, cache: 'no-store' }
-      )
-      if (!recentRes.ok) return unavailable()
-      const recentData = await recentRes.json()
-      const tracks = (recentData.items ?? []).map((item: any) => ({
-        title: item.track.name,
-        artist: item.track.artists.map((a: any) => a.name).join(', '),
-        album: item.track.album.name,
-        albumImageUrl: item.track.album.images[0]?.url ?? '',
-        songUrl: item.track.external_urls.spotify,
-      }))
-      return Response.json({ isPlaying: false, recentTracks: tracks })
+      // Newest first, so the first five are the five most recent plays.
+      const tracks = playable(recentItems).slice(0, 5).map(toTrack)
+      return Response.json({ isPlaying: false, recentTracks: tracks, week })
     }
 
     if (!nowRes.ok) return unavailable()
@@ -69,7 +74,7 @@ export async function GET() {
     const data = await nowRes.json()
 
     if (!data.item) {
-      return Response.json({ isPlaying: false, recentTracks: [] })
+      return Response.json({ isPlaying: false, recentTracks: [], week })
     }
 
     return Response.json({
@@ -80,6 +85,7 @@ export async function GET() {
       albumImageUrl: data.item.album?.images[0]?.url ?? data.item.images?.[0]?.url ?? '',
       songUrl: data.item.external_urls?.spotify ?? '',
       recentTracks: [],
+      week,
     })
   } catch {
     return unavailable()
