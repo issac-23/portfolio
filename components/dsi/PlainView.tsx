@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { galleryPhotos } from '@/data/gallery'
 import { mediaItems, mediaTypeLabels } from '@/data/media'
 import { channels, profile } from '@/data/profile'
+import { externalProps } from '@/data/links'
 import { projects, statusLabels } from '@/data/projects'
 import PlainListening from './PlainListening'
 import ViewLink from './ViewLink'
@@ -22,7 +23,7 @@ export default function PlainView() {
         <nav aria-label="Quick links">
           <a href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume (PDF)</a>
           {channels.map(c => (
-            <a key={c.label} href={c.href} {...(/^https?:/.test(c.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+            <a key={c.label} href={c.href} {...externalProps(c.href)}>
               {c.label}
             </a>
           ))}
@@ -99,7 +100,7 @@ export default function PlainView() {
           {channels.map(c => (
             <li key={c.label}>
               {c.label}:{' '}
-              <a href={c.href} {...(/^https?:/.test(c.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+              <a href={c.href} {...externalProps(c.href)}>
                 {c.handle}
               </a>
             </li>

@@ -1,3 +1,5 @@
+import { isExternal } from '../data/links'
+import { channels } from '../data/profile'
 import { mediaItems, mediaTypeLabels } from '../data/media'
 import { projects, statusLabels } from '../data/projects'
 import { expect, test } from './fixtures'
@@ -36,4 +38,19 @@ test('media types read the same on the classic page and in the plain view', asyn
       `${mediaTypeLabels[m.type].one} by ${m.creator}`,
     )
   }
+})
+
+test('only web channels open in a new tab, on the classic page and in the plain view', async ({ page }) => {
+  const check = async (links: (handle: string) => ReturnType<typeof page.getByRole>) => {
+    for (const c of channels) {
+      const link = links(c.handle)
+      await expect(link).toHaveAttribute('href', c.href)
+      if (isExternal(c.href)) await expect(link).toHaveAttribute('target', '_blank')
+      else await expect(link).not.toHaveAttribute('target', /.*/)
+    }
+  }
+  await page.goto('/classic')
+  await check(h => page.locator('#contact').getByRole('link', { name: new RegExp(h) }))
+  await page.goto('/?view=plain')
+  await check(h => page.locator('.dsi-plain-contact').getByRole('link', { name: h }))
 })

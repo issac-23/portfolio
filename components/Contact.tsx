@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { channels } from '@/data/profile'
+import { externalProps } from '@/data/links'
 
 // One icon per channel in data/profile.ts, keyed by its label.
 const ICONS: Record<string, React.ReactNode> = {
@@ -61,7 +62,7 @@ export default function Contact() {
                 <a
                   key={c.label}
                   href={c.href}
-                  {...(/^https?:/.test(c.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  {...externalProps(c.href)}
                   className="inline-flex items-center gap-3 bg-surface border border-border rounded-xl px-5 py-4 hover:border-accent group lift-card"
                 >
                   {ICONS[c.label]}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
+import { isExternal } from '@/data/links'
 import StatusBar from './StatusBar'
 
 /**
@@ -45,7 +46,7 @@ function ActionButton({ action: a }: { action: Action }) {
     return <span className="dsi-action" aria-disabled="true">{a.unavailable}</span>
   }
   if (a.href) {
-    const external = a.external ?? /^https?:/.test(a.href)
+    const external = a.external ?? isExternal(a.href)
     return (
       <a
         className={cls}
