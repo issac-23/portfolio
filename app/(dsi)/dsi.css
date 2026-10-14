@@ -72,10 +72,13 @@
   /* The shortcuts' row and the gap under it. A shell this wide always runs
      under the top corner, so the row is kept at every size. */
   --dsi-top-reserve: 40px;
+  /* The disclaimer's row under the device: its 16px line and the stage's
+     12px row gap above it. */
+  --dsi-bottom-reserve: 28px;
   /* As wide as the screens can be at this height: the window less the
      stage's padding, the shortcuts and the chrome, shared by two screens
      three quarters as tall as they are wide. */
-  --dsi-screen-w: calc((100svh - 12px - var(--dsi-top-reserve) - var(--dsi-chrome-y)) / 1.5);
+  --dsi-screen-w: calc((100svh - 12px - var(--dsi-top-reserve) - var(--dsi-bottom-reserve) - var(--dsi-chrome-y)) / 1.5);
   /* The window's width, or the XL's proportions round screens that size,
      whichever is narrower. A percentage, so it resolves against the stage's
      content box wherever it is used: the device and the shortcuts row. */
@@ -111,7 +114,7 @@
 .dsi-stage {
   min-height: 100svh;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   /* Enough that the R shoulder, which stands 7px proud of the lid, clears
      the Plain view pill above it. */
   row-gap: 12px;
@@ -1428,6 +1431,7 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   font-size: 0.7rem;
   vertical-align: middle;
 }
+.dsi-plain-disclaimer { margin: 40px 0 0; color: var(--dsi-muted); font-size: 0.9rem; }
 .dsi-plain-meta { color: var(--dsi-muted); font-size: 0.9rem; }
 .dsi-plain-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .dsi-plain-photos {
@@ -1473,6 +1477,22 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 }
 .dsi-shortcuts a:hover { text-decoration: underline; }
 .dsi-shortcuts a:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; }
+
+/* The fan-made line under the device, in the page margin. Its own grid row,
+   so it can neither overlap the device nor push the page into scrolling:
+   --dsi-bottom-reserve takes its 28px out of the screens' height. */
+.dsi-disclaimer {
+  margin: 0;
+  height: 16px;
+  line-height: 16px;
+  font-size: 0.68rem;
+  color: var(--dsi-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+@media (max-width: 360px) {
+  .dsi-disclaimer { font-size: 0.6rem; }
+}
 
 /* ── power off ──
    Both screens go plain black, the LED goes dark, and a white line collapses

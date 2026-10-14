@@ -6,6 +6,7 @@ import { externalProps } from '@/data/links'
 import { projects, statusLabels } from '@/data/projects'
 import PlainListening from './PlainListening'
 import ViewLink from './ViewLink'
+import { FAN_MADE } from './disclaimer'
 
 /**
  * Plain view: everything the DSi holds, as an ordinary document. For anyone
@@ -107,6 +108,9 @@ export default function PlainView() {
           ))}
         </ul>
       </section>
+      <footer>
+        <p className="dsi-plain-disclaimer">{FAN_MADE}</p>
+      </footer>
     </main>
   )
 }

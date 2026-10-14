@@ -1,6 +1,7 @@
 import DsiMenu from '@/components/dsi/DsiMenu'
 import PlainView from '@/components/dsi/PlainView'
 import ViewLink from '@/components/dsi/ViewLink'
+import { FAN_MADE } from '@/components/dsi/disclaimer'
 
 // Read on the server, so plain view arrives as plain view rather than the
 // device flashing up first, and a ?view=plain link can be shared as is.
@@ -21,6 +22,7 @@ export default function DsiPage({ searchParams }: { searchParams: { view?: strin
         <ViewLink to="plain">Plain view</ViewLink>
       </nav>
       <DsiMenu />
+      <p className="dsi-disclaimer">{FAN_MADE}</p>
     </main>
   )
 }
