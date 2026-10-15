@@ -1,5 +1,6 @@
 import DsiMenu from '@/components/dsi/DsiMenu'
 import PlainView from '@/components/dsi/PlainView'
+import Stage from '@/components/dsi/Stage'
 import ViewLink from '@/components/dsi/ViewLink'
 import { FAN_MADE } from '@/components/dsi/disclaimer'
 
@@ -10,6 +11,7 @@ export default function DsiPage({ searchParams }: { searchParams: { view?: strin
 
   return (
     <main className="dsi-stage" id="main-content">
+      <Stage />
       {/* What a search result or a screen reader should lead with: who, not
           which console. */}
       <h1 className="sr-only">Issac Ip — CS + Economics at Northeastern</h1>
