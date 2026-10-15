@@ -74,16 +74,32 @@ test.describe('with the boot screen on', () => {
     await expect(html(page)).not.toHaveAttribute('data-boot', '')
   })
 
-  test('no boot for plain view, a deep link, or reduced motion', async ({ page }) => {
+  test("no boot for plain view, a deep link, or the DSi's own less-motion setting",async ({ page }) => {
     await page.goto('/?view=plain')
     await expect(html(page)).not.toHaveAttribute('data-boot', '')
 
     await page.goto('/#projects')
     await expect(html(page)).not.toHaveAttribute('data-boot', '')
 
-    await page.emulateMedia({ reducedMotion: 'reduce' })
+    // Chosen in the DSi's System Settings, stored the way prefs.ts reads it.
+    await page.addInitScript(() => localStorage.setItem('dsi-motion', 'reduce'))
     await page.goto('/')
+    await expect(html(page)).toHaveAttribute('data-motion', 'reduce')
     await expect(html(page)).not.toHaveAttribute('data-boot', '')
+  })
+
+  test('the boot still plays under the system reduced motion, with its fades at full length', async ({ page }) => {
+    await holdBoot(page)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await expect(html(page)).toHaveAttribute('data-boot', '')
+    // The global reduced-motion rule would make these 0.01ms.
+    const durations = await page.evaluate(() =>
+      ['.dsi-boot', '.dsi-boot-mark'].map(s => getComputedStyle(document.querySelector(s)!).animationDuration),
+    )
+    expect(durations).toEqual(['0.5s', '0.5s'])
+    await ready(page)
+    await expect(html(page)).not.toHaveAttribute('data-boot', '', { timeout: 5000 })
   })
 
   test('powering on boots again', async ({ page }) => {

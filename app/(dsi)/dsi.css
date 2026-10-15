@@ -28,8 +28,25 @@
 }
 
 .dsi-root {
-  --dsi-page: #d3dde3;
-  --dsi-desk: #c2ced6;
+  /* The stage's 8-bit level. A pale sky, so the cyan shell keeps its edge
+     against it, and greens and soil kept soft enough to stay scenery. */
+  --dsi-sky-1: #a9cbee;
+  --dsi-sky-2: #bad6f2;
+  --dsi-sky-3: #cbe1f4;
+  --dsi-sky-4: #dcebf4;
+  --dsi-px-cloud: #fbfdff;
+  --dsi-px-cloud-shade: #dbe7f3;
+  --dsi-px-far: #b2d89a;
+  --dsi-px-far-line: #a1cc88;
+  --dsi-px-near: #86c06f;
+  --dsi-px-near-dot: #73b05e;
+  --dsi-px-grass: #72b85a;
+  --dsi-px-grass-hi: #8ccc6c;
+  --dsi-px-grass-lo: #579c45;
+  --dsi-px-soil: #c9926a;
+  --dsi-px-soil-hi: #dbab84;
+  --dsi-px-mortar: #a36d4a;
+  --dsi-px-block-edge: #85553a;
   --dsi-shell: #58c8e9;
   --dsi-shell-hi: #7ad8f2;
   --dsi-shell-lo: #35a8cc;
@@ -72,10 +89,13 @@
   /* The shortcuts' row and the gap under it. A shell this wide always runs
      under the top corner, so the row is kept at every size. */
   --dsi-top-reserve: 40px;
+  /* The disclaimer's row under the device: its 16px line and the stage's
+     12px row gap above it. */
+  --dsi-bottom-reserve: 28px;
   /* As wide as the screens can be at this height: the window less the
      stage's padding, the shortcuts and the chrome, shared by two screens
      three quarters as tall as they are wide. */
-  --dsi-screen-w: calc((100svh - 12px - var(--dsi-top-reserve) - var(--dsi-chrome-y)) / 1.5);
+  --dsi-screen-w: calc((100svh - 12px - var(--dsi-top-reserve) - var(--dsi-bottom-reserve) - var(--dsi-chrome-y)) / 1.5);
   /* The window's width, or the XL's proportions round screens that size,
      whichever is narrower. A percentage, so it resolves against the stage's
      content box wherever it is used: the device and the shortcuts row. */
@@ -83,8 +103,27 @@
 }
 
 :root.dark .dsi-root {
-  --dsi-page: #0a0e11;
-  --dsi-desk: #14191d;
+  --dsi-sky-1: #070c1a;
+  --dsi-sky-2: #0a1225;
+  --dsi-sky-3: #0d1830;
+  --dsi-sky-4: #111e3a;
+  --dsi-px-cloud: #222d47;
+  --dsi-px-cloud-shade: #1b243b;
+  --dsi-px-star: #c8d3ea;
+  --dsi-px-star-dim: #6b7a9e;
+  --dsi-px-moon: #e6dfbf;
+  --dsi-px-moon-shade: #c4bc98;
+  --dsi-px-far: #102624;
+  --dsi-px-far-line: #0d201e;
+  --dsi-px-near: #143128;
+  --dsi-px-near-dot: #112a22;
+  --dsi-px-grass: #1b3f2c;
+  --dsi-px-grass-hi: #245036;
+  --dsi-px-grass-lo: #143322;
+  --dsi-px-soil: #2f2420;
+  --dsi-px-soil-hi: #3b2e28;
+  --dsi-px-mortar: #211915;
+  --dsi-px-block-edge: #1a1310;
   --dsi-shell: #2f3337;
   --dsi-shell-hi: #43484d;
   --dsi-shell-lo: #1c2023;
@@ -111,15 +150,104 @@
 .dsi-stage {
   min-height: 100svh;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   /* Enough that the R shoulder, which stands 7px proud of the lid, clears
      the Plain view pill above it. */
   row-gap: 12px;
   justify-items: center;
   align-items: center;
   padding: 4px clamp(8px, 1.25vw, 24px) 8px;
-  background: radial-gradient(120% 90% at 50% 0%, var(--dsi-page), var(--dsi-desk));
+  /* Isolated so the scene's z-index -1 stays above this background and
+     below everything else on the stage. */
+  isolation: isolate;
+  /* The sky in hard bands, the way an 8-bit palette would draw it. */
+  background: linear-gradient(
+    180deg,
+    var(--dsi-sky-1) 0 24%,
+    var(--dsi-sky-2) 24% 44%,
+    var(--dsi-sky-3) 44% 64%,
+    var(--dsi-sky-4) 64%
+  );
 }
+
+/* ── scene ──
+   The level behind the device (components/dsi/Stage.tsx): clouds, hills,
+   ground and a few brick blocks, drawn as inline SVG. Fixed to the window
+   and out of the grid's flow, so it takes no row and moves nothing, and
+   clipped so the cloud strip, wider than the window, never scrolls it.  */
+.dsi-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  /* The device's width, worked out here for the blocks, which sit in the
+     margins beside it. Same sum as --dsi-device-w, against the window. */
+  --dsi-scene-dev: min(
+    100vw - 2 * clamp(8px, 1.25vw, 24px),
+    var(--dsi-shell-ratio) * var(--dsi-screen-w)
+  );
+}
+.dsi-scene svg { position: absolute; }
+.dsi-land { left: 0; bottom: 0; }
+
+/* One pattern tile is 1440px, and the strip is that much wider than the
+   window, so sliding it one tile left lands exactly where it began. About
+   two minutes to cross a 1080p screen. */
+.dsi-clouds {
+  top: 0;
+  left: 0;
+  width: calc(100% + 1440px);
+  animation: dsi-clouds 90s linear infinite;
+  will-change: transform;
+}
+@keyframes dsi-clouds { to { transform: translateX(-1440px); } }
+.dsi-stage:has(.dsi-device[data-power='off']) .dsi-clouds { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .dsi-clouds { animation: none; }
+}
+:root[data-motion='reduce'] .dsi-clouds { animation: none; }
+
+/* Brick blocks floating in the margins, a little way out from the shell.
+   Only on a window wide enough to have margins that size. */
+.dsi-blocks { display: none; }
+@media (min-aspect-ratio: 3/2) {
+  .dsi-blocks { display: block; }
+  .dsi-blocks-l { right: calc(50% + var(--dsi-scene-dev) / 2 + 3vw); bottom: 40%; }
+  .dsi-blocks-r { left: calc(50% + var(--dsi-scene-dev) / 2 + 4vw); bottom: 56%; }
+  .dsi-blocks-r2 { left: calc(50% + var(--dsi-scene-dev) / 2 + 9vw); bottom: 34%; }
+}
+
+/* Night only: stars over the top of the sky and a crescent moon. */
+.dsi-stars,
+.dsi-moon { display: none; }
+:root.dark .dsi-stars { display: block; top: 0; left: 0; height: 62%; }
+:root.dark .dsi-moon {
+  display: block;
+  top: clamp(14px, 7vh, 72px);
+  right: calc(50% + var(--dsi-scene-dev) / 2 + 6vw);
+}
+@media (max-aspect-ratio: 5/4) {
+  :root.dark .dsi-moon { top: 40px; right: auto; left: 20px; }
+}
+
+.dsi-px-cloud { fill: var(--dsi-px-cloud); }
+.dsi-px-cloud-shade { fill: var(--dsi-px-cloud-shade); }
+.dsi-px-star { fill: var(--dsi-px-star); }
+.dsi-px-star-dim { fill: var(--dsi-px-star-dim); }
+.dsi-px-moon { fill: var(--dsi-px-moon); }
+.dsi-px-moon-shade { fill: var(--dsi-px-moon-shade); }
+.dsi-px-far { fill: var(--dsi-px-far); }
+.dsi-px-far-line { fill: var(--dsi-px-far-line); }
+.dsi-px-near { fill: var(--dsi-px-near); }
+.dsi-px-near-dot { fill: var(--dsi-px-near-dot); }
+.dsi-px-grass { fill: var(--dsi-px-grass); }
+.dsi-px-grass-hi { fill: var(--dsi-px-grass-hi); }
+.dsi-px-grass-lo { fill: var(--dsi-px-grass-lo); }
+.dsi-px-soil { fill: var(--dsi-px-soil); }
+.dsi-px-soil-hi { fill: var(--dsi-px-soil-hi); }
+.dsi-px-mortar { fill: var(--dsi-px-mortar); }
+.dsi-px-block-edge { fill: var(--dsi-px-block-edge); }
 
 /* Positioned so the shoulder buttons hang off its top edge, and isolated so
    their z-index tucks them behind the lid rather than behind the page. */
@@ -1428,11 +1556,12 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   font-size: 0.7rem;
   vertical-align: middle;
 }
+.dsi-plain-disclaimer { margin: 40px 0 0; color: var(--dsi-muted); font-size: 0.9rem; }
 .dsi-plain-meta { color: var(--dsi-muted); font-size: 0.9rem; }
 .dsi-plain-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .dsi-plain-photos {
   list-style: none;
-  padding: 0 !important;
+  padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 10px;
@@ -1474,6 +1603,28 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 .dsi-shortcuts a:hover { text-decoration: underline; }
 .dsi-shortcuts a:focus-visible { outline: 2px solid var(--dsi-accent-ink); outline-offset: 2px; }
 
+/* The fan-made line under the device, in the page margin. Its own grid row,
+   so it can neither overlap the device nor push the page into scrolling:
+   --dsi-bottom-reserve takes its 28px out of the screens' height. It lands
+   on the stage's ground, so it gets a pill like the shortcuts' to read on;
+   padding only across, so the row keeps its 16px. */
+.dsi-disclaimer {
+  margin: 0;
+  height: 16px;
+  line-height: 16px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--dsi-panel);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  font-size: 0.68rem;
+  color: var(--dsi-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+@media (max-width: 360px) {
+  .dsi-disclaimer { font-size: 0.6rem; }
+}
+
 /* ── power off ──
    Both screens go plain black, the LED goes dark, and a white line collapses
    to nothing as they switch off, like a tube TV. */
@@ -1503,7 +1654,9 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
    What the DSi showed when you switched it on: both screens white, the
    maker's name in grey in a rounded outline on the top one, then the menu.
    The name here is the site's owner. Shown only while <html> has data-boot,
-   which the layout's inline script sets before first paint, once a visit. */
+   which the layout's inline script sets before first paint, once a visit.
+   It only fades, so it plays under the system's reduced motion too; only the
+   System Settings switch skips it. */
 .dsi-boot { display: none; }
 :root[data-boot] .dsi-boot {
   position: absolute;
@@ -1527,6 +1680,13 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
 }
 @keyframes dsi-boot-in { to { opacity: 1; } }
 @keyframes dsi-boot-out { to { opacity: 0; visibility: hidden; } }
+/* The global reduced-motion rule shrinks every animation to 0.01ms, which
+   would end the boot at once. Keep its fades, and so its animationend.
+   The !important is needed to beat that rule's own !important. */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-boot] .dsi-boot { animation-duration: 0.5s !important; }
+  :root[data-boot] .dsi-boot-mark { animation-duration: 0.5s !important; }
+}
 @media (max-width: 620px) {
   .dsi-boot-mark { font-size: 1.3rem; }
 }

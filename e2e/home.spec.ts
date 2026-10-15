@@ -108,3 +108,44 @@ test('the resume is one Tab from the top of the page', async ({ page }) => {
   await page.keyboard.press('Tab')
   await expect(resume).toBeFocused()
 })
+
+const FAN_MADE = 'Fan-made tribute. Not affiliated with or endorsed by Nintendo.'
+
+test('the fan-made line shows on the device page and in plain view', async ({ page }) => {
+  await openMenu(page)
+  const line = page.getByText(FAN_MADE)
+  await expect(line).toBeVisible()
+  // Not a Tab stop, and clear of the device.
+  expect(await line.evaluate(e => e.tabIndex)).toBe(-1)
+  const [box, dev] = await Promise.all([line.boundingBox(), page.locator('.dsi-device').boundingBox()])
+  expect(box!.y, 'sits under the device').toBeGreaterThanOrEqual(dev!.y + dev!.height)
+
+  await page.goto('/?view=plain')
+  await expect(page.getByText(FAN_MADE)).toBeVisible()
+})
+
+for (const [width, height] of [
+  [1914, 936],
+  [1920, 1080],
+  [1366, 768],
+  [390, 844],
+]) {
+  test(`the fan-made line costs the page no scroll at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height })
+    await openMenu(page)
+    await expect(page.getByText(FAN_MADE)).toBeVisible()
+    const scrolls = await page.evaluate(() => {
+      const de = document.documentElement
+      return de.scrollHeight > de.clientHeight + 1 || de.scrollWidth > de.clientWidth + 1
+    })
+    expect(scrolls).toBe(false)
+    const [box, nav] = await Promise.all([
+      page.getByText(FAN_MADE).boundingBox(),
+      page.getByRole('navigation', { name: 'Shortcuts' }).boundingBox(),
+    ])
+    expect(box!.y).toBeGreaterThan(nav!.y + nav!.height)
+    expect(box!.y + box!.height).toBeLessThanOrEqual(height)
+    expect(box!.x).toBeGreaterThanOrEqual(0)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(width)
+  })
+}
