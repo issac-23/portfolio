@@ -1,16 +1,37 @@
 import type { Metadata } from 'next'
-import { M_PLUS_Rounded_1c } from 'next/font/google'
+import localFont from 'next/font/local'
 import PrefsSync from '@/components/dsi/PrefsSync'
 import './dsi.css'
 
 // Self-hosted the same way the site's other faces are. The DSi's system font
-// was a rounded gothic, and this is the closest Google Fonts carries.
-const rounded = M_PLUS_Rounded_1c({
-  subsets: ['latin'],
-  weight: ['400', '500', '700', '800'],
+// was a rounded gothic, and this is the closest the @fontsource packages
+// carry. Latin only, as before.
+const rounded = localFont({
+  src: [
+    {
+      path: '../../node_modules/@fontsource/m-plus-rounded-1c/files/m-plus-rounded-1c-latin-400-normal.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../node_modules/@fontsource/m-plus-rounded-1c/files/m-plus-rounded-1c-latin-500-normal.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../node_modules/@fontsource/m-plus-rounded-1c/files/m-plus-rounded-1c-latin-700-normal.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../../node_modules/@fontsource/m-plus-rounded-1c/files/m-plus-rounded-1c-latin-800-normal.woff2',
+      weight: '800',
+      style: 'normal',
+    },
+  ],
   variable: '--font-rounded',
   display: 'swap',
-  // next/font has no metric overrides for this face, so it cannot build a
+  // None of next/font's presets match this face, so it cannot build a
   // matched fallback itself. dsi.css declares one instead.
   adjustFontFallback: false,
   fallback: ['M PLUS Rounded Fallback', 'Trebuchet MS', 'system-ui', 'sans-serif'],
