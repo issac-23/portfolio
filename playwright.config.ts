@@ -28,10 +28,11 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  // Every worker drives a browser against the one next start process. Past
-  // about four locally they starve each other and timings stop meaning much.
-  workers: process.env.CI ? undefined : 4,
+  retries: 1,
+  // Every worker drives a browser against the one next start process. Locally
+  // that plus other work pinned the CPU and a different few tests timed out each
+  // run, so default to half the cores (E2E_WORKERS overrides) and retry once.
+  workers: process.env.CI ? undefined : (process.env.E2E_WORKERS ?? '50%'),
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
 
   use: {
