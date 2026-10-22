@@ -1,10 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { flushSync } from 'react-dom'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
 import { APPS, type AppId } from './apps'
+import type { Phase } from './console'
 import { appFromHash, writeHash } from './deepLink'
 import Device from './Device'
 import { playLaunch, playReturn } from './launch'
@@ -14,6 +15,15 @@ import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
 import { startBoot, useBoot } from './useBoot'
 import { rememberedView } from './view'
+
+// Whether the boot screen is up, read off <html> since the layout's script and
+// the boot hook both set it outside React.
+const bootUp = () => 'boot' in document.documentElement.dataset
+function subscribeBoot(onChange: () => void) {
+  const mo = new MutationObserver(onChange)
+  mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-boot'] })
+  return () => mo.disconnect()
+}
 
 /**
  * Owns both screens. Selection state has to drive the top and bottom screen
@@ -25,6 +35,9 @@ export default function DsiMenu() {
   const [app, setApp] = useState(0)
   const [sel, setSel] = useState(0)
   const [power, setPower] = useState(true)
+  const [moving, setMoving] = useState<'launching' | 'returning' | null>(null)
+  const booting = useSyncExternalStore(subscribeBoot, bootUp, () => false)
+  const phase: Phase = !power ? 'off' : booting ? 'booting' : (moving ?? (open ? 'app' : 'menu'))
   // Read by the hashchange listener, whose effect runs once.
   const powered = useRef(true)
   // Set while a transition is running, so a second press cannot start
@@ -62,18 +75,21 @@ export default function DsiMenu() {
     const id = APPS[index].id
     if (busy.current || !SCREENS[id]) return
     busy.current = true
+    setMoving('launching')
     // Busy only until the swap. The white fading off afterwards is just
     // paint, and holding input through it dropped a quick Escape or Enter.
     playLaunch(icon, () => {
       flushSync(() => {
         setSel(0)
         setOpen(id)
+        setMoving(null)
       })
       writeHash(id)
       busy.current = false
     }, !lessMotion()).catch(() => {
       // Failed before reaching the swap: let the next press through.
       busy.current = false
+      setMoving(null)
     })
   }, [])
 
@@ -81,14 +97,19 @@ export default function DsiMenu() {
     if (busy.current) return
     busy.current = true
     returning.current = true
+    setMoving('returning')
     const from = document.querySelector('.dsi-device') ?? document.body
     playReturn(from, () => {
-      flushSync(() => setOpen(null))
+      flushSync(() => {
+        setOpen(null)
+        setMoving(null)
+      })
       writeHash(null)
       busy.current = false
     }, !lessMotion()).catch(() => {
       // Failed before reaching the swap: let the next press through.
       busy.current = false
+      setMoving(null)
     })
   }, [])
 
@@ -114,17 +135,18 @@ export default function DsiMenu() {
   // effects layers survive the swap that happens mid-launch. Off renders
   // nothing in either screen, so no handler from the rail or an app is left
   // listening to a dark console.
-  if (!power) return <Device top={null} bottom={null} power={false} onPower={togglePower} />
+  if (!power) return <Device top={null} bottom={null} power={false} phase={phase} onPower={togglePower} />
 
   const screen = open ? SCREENS[open] : undefined
   if (screen) {
     const ctx: ScreenCtx = { sel, setSel, back }
-    return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} power onPower={togglePower} />
+    return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} power phase={phase} onPower={togglePower} />
   }
 
   return (
     <Device
       power
+      phase={phase}
       onPower={togglePower}
       top={
         <>
