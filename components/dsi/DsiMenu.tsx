@@ -1,15 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
+import { useCallback, useEffect } from 'react'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
-import { APPS, type AppId } from './apps'
-import type { Phase } from './console'
-import { appFromHash, writeHash } from './deepLink'
+import { APPS } from './apps'
+import { appFromHash } from './deepLink'
 import Device from './Device'
-import { playLaunch, playReturn } from './launch'
-import { lessMotion } from './prefs'
 import PhotoFrame from './PhotoFrame'
 import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
@@ -17,26 +13,12 @@ import { useConsole } from './useConsole'
 import { rememberedView } from './view'
 
 /**
- * Owns both screens. Selection state has to drive the top and bottom screen
- * together, so it lives here rather than in either one, and so does which
- * app is open, since opening one replaces both screens at once.
+ * Owns both screens, and draws whatever the console says is showing. Which
+ * app is open and what is selected in it live in the console, because opening
+ * one replaces both screens at once and the top and bottom have to agree.
  */
 export default function DsiMenu() {
-  const [open, setOpen] = useState<AppId | null>(null)
-  const [app, setApp] = useState(0)
-  const [sel, setSel] = useState(0)
-  const [moving, setMoving] = useState<'launching' | 'returning' | null>(null)
   const [state, send] = useConsole()
-  const power = state.phase !== 'off'
-  const phase: Phase = state.phase === 'menu' ? (moving ?? (open ? 'app' : 'menu')) : state.phase
-  // Read by the hashchange listener, whose effect runs once.
-  const powered = useRef(true)
-  // Set while a transition is running, so a second press cannot start
-  // another one on top of it.
-  const busy = useRef(false)
-  // Only hand focus back to the rail when coming back from an app, never on
-  // first load, where it would steal the skip link's place.
-  const returning = useRef(false)
 
   // Someone who chose plain view last time gets it again without hunting
   // for the setting. Plain view links back here and clears the choice.
@@ -48,88 +30,41 @@ export default function DsiMenu() {
   // the link was the click, so there is nothing to animate from.
   useEffect(() => {
     const go = () => {
-      const id = appFromHash(location.hash)
-      // A dark console opens nothing; switching on clears the address anyway.
-      if (!powered.current || !id || !SCREENS[id]) return
-      setApp(APPS.findIndex(a => a.id === id))
-      setSel(0)
-      setOpen(id)
+      const app = appFromHash(location.hash)
+      send({ type: 'hash', app, slot: app ? APPS.findIndex(a => a.id === app) : 0 })
     }
     go()
     window.addEventListener('hashchange', go)
     return () => window.removeEventListener('hashchange', go)
-  }, [])
+  }, [send])
 
-  const launch = useCallback((index: number, icon: HTMLElement) => {
-    const id = APPS[index].id
-    if (busy.current || !SCREENS[id]) return
-    busy.current = true
-    setMoving('launching')
-    // Busy only until the swap. The white fading off afterwards is just
-    // paint, and holding input through it dropped a quick Escape or Enter.
-    playLaunch(icon, () => {
-      flushSync(() => {
-        setSel(0)
-        setOpen(id)
-        setMoving(null)
-      })
-      writeHash(id)
-      busy.current = false
-    }, !lessMotion()).catch(() => {
-      // Failed before reaching the swap: let the next press through.
-      busy.current = false
-      setMoving(null)
-    })
-  }, [])
-
-  const back = useCallback(() => {
-    if (busy.current) return
-    busy.current = true
-    returning.current = true
-    setMoving('returning')
-    const from = document.querySelector('.dsi-device') ?? document.body
-    playReturn(from, () => {
-      flushSync(() => {
-        setOpen(null)
-        setMoving(null)
-      })
-      writeHash(null)
-      busy.current = false
-    }, !lessMotion()).catch(() => {
-      // Failed before reaching the swap: let the next press through.
-      busy.current = false
-      setMoving(null)
-    })
-  }, [])
-
+  const launch = useCallback((index: number, icon: HTMLElement) => send({ type: 'launch', app: APPS[index].id, icon }), [send])
+  const back = useCallback(() => send({ type: 'back' }), [send])
+  const setSel = useCallback((index: number) => send({ type: 'select', index }), [send])
+  const railMoved = useCallback((index: number) => send({ type: 'railMoved', index }), [send])
   // Off closes whatever is open, so switching on always lands on the menu with
   // the rail back on Profile. The boot screen plays again unless motion is off.
-  const togglePower = useCallback(() => {
-    if (busy.current) return
-    returning.current = false
-    powered.current = !power
-    setOpen(null)
-    setApp(0)
-    setSel(0)
-    send({ type: 'power' })
-  }, [power, send])
+  const togglePower = useCallback(() => send({ type: 'power' }), [send])
 
   // The same Device element whichever app is open, so the shell and its
   // effects layers survive the swap that happens mid-launch. Off renders
   // nothing in either screen, so no handler from the rail or an app is left
   // listening to a dark console.
-  if (!power) return <Device top={null} bottom={null} power={false} phase={phase} onPower={togglePower} />
+  if (state.phase === 'off') return <Device top={null} bottom={null} power={false} phase={state.phase} onPower={togglePower} />
 
+  // Launching still shows the menu, and returning still shows the app: each
+  // swaps at the white, not when it starts.
+  const open = state.phase === 'app' || state.phase === 'returning' ? state.app : null
   const screen = open ? SCREENS[open] : undefined
   if (screen) {
-    const ctx: ScreenCtx = { sel, setSel, back }
-    return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} power phase={phase} onPower={togglePower} />
+    const ctx: ScreenCtx = { sel: state.sel, setSel, back }
+    return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} power phase={state.phase} onPower={togglePower} />
   }
 
   return (
     <Device
       power
-      phase={phase}
+      phase={state.phase}
       onPower={togglePower}
       top={
         <>
@@ -139,7 +74,7 @@ export default function DsiMenu() {
       }
       bottom={
         <div className="dsi-lower">
-          <AppRail apps={APPS} initial={app} autoFocus={returning.current} onChange={setApp} onLaunch={launch} />
+          <AppRail apps={APPS} initial={state.rail} autoFocus={state.refocus} onChange={railMoved} onLaunch={launch} />
         </div>
       }
     />
