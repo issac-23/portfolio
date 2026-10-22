@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
@@ -9,21 +9,12 @@ import type { Phase } from './console'
 import { appFromHash, writeHash } from './deepLink'
 import Device from './Device'
 import { playLaunch, playReturn } from './launch'
-import { chosenLessMotion, lessMotion } from './prefs'
+import { lessMotion } from './prefs'
 import PhotoFrame from './PhotoFrame'
 import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
-import { startBoot, useBoot } from './useBoot'
+import { useConsole } from './useConsole'
 import { rememberedView } from './view'
-
-// Whether the boot screen is up, read off <html> since the layout's script and
-// the boot hook both set it outside React.
-const bootUp = () => 'boot' in document.documentElement.dataset
-function subscribeBoot(onChange: () => void) {
-  const mo = new MutationObserver(onChange)
-  mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-boot'] })
-  return () => mo.disconnect()
-}
 
 /**
  * Owns both screens. Selection state has to drive the top and bottom screen
@@ -34,10 +25,10 @@ export default function DsiMenu() {
   const [open, setOpen] = useState<AppId | null>(null)
   const [app, setApp] = useState(0)
   const [sel, setSel] = useState(0)
-  const [power, setPower] = useState(true)
   const [moving, setMoving] = useState<'launching' | 'returning' | null>(null)
-  const booting = useSyncExternalStore(subscribeBoot, bootUp, () => false)
-  const phase: Phase = !power ? 'off' : booting ? 'booting' : (moving ?? (open ? 'app' : 'menu'))
+  const [state, send] = useConsole()
+  const power = state.phase !== 'off'
+  const phase: Phase = state.phase === 'menu' ? (moving ?? (open ? 'app' : 'menu')) : state.phase
   // Read by the hashchange listener, whose effect runs once.
   const powered = useRef(true)
   // Set while a transition is running, so a second press cannot start
@@ -46,8 +37,6 @@ export default function DsiMenu() {
   // Only hand focus back to the rail when coming back from an app, never on
   // first load, where it would steal the skip link's place.
   const returning = useRef(false)
-
-  useBoot()
 
   // Someone who chose plain view last time gets it again without hunting
   // for the setting. Plain view links back here and clears the choice.
@@ -122,14 +111,8 @@ export default function DsiMenu() {
     setOpen(null)
     setApp(0)
     setSel(0)
-    writeHash(null)
-    if (power) {
-      setPower(false)
-    } else {
-      setPower(true)
-      if (!chosenLessMotion()) startBoot()
-    }
-  }, [power])
+    send({ type: 'power' })
+  }, [power, send])
 
   // The same Device element whichever app is open, so the shell and its
   // effects layers survive the swap that happens mid-launch. Off renders
