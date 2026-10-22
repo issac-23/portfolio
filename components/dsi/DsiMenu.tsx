@@ -8,7 +8,7 @@ import { APPS, type AppId } from './apps'
 import { appFromHash, writeHash } from './deepLink'
 import Device from './Device'
 import { playLaunch, playReturn } from './launch'
-import { chosenLessMotion } from './prefs'
+import { chosenLessMotion, lessMotion } from './prefs'
 import PhotoFrame from './PhotoFrame'
 import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
@@ -71,7 +71,7 @@ export default function DsiMenu() {
       })
       writeHash(id)
       busy.current = false
-    }).catch(() => {
+    }, !lessMotion()).catch(() => {
       // Failed before reaching the swap: let the next press through.
       busy.current = false
     })
@@ -86,7 +86,7 @@ export default function DsiMenu() {
       flushSync(() => setOpen(null))
       writeHash(null)
       busy.current = false
-    }).catch(() => {
+    }, !lessMotion()).catch(() => {
       // Failed before reaching the swap: let the next press through.
       busy.current = false
     })
