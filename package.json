@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "check": "npm run lint && npm run test:e2e",
+    "check": "npm run lint && npm run typecheck:e2e && npm run test:e2e",
     "check:analytics": "node scripts/verify-analytics.mjs",
     "shots": "node scripts/shots.mjs",
     "shots:gallery": "node scripts/gallery-shot.mjs",
