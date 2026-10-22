@@ -1,27 +1,61 @@
 import type { Metadata, Viewport } from 'next'
-import { DM_Serif_Display, Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import { Analytics } from '@vercel/analytics/next'
 import { SITE_URL, SOCIAL } from './site'
 import './globals.css'
 
-// Self-hosted at build time rather than fetched from Google on every visit:
-// no third-party request, no render-blocking stylesheet, and no flash of
-// fallback text. Exposed as CSS variables so Tailwind's font-serif and
-// font-sans resolve to them.
-const serif = DM_Serif_Display({
-  subsets: ['latin'],
-  weight: '400',
-  style: ['normal', 'italic'],
+// Self-hosted from the @fontsource packages rather than fetched from Google:
+// the build never needs the network, and visitors make no third-party
+// request, wait on no render-blocking stylesheet and see no flash of fallback
+// text. Exposed as CSS variables so Tailwind's font-serif and font-sans
+// resolve to them. next/font/local reads its options statically, so they have
+// to stay literals. adjustFontFallback picks the system face whose metrics the
+// generated fallback is matched to.
+const serif = localFont({
+  src: [
+    {
+      path: '../node_modules/@fontsource/dm-serif-display/files/dm-serif-display-latin-400-normal.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../node_modules/@fontsource/dm-serif-display/files/dm-serif-display-latin-400-italic.woff2',
+      weight: '400',
+      style: 'italic',
+    },
+  ],
   variable: '--font-serif',
   display: 'swap',
+  adjustFontFallback: 'Times New Roman',
   fallback: ['Georgia', 'serif'],
 })
 
-const sans = Inter({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
+const sans = localFont({
+  src: [
+    {
+      path: '../node_modules/@fontsource/inter/files/inter-latin-300-normal.woff2',
+      weight: '300',
+      style: 'normal',
+    },
+    {
+      path: '../node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../node_modules/@fontsource/inter/files/inter-latin-500-normal.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../node_modules/@fontsource/inter/files/inter-latin-600-normal.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+  ],
   variable: '--font-sans',
   display: 'swap',
+  adjustFontFallback: 'Arial',
   fallback: ['system-ui', 'sans-serif'],
 })
 

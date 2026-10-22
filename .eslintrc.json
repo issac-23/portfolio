@@ -1,4 +1,17 @@
 {
   "extends": "next/core-web-vitals",
-  "ignorePatterns": ["tend/", "shots/", ".next/", "public/"]
+  "ignorePatterns": ["tend/", "shots/", ".next/", "public/"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "next/font/google",
+            "message": "Don't use next/font/google: the build fetches the fonts from Google and fails when that is unreachable. Use next/font/local with the woff2 files from an @fontsource package instead."
+          }
+        ]
+      }
+    ]
+  }
 }
