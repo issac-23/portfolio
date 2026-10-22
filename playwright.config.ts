@@ -1,6 +1,18 @@
 import { defineConfig } from '@playwright/test'
 
-const PORT = Number(process.env.E2E_PORT ?? 3100)
+// Each checkout gets its own port, derived from where it lives on disk. With a
+// shared default, a second checkout's next start (a git worktree, say) was
+// silently reused by reuseExistingServer and the tests ran against the wrong
+// branch. CI is a single checkout, so it keeps 3100.
+function portForCheckout(dir: string) {
+  let hash = 0
+  for (const char of dir) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  return 3100 + (hash % 900)
+}
+
+const PORT = Number(
+  process.env.E2E_PORT ?? (process.env.CI ? 3100 : portForCheckout(__dirname)),
+)
 
 /**
  * End-to-end tests against a production build.
