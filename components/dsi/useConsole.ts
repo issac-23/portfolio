@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { flushSync } from 'react-dom'
+import { APPS } from './apps'
 import {
   BOOTED_KEY,
   BOOT_DATASET,
@@ -11,7 +12,7 @@ import {
   type ConsoleState,
   type Trigger,
 } from './console'
-import { writeHash } from './deepLink'
+import { appFromHash, writeHash } from './deepLink'
 import { playLaunch, playReturn } from './launch'
 import { chosenLessMotion, lessMotion } from './prefs'
 import { SCREENS } from './screens'
@@ -171,7 +172,8 @@ function createConsole(env: ConsoleEnv) {
 
 /**
  * The console for the page: its state, and the one function every trigger goes
- * through. Also tells it when the page arrives.
+ * through. Also feeds it the two things that come from outside, the page
+ * arriving and the address changing.
  */
 export function useConsole() {
   const ref = useRef<ReturnType<typeof createConsole>>()
@@ -181,7 +183,19 @@ export function useConsole() {
 
   useEffect(() => {
     c.send({ type: 'arrive', booting: BOOT_DATASET in document.documentElement.dataset })
-    return () => c.stop()
+
+    // Arriving on, or switching to, an app's address opens it straight away:
+    // the link was the click, so there is nothing to animate from.
+    const go = () => {
+      const app = appFromHash(location.hash)
+      c.send({ type: 'hash', app, slot: app ? APPS.findIndex(a => a.id === app) : 0 })
+    }
+    go()
+    window.addEventListener('hashchange', go)
+    return () => {
+      window.removeEventListener('hashchange', go)
+      c.stop()
+    }
   }, [c])
 
   return [state, c.send] as const

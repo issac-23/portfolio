@@ -4,7 +4,6 @@ import { useCallback, useEffect } from 'react'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
 import { APPS } from './apps'
-import { appFromHash } from './deepLink'
 import Device from './Device'
 import PhotoFrame from './PhotoFrame'
 import { SCREENS, type ScreenCtx } from './screens'
@@ -25,18 +24,6 @@ export default function DsiMenu() {
   useEffect(() => {
     if (rememberedView() === 'plain') window.location.replace('/?view=plain')
   }, [])
-
-  // Arriving on, or switching to, an app's address opens it straight away:
-  // the link was the click, so there is nothing to animate from.
-  useEffect(() => {
-    const go = () => {
-      const app = appFromHash(location.hash)
-      send({ type: 'hash', app, slot: app ? APPS.findIndex(a => a.id === app) : 0 })
-    }
-    go()
-    window.addEventListener('hashchange', go)
-    return () => window.removeEventListener('hashchange', go)
-  }, [send])
 
   const launch = useCallback((index: number, icon: HTMLElement) => send({ type: 'launch', app: APPS[index].id, icon }), [send])
   const back = useCallback(() => send({ type: 'back' }), [send])
