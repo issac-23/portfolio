@@ -195,3 +195,57 @@ test.describe('with the boot screen on', () => {
     await expectSettledOn(page, 'Profile')
   })
 })
+
+test.describe('the pre-paint boot rule', () => {
+  // The fixture would mark every visit as booted, which would make each skip
+  // below pass without proving anything.
+  test.use({ boot: true })
+
+  // Notes whether data-boot was ever set, not just whether it is set when the
+  // test looks: the boot ends by itself within seconds.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      const w = window as unknown as { __bootSeen: boolean }
+      w.__bootSeen = false
+      new MutationObserver(() => {
+        if ('boot' in document.documentElement.dataset) w.__bootSeen = true
+      }).observe(document, { subtree: true, attributes: true, attributeFilter: ['data-boot'] })
+    })
+  })
+
+  const bootSeen = (page: Page) => page.evaluate(() => (window as unknown as { __bootSeen: boolean }).__bootSeen)
+
+  test('a first visit boots', async ({ page }) => {
+    await page.goto('/')
+    expect(await bootSeen(page)).toBe(true)
+  })
+
+  test('a visit that already booted does not boot again', async ({ page }) => {
+    await page.addInitScript(() => sessionStorage.setItem('dsi-booted', '1'))
+    await page.goto('/')
+    await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 20_000 })
+    expect(await bootSeen(page)).toBe(false)
+    await expect(phase(page)).toHaveAttribute('data-console', 'menu')
+  })
+
+  test("the DSi's own less-motion setting does not boot", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('dsi-motion', 'reduce'))
+    await page.goto('/')
+    await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 20_000 })
+    expect(await bootSeen(page)).toBe(false)
+    await expect(phase(page)).toHaveAttribute('data-console', 'menu')
+  })
+
+  test('plain view does not boot', async ({ page }) => {
+    await page.goto('/?view=plain')
+    expect(await bootSeen(page)).toBe(false)
+    await expect(page.locator('html')).not.toHaveAttribute('data-boot', '')
+  })
+
+  test('any hash does not boot, even one that names no app', async ({ page }) => {
+    await page.goto('/#nothing')
+    await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 20_000 })
+    expect(await bootSeen(page)).toBe(false)
+    await expect(phase(page)).toHaveAttribute('data-console', 'menu')
+  })
+})

@@ -133,3 +133,19 @@ export const MOTION_KEY = 'dsi-motion'
 export const BOOT_DATASET = 'boot'
 export const MOTION_DATASET = 'motion'
 export const PLAIN_QUERY = 'view=plain'
+
+// Both run inline before first paint, so they are built here from the same
+// names the console uses afterwards rather than written out a second time.
+
+// Applies the stored motion choice before the device paints, the way the
+// root layout does for the theme, so a visitor who turned motion off never
+// sees one frame of it.
+export const motionScript = `(function(){try{if(localStorage.getItem('${MOTION_KEY}')==='reduce')document.documentElement.dataset.${MOTION_DATASET}='reduce'}catch(e){}})()`
+
+// Rule a. The boot screen, decided before first paint so the menu never
+// flashes up ahead of it. Once a visit, and never when it would only be in the
+// way: less motion chosen in the DSi's own System Settings, plain view, or a
+// link straight to an app. Any hash counts as a link, so an address that names
+// nothing skips it too. The system's reduced-motion setting does not skip it:
+// the boot only fades, with no movement.
+export const bootScript = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem('${BOOTED_KEY}'))return;if(d.dataset.${MOTION_DATASET}==='reduce')return;if(location.search.indexOf('${PLAIN_QUERY}')>-1||location.hash)return;d.dataset.${BOOT_DATASET}=''}catch(e){}})()`
