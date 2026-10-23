@@ -125,11 +125,12 @@ function createConsole(env: ConsoleEnv) {
         if (next.phase === 'booting') beginBoot(false)
         break
       case 'launch': {
+        const { moveId } = next
         // Busy only until the swap. The white fading off afterwards is just
         // paint, and holding input through it dropped a quick Escape or Enter.
-        playLaunch(t.icon, () => flushSync(() => send({ type: 'launched' })), animates()).catch(() => {
+        playLaunch(t.icon, () => flushSync(() => send({ type: 'launched', moveId })), animates()).catch(() => {
           // Failed before reaching the swap: let the next press through.
-          send({ type: 'launchFailed' })
+          send({ type: 'launchFailed', moveId })
         })
         break
       }
@@ -137,9 +138,10 @@ function createConsole(env: ConsoleEnv) {
         writeHash(next.app)
         break
       case 'back': {
+        const { moveId } = next
         const from = document.querySelector('.dsi-device') ?? document.body
-        playReturn(from, () => flushSync(() => send({ type: 'returned' })), animates()).catch(() => {
-          send({ type: 'returnFailed' })
+        playReturn(from, () => flushSync(() => send({ type: 'returned', moveId })), animates()).catch(() => {
+          send({ type: 'returnFailed', moveId })
         })
         break
       }

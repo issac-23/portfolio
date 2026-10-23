@@ -23,7 +23,10 @@ export type Phase = 'off' | 'booting' | 'menu' | 'launching' | 'app' | 'returnin
  * `app` is the open app in launching, app and returning, and null otherwise.
  * `sel` is the selection inside the open app, `rail` the index of the
  * highlighted slot, and `refocus` is whether the menu was reached by coming
- * back from an app, which is when the rail takes focus.
+ * back from an app, which is when the rail takes focus. `moveId` numbers the
+ * launches and returns, so the end of one cannot be mistaken for the end of
+ * the next: a failure that arrives late, after a newer launch has started,
+ * carries the old id and is ignored.
  */
 export interface ConsoleState {
   phase: Phase
@@ -31,9 +34,10 @@ export interface ConsoleState {
   sel: number
   rail: number
   refocus: boolean
+  moveId: number
 }
 
-export const INITIAL: ConsoleState = { phase: 'menu', app: null, sel: 0, rail: 0, refocus: false }
+export const INITIAL: ConsoleState = { phase: 'menu', app: null, sel: 0, rail: 0, refocus: false, moveId: 0 }
 
 export type Trigger =
   /** The page has hydrated. `booting` is whether the layout's script started a boot. */
@@ -42,12 +46,12 @@ export type Trigger =
   | { type: 'bootDone' }
   | { type: 'launch'; app: AppId; icon: HTMLElement }
   /** The launch reached the white, where the app replaces the menu. */
-  | { type: 'launched' }
-  | { type: 'launchFailed' }
+  | { type: 'launched'; moveId: number }
+  | { type: 'launchFailed'; moveId: number }
   | { type: 'back' }
   /** The return reached the white, where the menu replaces the app. */
-  | { type: 'returned' }
-  | { type: 'returnFailed' }
+  | { type: 'returned'; moveId: number }
+  | { type: 'returnFailed'; moveId: number }
   /** The address changed. `app` is the one it names, if any, and `slot` its place on the rail. */
   | { type: 'hash'; app: AppId | null; slot: number }
   | { type: 'select'; index: number }
@@ -66,14 +70,15 @@ type Row = { [T in Trigger['type']]?: (s: ConsoleState, t: Of<T>, env: ConsoleEn
 
 // Back to the start: the menu with the rail on the first app. Switching off
 // and on both land here, so power always ends up on Profile.
-const reset = (phase: Phase): ConsoleState => ({ ...INITIAL, phase })
+// The move counter carries over, so ids are never reused within a visit.
+const reset = (s: ConsoleState, phase: Phase): ConsoleState => ({ ...INITIAL, phase, moveId: s.moveId })
 
 const to = (s: ConsoleState, phase: Phase): ConsoleState => ({ ...s, phase })
 
 // An address that names an app opens it straight away, from anywhere the
 // console is on and not mid-transition: the link was the click.
 const openFromHash = (s: ConsoleState, t: Of<'hash'>, env: ConsoleEnv): ConsoleState | null =>
-  t.app && env.opens(t.app) ? { phase: 'app', app: t.app, sel: 0, rail: t.slot, refocus: false } : null
+  t.app && env.opens(t.app) ? { phase: 'app', app: t.app, sel: 0, rail: t.slot, refocus: false, moveId: s.moveId } : null
 
 const railMoved = (s: ConsoleState, t: Of<'railMoved'>): ConsoleState => (s.rail === t.index ? s : { ...s, rail: t.index })
 
@@ -86,35 +91,35 @@ const select = (s: ConsoleState, t: Of<'select'>): ConsoleState => (s.sel === t.
  */
 const MOVES: Record<Phase, Row> = {
   off: {
-    power: (_s, _t, env) => reset(env.replaysBoot() ? 'booting' : 'menu'),
+    power: (s, _t, env) => reset(s, env.replaysBoot() ? 'booting' : 'menu'),
   },
   booting: {
     bootDone: s => to(s, 'menu'),
-    power: () => reset('off'),
+    power: s => reset(s, 'off'),
     hash: openFromHash,
     railMoved,
   },
   menu: {
     arrive: (s, t) => (t.booting ? to(s, 'booting') : null),
-    power: () => reset('off'),
-    launch: (s, t, env) => (env.opens(t.app) ? { ...s, phase: 'launching', app: t.app, refocus: false } : null),
+    power: s => reset(s, 'off'),
+    launch: (s, t, env) => (env.opens(t.app) ? { ...s, phase: 'launching', app: t.app, refocus: false, moveId: s.moveId + 1 } : null),
     hash: openFromHash,
     railMoved,
   },
   launching: {
-    launched: s => ({ ...s, phase: 'app', sel: 0 }),
-    launchFailed: s => ({ ...s, phase: 'menu', app: null }),
+    launched: (s, t) => (t.moveId === s.moveId ? { ...s, phase: 'app', sel: 0 } : null),
+    launchFailed: (s, t) => (t.moveId === s.moveId ? { ...s, phase: 'menu', app: null } : null),
     railMoved,
   },
   app: {
-    back: s => to(s, 'returning'),
-    power: () => reset('off'),
+    back: s => ({ ...s, phase: 'returning', moveId: s.moveId + 1 }),
+    power: s => reset(s, 'off'),
     hash: openFromHash,
     select,
   },
   returning: {
-    returned: s => ({ ...s, phase: 'menu', app: null, sel: 0, refocus: true }),
-    returnFailed: s => to(s, 'app'),
+    returned: (s, t) => (t.moveId === s.moveId ? { ...s, phase: 'menu', app: null, sel: 0, refocus: true } : null),
+    returnFailed: (s, t) => (t.moveId === s.moveId ? to(s, 'app') : null),
     select,
   },
 }
