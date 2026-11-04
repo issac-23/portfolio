@@ -25,6 +25,14 @@ export const statusLabels: Record<Project['status'], string> = {
 // ─────────────────────────────────────────────────────────────────
 export const projects: Project[] = [
   {
+    title: 'Personal site',
+    description: 'This site, built as a Nintendo DSi home menu with a plain view. Live Spotify data every 30 seconds, and a production-only font-swap fix that keeps layout shift under 0.01, covered by Playwright.',
+    tags: ['Next.js', 'TypeScript', 'Playwright'],
+    url: 'https://www.issac-ip.com',
+    github: 'https://github.com/issac-23/portfolio',
+    status: 'live',
+  },
+  {
     title: 'DCF Calculator',
     description: 'Two-stage DCF calculator for public stocks. Pulls real financials, projects 5-year free cash flows, and outputs fair value per share with a sensitivity grid. Also runs in reverse: given the market price, it solves for the growth rate that would justify it.',
     tags: ['Python', 'Streamlit', 'pandas', 'pytest'],
