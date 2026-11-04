@@ -97,6 +97,12 @@ test('up and down move through the cards and the top screen follows', async ({ p
   await expect(page.getByRole('heading', { level: 2, name: CARDS[0] })).toBeVisible()
 })
 
+test('the site itself is listed, with a link to it', async ({ page }) => {
+  await launchProjects(page)
+  await expect(cards(page).first()).toContainText(CARDS[0])
+  await expect(page.getByRole('link', { name: `Open ${CARDS[0]} (new tab)` })).toHaveAttribute('href', 'https://www.issac-ip.com')
+})
+
 test('Open and GitHub point at the selected card, in a new tab', async ({ page }) => {
   await launchProjects(page)
   const open = page.getByRole('link', { name: `Open ${CARDS[0]} (new tab)` })
