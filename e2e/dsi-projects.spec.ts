@@ -7,7 +7,7 @@ import { expectSettledOn, openMenu } from './helpers/dsi'
  * game card select. Card titles are the ones in data/projects.ts.
  */
 
-const CARDS = ['Personal site', 'DCF Calculator', 'tally']
+const CARDS = ['DCF Calculator', 'tally', 'Personal site']
 
 const cards = (page: Page) => page.getByRole('list', { name: 'Game cards' }).getByRole('button')
 
@@ -99,34 +99,39 @@ test('up and down move through the cards and the top screen follows', async ({ p
 
 test('the site itself is listed, with a link to it', async ({ page }) => {
   await launchProjects(page)
-  await expect(cards(page).first()).toContainText(CARDS[0])
-  await expect(page.getByRole('link', { name: `Open ${CARDS[0]} (new tab)` })).toHaveAttribute('href', 'https://www.issac-ip.com')
+  await cards(page).nth(2).click()
+  await expect(cards(page).nth(2)).toContainText(CARDS[2])
+  await expect(page.getByRole('link', { name: `Open ${CARDS[2]} (new tab)` })).toHaveAttribute('href', 'https://www.issac-ip.com')
 })
 
 test('Open and GitHub point at the selected card, in a new tab', async ({ page }) => {
   await launchProjects(page)
   const open = page.getByRole('link', { name: `Open ${CARDS[0]} (new tab)` })
-  await expect(open).toHaveAttribute('href', 'https://www.issac-ip.com')
+  await expect(open).toHaveAttribute('href', 'https://dcf-calculator-issac.streamlit.app')
   await expect(open).toHaveAttribute('target', '_blank')
   await expect(page.getByRole('link', { name: `${CARDS[0]} on GitHub (new tab)` })).toHaveAttribute(
     'href',
-    'https://github.com/issac-23/portfolio',
+    'https://github.com/issac-23/dcf-calculator',
   )
 
   await cards(page).nth(1).click()
   await expect(page.getByRole('link', { name: `Open ${CARDS[1]} (new tab)` })).toHaveAttribute(
     'href',
-    'https://dcf-calculator-issac.streamlit.app',
+    'https://tally-issac.vercel.app/',
   )
   await expect(page.getByRole('link', { name: `${CARDS[1]} on GitHub (new tab)` })).toHaveAttribute(
     'href',
-    'https://github.com/issac-23/dcf-calculator',
+    'https://github.com/issac-23/tally',
   )
 
   await cards(page).nth(2).click()
   await expect(page.getByRole('link', { name: `Open ${CARDS[2]} (new tab)` })).toHaveAttribute(
     'href',
-    'https://tally-issac.vercel.app/',
+    'https://www.issac-ip.com',
+  )
+  await expect(page.getByRole('link', { name: `${CARDS[2]} on GitHub (new tab)` })).toHaveAttribute(
+    'href',
+    'https://github.com/issac-23/portfolio',
   )
 })
 
