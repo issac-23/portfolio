@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { galleryPhotos } from '@/data/gallery'
 import { mediaItems, mediaTypeLabels } from '@/data/media'
-import { channels, profile } from '@/data/profile'
+import { availability, channels, profile } from '@/data/profile'
 import { externalProps } from '@/data/links'
 import { projects, statusLabels } from '@/data/projects'
 import PlainListening from './PlainListening'
@@ -21,6 +21,7 @@ export default function PlainView() {
       <header className="dsi-plain-head">
         <h1>{profile.name}</h1>
         <p>{profile.headline}</p>
+        <p className="dsi-plain-avail">{availability}</p>
         <nav aria-label="Quick links">
           <a href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume (PDF)</a>
           {channels.map(c => (

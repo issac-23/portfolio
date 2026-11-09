@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import { Analytics } from '@vercel/analytics/next'
+import { availability } from '@/data/profile'
 import { SITE_URL, SOCIAL } from './site'
 import './globals.css'
 
@@ -63,19 +64,19 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'Issac Ip — CS + Economics @ Northeastern',
   description:
-    'Issac Ip — CS + Economics at Northeastern University. Projects, photography, and what I’m listening to and reading.',
+    `Issac Ip — CS + Economics at Northeastern University. ${availability}. Projects, photography, and what I’m listening to and reading.`,
   openGraph: {
     type: 'website',
     title: 'Issac Ip — CS + Economics @ Northeastern',
     description:
-      'Projects, photography, and what I’m listening to and reading.',
+      `${availability}. Projects, photography, and what I’m listening to and reading.`,
     images: ['/og.png'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Issac Ip — CS + Economics @ Northeastern',
     description:
-      'Projects, photography, and what I’m listening to and reading.',
+      `${availability}. Projects, photography, and what I’m listening to and reading.`,
     images: ['/og.png'],
   },
   icons: {

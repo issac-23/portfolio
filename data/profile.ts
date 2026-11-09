@@ -21,6 +21,10 @@ export const profile = {
   interests: ['Music', 'Photography', 'Economics', 'Tech', 'Podcasts', 'Friends'],
 }
 
+/** The co-op line, worded once so the Profile app, plain view, classic hero and
+ *  page metadata cannot drift apart. */
+export const availability = 'Available for co-op: January – June 2027'
+
 export interface Channel {
   label: string
   /** What the channel shows, like the address or handle. */

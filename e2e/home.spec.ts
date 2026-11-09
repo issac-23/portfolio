@@ -86,6 +86,14 @@ test('the Spotify token setup routes are gone', async ({ request }) => {
   expect((await request.get('/callback?code=x')).status()).toBe(404)
 })
 
+test('search results and link previews carry the co-op line', async ({ page }) => {
+  await page.goto('/')
+  const line = 'Available for co-op: January – June 2027'
+  for (const sel of ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']) {
+    await expect(page.locator(sel), sel).toHaveAttribute('content', new RegExp(line))
+  }
+})
+
 test('the home page is indexed and canonical; the classic one is kept but not indexed', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('meta[name="robots"]')).toHaveCount(0)
