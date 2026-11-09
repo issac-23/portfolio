@@ -142,16 +142,27 @@ const authUrl =
   `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
   `&scope=${encodeURIComponent(SCOPES)}`
 
-function fail(res, message) {
+// The secret is read once at startup, so a wrong one can't be fixed without a restart.
+const BAD_SECRET_HINT =
+  'The client ID or client secret is wrong (invalid_client). Stop this script (Ctrl+C), ' +
+  'update SPOTIFY_CLIENT_SECRET in .env.local (or pass it as the 2nd argument), and run it again.'
+
+function fail(res, message, { restart = false } = {}) {
   console.error(`\nAuth failed: ${message}`)
-  console.error('Fix the problem, then open this URL again (the script is still running):')
-  console.error(authUrl + '\n')
+  if (restart) {
+    console.error(BAD_SECRET_HINT + '\n')
+  } else {
+    console.error('Fix the problem, then open this URL again (the script is still running):')
+    console.error(authUrl + '\n')
+  }
   res.writeHead(200, { 'Content-Type': 'text/html' })
   res.end(
     page(
       `<h2 style="color:#e5604d">Auth failed</h2>` +
         `<p style="color:#9A8F85;max-width:40rem;word-break:break-word">${esc(message)}</p>` +
-        `<p style="color:#9A8F85">Fix it, then open the authorization URL from the terminal again.</p>`,
+        `<p style="color:#9A8F85;max-width:40rem">${
+          restart ? esc(BAD_SECRET_HINT) : 'Fix it, then open the authorization URL from the terminal again.'
+        }</p>`,
     ),
   )
 }
@@ -187,7 +198,9 @@ const server = http.createServer(async (req, res) => {
     if (!tokenRes.ok || !data.refresh_token) {
       // Only the error fields; never echo tokens.
       const msg = [data.error, data.error_description].filter(Boolean).join(': ')
-      return fail(res, `token exchange failed (HTTP ${tokenRes.status})${msg ? ': ' + msg : ''}`)
+      return fail(res, `token exchange failed (HTTP ${tokenRes.status})${msg ? ': ' + msg : ''}`, {
+        restart: data.error === 'invalid_client',
+      })
     }
   } catch (e) {
     return fail(res, `token exchange failed: ${e.message}`)

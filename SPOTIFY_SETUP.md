@@ -36,6 +36,9 @@ the browser doesn't open, visit the URL it prints.
 
 If something fails (wrong secret, denied access), the page and terminal show
 the error and the script keeps running. Fix it and open the printed URL again.
+If the error is `invalid_client` (for example the secret was rotated and
+`.env.local` is stale), the secret is already loaded, so stop the script with
+Ctrl+C, fix `SPOTIFY_CLIENT_SECRET`, and rerun it.
 
 ## 4. Deploy
 
