@@ -60,7 +60,8 @@ SPOTIFY_CLIENT_SECRET=
 SPOTIFY_REFRESH_TOKEN=
 ```
 
-See `SPOTIFY_SETUP.md` for instructions on getting these values.
+Run `node scripts/spotify-auth.mjs` to get the refresh token (it expires every
+6 months, so rerun it then). See `SPOTIFY_SETUP.md` for the full steps.
 
 ## Updating content
 

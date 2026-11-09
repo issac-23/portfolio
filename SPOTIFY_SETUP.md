@@ -1,55 +1,53 @@
-# Spotify Setup (one-time, ~10 minutes)
+# Spotify Setup
 
-## Step 1 — Create a Spotify App
+The Now Playing section reads from the Spotify Web API using a refresh token.
+Spotify refresh tokens expire 6 months after authorization, so you will redo
+step 3 about twice a year. The app and its credentials only need to be set up once.
 
-1. Go to https://developer.spotify.com/dashboard
-2. Click **"Create app"**
-3. Fill in:
-   - App name: `Issac Portfolio` (anything works)
-   - Redirect URI: `http://localhost:3000`
-   - Check the **Web API** box
-4. Click **Save**
+## 1. Create a Spotify app (once)
 
-## Step 2 — Copy your credentials
+1. Go to https://developer.spotify.com/dashboard and click **Create app**.
+2. Name it anything (e.g. `Issac Portfolio`).
+3. Redirect URI: `http://127.0.0.1:8888/callback`. It has to match exactly;
+   Spotify rejects anything else with "redirect_uri: Not matching configuration".
+4. Check the **Web API** box and save.
+5. Copy the **Client ID** and **Client Secret** (View client secret).
 
-From your app's dashboard, copy:
-- **Client ID**
-- **Client Secret** (click "View client secret")
-
-## Step 3 — Authorize and get your code
-
-Paste your Client ID into this URL, then open it in your browser:
-
-```
-https://accounts.spotify.com/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000&scope=user-read-currently-playing%20user-read-recently-played
-```
-
-1. You'll be asked to log in and approve the app
-2. After approving, your browser will redirect to `http://localhost:3000/?code=LONG_CODE_HERE`
-3. Copy everything after `?code=` in the URL
-
-## Step 4 — Exchange the code for a refresh token
-
-Run this in your terminal (from the project folder):
-
-```bash
-node scripts/get-refresh-token.mjs YOUR_CODE YOUR_CLIENT_ID YOUR_CLIENT_SECRET
-```
-
-The script will print your three env vars. Copy them.
-
-## Step 5 — Create .env.local
-
-Create a file called `.env.local` in the project root and paste the three values:
+## 2. Put the client ID and secret in `.env.local` (once)
 
 ```
 SPOTIFY_CLIENT_ID=...
 SPOTIFY_CLIENT_SECRET=...
-SPOTIFY_REFRESH_TOKEN=...
 ```
 
-## Step 6 — Restart the dev server
+## 3. Authorize
 
-If it's already running, stop it (Ctrl+C) and run `npm run dev` again.
+```bash
+node scripts/spotify-auth.mjs
+```
 
-That's it — the Now Playing section is live.
+The script reads the client ID and secret from `.env.local` (or takes them as
+arguments: `node scripts/spotify-auth.mjs CLIENT_ID CLIENT_SECRET`, which ends
+up in your shell history). If it can't find a secret it asks for one.
+
+It opens Spotify in your browser, you approve, and it writes
+`SPOTIFY_REFRESH_TOKEN` into `.env.local`, leaving your other lines alone. If
+the browser doesn't open, visit the URL it prints.
+
+If something fails (wrong secret, denied access), the page and terminal show
+the error and the script keeps running. Fix it and open the printed URL again.
+
+## 4. Deploy
+
+Copy `SPOTIFY_REFRESH_TOKEN` from `.env.local` into the Vercel project's
+**Production** environment variables (and `SPOTIFY_CLIENT_SECRET` too if you
+rotated it), then redeploy. Restart `npm run dev` locally.
+
+## Token expired
+
+Symptom: `/api/spotify/now-playing` on the site returns
+`{"error":"spotify_unavailable"}`, and Spotify's token endpoint answers
+`400 invalid_grant`.
+
+Fix: rerun `node scripts/spotify-auth.mjs`, update the Vercel env var, and
+redeploy. Expect this roughly every 6 months.
