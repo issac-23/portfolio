@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
-import { mockSpotify, spotifyDown, track } from './helpers/spotify'
+import { mockSpotify, spotifyAuthExpired, spotifyDown, track } from './helpers/spotify'
 
 /**
  * The classic page's Spotify card, in each state the one shared now-playing
@@ -50,6 +50,13 @@ test.describe('with Spotify down', () => {
     await card(page).getByRole('button', { name: 'Try again' }).click()
     await expect(card(page)).toContainText('Now playing')
     await expect(card(page)).toContainText('Ivy')
+  })
+
+  test('shows the same unreachable state when the token has expired', async ({ page }) => {
+    await mockSpotify(page, spotifyAuthExpired)
+    await page.goto('/classic')
+    await expect(card(page)).toContainText("Couldn't reach Spotify")
+    await expect(card(page)).not.toContainText('Not playing right now')
   })
 
   test('keeps the last good answer through a failed poll', async ({ page }) => {

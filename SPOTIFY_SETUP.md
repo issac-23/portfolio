@@ -49,8 +49,9 @@ rotated it), then redeploy. Restart `npm run dev` locally.
 ## Token expired
 
 Symptom: `/api/spotify/now-playing` on the site returns
-`{"error":"spotify_unavailable"}`, and Spotify's token endpoint answers
-`400 invalid_grant`.
+`{"error":"spotify_auth"}` (any other Spotify failure is
+`spotify_unavailable`), and Spotify's token endpoint answers
+`400 invalid_grant`. The Vercel function log shows `token 400 invalid_grant`.
 
 Check: `node scripts/spotify-auth.mjs --check` tests the token saved in
 `.env.local` and prints only statuses and Spotify's error codes.

@@ -20,5 +20,8 @@ export const mockSpotify = (page: Page, body: object, status = 200) =>
 /** The route's report that it could not get an answer out of Spotify. */
 export const spotifyDown = { error: 'spotify_unavailable' }
 
+/** The route's report that the refresh token was revoked or expired; the site shows it like an outage. */
+export const spotifyAuthExpired = { error: 'spotify_auth' }
+
 /** Nothing playing and nothing recent, the quiet default for tests that are about something else. */
 export const mockSpotifyQuiet = (page: Page) => mockSpotify(page, { isPlaying: false, recentTracks: [] })
