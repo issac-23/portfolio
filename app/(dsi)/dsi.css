@@ -1413,10 +1413,6 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   font-size: 0.66rem;
 }
 .dsi-bubble span { padding: 3px 7px; }
-.dsi-card[data-sel] {
-  border-color: var(--dsi-start);
-  box-shadow: inset 0 0 0 1.5px var(--dsi-start);
-}
 @media (max-width: 620px) {
   .dsi-chat { gap: 3px; padding: 5px; }
   .dsi-bubble { font-size: 0.6rem; }

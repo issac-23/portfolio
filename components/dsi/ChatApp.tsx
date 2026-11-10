@@ -37,7 +37,7 @@ interface ChannelsProps {
 /** Lower screen: the channels you can actually reach me on. */
 export function Channels({ selected, onSelect, onBack }: ChannelsProps) {
   const list = useRef<HTMLUListElement>(null)
-  useListNav({ container: list, count: channels.length, selected, onSelect })
+  const { itemProps } = useListNav({ container: list, count: channels.length, selected, onSelect })
 
   return (
     <AppLower onBack={onBack}>
@@ -48,11 +48,8 @@ export function Channels({ selected, onSelect, onBack }: ChannelsProps) {
               <a
                 className="dsi-card"
                 href={c.href}
-                data-idx={i}
-                data-sel={i === selected || undefined}
-                tabIndex={i === selected ? 0 : -1}
-                onFocus={() => onSelect(i)}
                 {...externalProps(c.href)}
+                {...itemProps(i)}
               >
                 <span className="dsi-card-text">
                   <b>{c.label}</b>
