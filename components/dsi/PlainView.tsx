@@ -1,9 +1,9 @@
 import Image from 'next/image'
-import { galleryPhotos } from '@/data/gallery'
+import { PHOTO_THUMB_SIZES, galleryPhotos, photoLabel } from '@/data/gallery'
 import { mediaItems, mediaTypeLabels } from '@/data/media'
 import { availability, channels, profile } from '@/data/profile'
-import { externalProps } from '@/data/links'
-import { projects, statusLabels } from '@/data/projects'
+import { RESUME_PDF, externalProps, newTabProps } from '@/data/links'
+import { NO_LIVE_LINK, projects, statusLabels } from '@/data/projects'
 import PlainListening from './PlainListening'
 import ViewLink from './ViewLink'
 import { FAN_MADE } from './disclaimer'
@@ -23,7 +23,7 @@ export default function PlainView() {
         <p>{profile.headline}</p>
         <p className="dsi-plain-avail">{availability}</p>
         <nav aria-label="Quick links">
-          <a href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume (PDF)</a>
+          <a href={RESUME_PDF} {...newTabProps}>Resume (PDF)</a>
           {channels.map(c => (
             <a key={c.label} href={c.href} {...externalProps(c.href)}>
               {c.label}
@@ -56,8 +56,8 @@ export default function PlainView() {
             <p>{p.description}</p>
             <p className="dsi-plain-meta">{p.tags.join(' · ')}</p>
             <p className="dsi-plain-links">
-              {p.url ? <a href={p.url} target="_blank" rel="noopener noreferrer">Open {p.title}</a> : <span>No live link yet</span>}
-              {p.github && <a href={p.github} target="_blank" rel="noopener noreferrer">{p.title} on GitHub</a>}
+              {p.url ? <a href={p.url} {...externalProps(p.url)}>Open {p.title}</a> : <span>{NO_LIVE_LINK}</span>}
+              {p.github && <a href={p.github} {...externalProps(p.github)}>{p.title} on GitHub</a>}
             </p>
           </article>
         ))}
@@ -66,9 +66,9 @@ export default function PlainView() {
       <section aria-labelledby="plain-photos">
         <h2 id="plain-photos">Photos</h2>
         <ul className="dsi-plain-photos">
-          {galleryPhotos.map(ph => (
+          {galleryPhotos.map((ph, i) => (
             <li key={ph.src}>
-              <Image src={ph.src} alt={ph.alt ?? 'Gallery photo'} width={ph.width} height={ph.height} sizes="(max-width: 620px) 45vw, 200px" />
+              <Image src={ph.src} alt={photoLabel(ph, i)} width={ph.width} height={ph.height} sizes={PHOTO_THUMB_SIZES} />
               {ph.caption && <span>{ph.caption}</span>}
             </li>
           ))}
@@ -85,7 +85,7 @@ export default function PlainView() {
         <ul className="dsi-plain-shelf">
           {mediaItems.map(m => (
             <li key={m.url}>
-              <a href={m.url} target="_blank" rel="noopener noreferrer">{m.title}</a>
+              <a href={m.url} {...externalProps(m.url)}>{m.title}</a>
               <span className="dsi-plain-meta">
                 {mediaTypeLabels[m.type].one} by {m.creator}
                 {m.date ? `, ${m.date}` : ''}

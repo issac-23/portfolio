@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import type { GalleryPhoto } from '@/data/gallery'
+import { PHOTO_STAGE_SIZES, photoLabel, type GalleryPhoto } from '@/data/gallery'
 import { lessMotion, useMotion } from './prefs'
 
 const INTERVAL = 5000
@@ -57,7 +57,7 @@ export default function PhotoFrame({ photos }: { photos: GalleryPhoto[] }) {
   }
 
   // Same sizes on both layers, so they resolve to one variant and one download.
-  const sizes = '(max-width: 620px) 76vw, 640px'
+  const sizes = PHOTO_STAGE_SIZES
 
   return (
     <div
@@ -70,7 +70,7 @@ export default function PhotoFrame({ photos }: { photos: GalleryPhoto[] }) {
         <Image src={photo.src} alt="" fill sizes={sizes} className="dsi-photo-back" priority={i === 0} />
         <Image
           src={photo.src}
-          alt={photo.alt ?? 'Gallery photo'}
+          alt={photoLabel(photo, i)}
           fill
           sizes={sizes}
           className="dsi-photo-front"

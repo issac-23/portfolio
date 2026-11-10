@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { statusLabels, type Project } from '@/data/projects'
+import { NO_LIVE_LINK, statusLabels, type Project } from '@/data/projects'
 import { AppLower, useListNav } from './screen'
 
 // Cartridge label colours, cycled. A project has no artwork of its own, so
@@ -64,7 +64,7 @@ export function ProjectList({ projects, selected, onSelect, onBack }: ProjectLis
       actions={[
         project.url
           ? { label: 'Open', name: `Open ${project.title} (new tab)`, href: project.url, primary: true }
-          : { label: 'Open', unavailable: 'No live link' },
+          : { label: 'Open', unavailable: NO_LIVE_LINK },
         project.github
           ? { label: 'GitHub', name: `${project.title} on GitHub (new tab)`, href: project.github }
           : { label: 'GitHub', unavailable: 'No repo' },

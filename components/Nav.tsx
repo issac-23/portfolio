@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { RESUME_PDF, newTabProps } from '@/data/links'
 import ThemeToggle from './ThemeToggle'
 
 const links = [
@@ -100,9 +101,8 @@ export default function Nav() {
 
           <div className="flex items-center gap-4">
             <a
-              href="/resume.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
+              href={RESUME_PDF}
+              {...newTabProps}
               className="hidden sm:inline-block text-xs text-fg border border-border rounded-full px-3.5 py-1.5 hover:border-accent hover:text-accent transition-all"
             >
               Resume
@@ -159,9 +159,8 @@ export default function Nav() {
             ))}
             <li>
               <a
-                href="/resume.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
+                href={RESUME_PDF}
+                {...newTabProps}
                 className="text-sm text-muted hover:text-fg transition-colors block py-1"
                 onClick={() => setOpen(false)}
               >

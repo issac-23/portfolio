@@ -7,6 +7,22 @@ export interface GalleryPhoto {
   caption?: string
 }
 
+/**
+ * What a photo is called to a screen reader, on every screen: its alt, then its
+ * caption, then a number (1-based, by position in the gallery).
+ */
+export const photoLabel = (photo: GalleryPhoto, index: number) =>
+  photo.alt ?? photo.caption ?? `Gallery photo ${index + 1}`
+
+/**
+ * `sizes` for the big photo on the DSi's top screen. PhotoFrame and Camera
+ * show the same photo in the same box, so they must resolve to one variant.
+ */
+export const PHOTO_STAGE_SIZES = '(max-width: 620px) 76vw, 640px'
+
+/** `sizes` for the grid thumbnails, classic and plain view alike. */
+export const PHOTO_THUMB_SIZES = '(max-width: 640px) 45vw, 200px'
+
 // ─────────────────────────────────────────────────────────────────
 // HOW TO ADD PHOTOS:
 // 1. Drop image files into /public/photos/gallery/

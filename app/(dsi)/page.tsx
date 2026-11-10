@@ -1,3 +1,4 @@
+import { RESUME_PDF, newTabProps } from '@/data/links'
 import DsiMenu from '@/components/dsi/DsiMenu'
 import PlainView from '@/components/dsi/PlainView'
 import Stage from '@/components/dsi/Stage'
@@ -18,7 +19,7 @@ export default function DsiPage({ searchParams }: { searchParams: { view?: strin
       {/* The two things a recruiter is most likely here for, ahead of the
           device in the tab order, so nobody has to learn the DSi to get them. */}
       <nav className="dsi-shortcuts" aria-label="Shortcuts">
-        <a href="/resume.pdf" target="_blank" rel="noopener noreferrer">
+        <a href={RESUME_PDF} {...newTabProps}>
           Resume
         </a>
         <ViewLink to="plain">Plain view</ViewLink>
