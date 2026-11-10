@@ -1,6 +1,7 @@
 'use client'
 
 import { plural } from './apps'
+import { externalProps } from '@/data/links'
 import { useListeningWeek, useNowPlaying } from '../useNowPlaying'
 
 /** The Sound app as a sentence and a short list. */
@@ -17,7 +18,7 @@ export default function PlainListening() {
       {s.kind === 'playing' && (
         <p>
           Now playing:{' '}
-          <a href={s.track.songUrl} target="_blank" rel="noopener noreferrer">{s.track.title}</a> by {s.track.artist}
+          <a href={s.track.songUrl} {...externalProps(s.track.songUrl)}>{s.track.title}</a> by {s.track.artist}
         </p>
       )}
       {week.kind === 'week' ? (
@@ -33,7 +34,7 @@ export default function PlainListening() {
             {week.topTracks.map(t => (
               <li key={`${t.title}|${t.artist}`}>
                 {t.songUrl ? (
-                  <a href={t.songUrl} target="_blank" rel="noopener noreferrer">{t.title}</a>
+                  <a href={t.songUrl} {...externalProps(t.songUrl)}>{t.title}</a>
                 ) : (
                   t.title
                 )}{' '}
@@ -51,7 +52,7 @@ export default function PlainListening() {
           <ul>
             {recent.map(t => (
               <li key={`${t.title}|${t.artist}`}>
-                <a href={t.songUrl} target="_blank" rel="noopener noreferrer">{t.title}</a> by {t.artist}
+                <a href={t.songUrl} {...externalProps(t.songUrl)}>{t.title}</a> by {t.artist}
               </li>
             ))}
           </ul>
