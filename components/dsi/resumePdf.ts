@@ -1,6 +1,8 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist'
+import { RESUME_PDF } from '@/data/links'
 
-export const RESUME_PDF = '/resume.pdf'
+// Defined in data/links.ts, where the classic page can reach it too.
+export { RESUME_PDF }
 
 // The document and its worker are kept on purpose, for the rest of the page session.
 let doc: Promise<PDFDocumentProxy | null> | undefined

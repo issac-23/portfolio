@@ -1,3 +1,4 @@
+import { RESUME_PDF } from '@/data/links'
 import { availability, profile } from '@/data/profile'
 import { APPS } from './apps'
 import { AppLower } from './screen'
@@ -27,7 +28,7 @@ export function ProfileCard() {
 /** Lower screen: the facts as stat rows, then what I'm into. */
 export function ProfileStats({ onBack }: { onBack: () => void }) {
   return (
-    <AppLower onBack={onBack} actions={[{ label: 'Resume', name: 'Resume (PDF, new tab)', href: '/resume.pdf', external: true, primary: true }]}>
+    <AppLower onBack={onBack} actions={[{ label: 'Resume', name: 'Resume (PDF, new tab)', href: RESUME_PDF, external: true, primary: true }]}>
       <dl className="dsi-stats">
         {profile.stats.map(s => (
           <div key={s.label}>

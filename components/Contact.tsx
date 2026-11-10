@@ -1,7 +1,7 @@
 'use client'
 
 import { channels } from '@/data/profile'
-import { externalProps } from '@/data/links'
+import { RESUME_PDF, externalProps, newTabProps } from '@/data/links'
 import { useReveal } from './useReveal'
 
 // One icon per channel in data/profile.ts, keyed by its label.
@@ -67,9 +67,8 @@ export default function Contact() {
               ))}
 
               <a
-                href="/resume.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
+                href={RESUME_PDF}
+                {...newTabProps}
                 className="inline-flex items-center gap-3 bg-surface border border-border rounded-xl px-5 py-4 hover:border-accent group lift-card"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted group-hover:text-accent transition-colors flex-shrink-0">

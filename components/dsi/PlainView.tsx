@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { galleryPhotos } from '@/data/gallery'
 import { mediaItems, mediaTypeLabels } from '@/data/media'
 import { availability, channels, profile } from '@/data/profile'
-import { externalProps } from '@/data/links'
+import { RESUME_PDF, externalProps, newTabProps } from '@/data/links'
 import { projects, statusLabels } from '@/data/projects'
 import PlainListening from './PlainListening'
 import ViewLink from './ViewLink'
@@ -23,7 +23,7 @@ export default function PlainView() {
         <p>{profile.headline}</p>
         <p className="dsi-plain-avail">{availability}</p>
         <nav aria-label="Quick links">
-          <a href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume (PDF)</a>
+          <a href={RESUME_PDF} {...newTabProps}>Resume (PDF)</a>
           {channels.map(c => (
             <a key={c.label} href={c.href} {...externalProps(c.href)}>
               {c.label}
