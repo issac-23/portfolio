@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useRef } from 'react'
-import type { GalleryPhoto } from '@/data/gallery'
+import { PHOTO_STAGE_SIZES, photoLabel, type GalleryPhoto } from '@/data/gallery'
 import { AppLower, useListNav } from './screen'
 
 /**
@@ -14,12 +14,12 @@ const COLS = 4
 
 /** Upper screen: the selected photo, letterboxed over a blur of itself. */
 export function PhotoView({ photo, index, total }: { photo: GalleryPhoto; index: number; total: number }) {
-  const sizes = '(max-width: 620px) 76vw, 640px'
+  const sizes = PHOTO_STAGE_SIZES
   return (
     <div className="dsi-photo">
       <div className="dsi-photo-shot" key={photo.src}>
         <Image src={photo.src} alt="" fill sizes={sizes} className="dsi-photo-back" />
-        <Image src={photo.src} alt={photo.alt ?? 'Gallery photo'} fill sizes={sizes} className="dsi-photo-front" />
+        <Image src={photo.src} alt={photoLabel(photo, index)} fill sizes={sizes} className="dsi-photo-front" />
       </div>
       <div className="dsi-photo-tag">
         <span>{index + 1} / {total}</span>
@@ -55,7 +55,7 @@ export function Album({ photos, selected, onSelect, onBack }: AlbumProps) {
               className="dsi-thumb"
               data-idx={i}
               aria-pressed={i === selected}
-              aria-label={p.alt ?? `Photo ${i + 1}`}
+              aria-label={photoLabel(p, i)}
               tabIndex={i === selected ? 0 : -1}
               onClick={() => onSelect(i)}
             >

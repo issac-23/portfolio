@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { galleryPhotos } from '@/data/gallery'
+import { PHOTO_THUMB_SIZES, galleryPhotos, photoLabel } from '@/data/gallery'
 import { mediaItems, mediaTypeLabels } from '@/data/media'
 import { availability, channels, profile } from '@/data/profile'
 import { RESUME_PDF, externalProps, newTabProps } from '@/data/links'
@@ -66,9 +66,9 @@ export default function PlainView() {
       <section aria-labelledby="plain-photos">
         <h2 id="plain-photos">Photos</h2>
         <ul className="dsi-plain-photos">
-          {galleryPhotos.map(ph => (
+          {galleryPhotos.map((ph, i) => (
             <li key={ph.src}>
-              <Image src={ph.src} alt={ph.alt ?? 'Gallery photo'} width={ph.width} height={ph.height} sizes="(max-width: 620px) 45vw, 200px" />
+              <Image src={ph.src} alt={photoLabel(ph, i)} width={ph.width} height={ph.height} sizes={PHOTO_THUMB_SIZES} />
               {ph.caption && <span>{ph.caption}</span>}
             </li>
           ))}

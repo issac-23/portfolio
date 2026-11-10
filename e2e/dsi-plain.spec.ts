@@ -1,5 +1,5 @@
 import { availability, channels, profile } from '../data/profile'
-import { galleryPhotos } from '../data/gallery'
+import { galleryPhotos, photoLabel } from '../data/gallery'
 import { mediaItems } from '../data/media'
 import { projects } from '../data/projects'
 import { expect, test } from './fixtures'
@@ -33,7 +33,7 @@ test('holds everything the DSi does', async ({ page }) => {
     await expect(page.getByRole('heading', { level: 3, name: new RegExp(p.title) })).toBeVisible()
     if (p.url) await expect(page.getByRole('link', { name: `Open ${p.title}` })).toHaveAttribute('href', p.url)
   }
-  for (const ph of galleryPhotos) await expect(page.getByAltText(ph.alt ?? 'Gallery photo').first()).toBeAttached()
+  for (const [i, ph] of galleryPhotos.entries()) await expect(page.getByAltText(photoLabel(ph, i), { exact: true }).first()).toBeAttached()
   for (const m of mediaItems) await expect(page.getByRole('link', { name: m.title })).toHaveAttribute('href', m.url)
   for (const c of channels) {
     await expect(page.locator('.dsi-plain-contact').getByRole('link', { name: c.handle })).toHaveAttribute('href', c.href)

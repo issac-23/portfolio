@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { galleryPhotos } from '@/data/gallery'
+import { PHOTO_THUMB_SIZES, galleryPhotos, photoLabel } from '@/data/gallery'
 import { useReveal } from './useReveal'
 
 export default function Gallery() {
@@ -121,10 +121,10 @@ export default function Gallery() {
                   >
                     <Image
                       src={photo.src}
-                      alt={photo.alt ?? photo.caption ?? `Gallery photo ${i + 1}`}
+                      alt={photoLabel(photo, i)}
                       width={photo.width}
                       height={photo.height}
-                      sizes="(max-width: 640px) 45vw, 200px"
+                      sizes={PHOTO_THUMB_SIZES}
                       // Eager on purpose. Chrome can fail to start a lazy image
                       // that sits in a CSS column layout: on Linux the last
                       // thumbnail stayed blank while fully on screen. Seven
@@ -153,7 +153,7 @@ export default function Gallery() {
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label={photo.alt ?? photo.caption ?? 'Gallery photo'}
+            aria-label={photoLabel(photo, selected)}
             className={`t-modal relative max-w-4xl w-full ${isOpen ? 'is-open' : 'is-closing'}`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -168,7 +168,7 @@ export default function Gallery() {
               <Image
                 key={photo.src}
                 src={photo.src}
-                alt={photo.alt ?? photo.caption ?? 'Gallery photo'}
+                alt={photoLabel(photo, selected)}
                 fill
                 sizes="(max-width: 896px) 100vw, 896px"
                 priority

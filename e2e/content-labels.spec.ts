@@ -1,3 +1,4 @@
+import { galleryPhotos, photoLabel } from '../data/gallery'
 import { isExternal } from '../data/links'
 import { channels } from '../data/profile'
 import { mediaItems, mediaTypeLabels } from '../data/media'
@@ -53,4 +54,14 @@ test('only web channels open in a new tab, on the classic page and in the plain 
   await check(h => page.locator('#contact').getByRole('link', { name: new RegExp(h) }))
   await page.goto('/?view=plain')
   await check(h => page.locator('.dsi-plain-contact').getByRole('link', { name: h }))
+})
+
+test('gallery photos are named the same on the classic page and in the plain view', async ({ page }) => {
+  const expected = galleryPhotos.map(photoLabel)
+
+  await page.goto('/classic')
+  expect(await page.locator('#gallery img').evaluateAll(imgs => imgs.map(i => i.getAttribute('alt')))).toEqual(expected)
+
+  await page.goto('/?view=plain')
+  expect(await page.locator('.dsi-plain-photos img').evaluateAll(imgs => imgs.map(i => i.getAttribute('alt')))).toEqual(expected)
 })
