@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { plural } from './apps'
 import { AppLower } from './screen'
+import { externalProps } from '@/data/links'
 import { useListeningWeek, useNowPlaying } from '../useNowPlaying'
 
 // The box size lives in CSS, so it can change per screen size; `size` is
@@ -102,7 +103,7 @@ export function SoundLists({ onBack }: { onBack: () => void }) {
               return (
                 <li key={`${t.title}|${t.artist}`}>
                   {t.songUrl ? (
-                    <a className="dsi-card" href={t.songUrl} target="_blank" rel="noopener noreferrer">{inner}</a>
+                    <a className="dsi-card" href={t.songUrl} {...externalProps(t.songUrl)}>{inner}</a>
                   ) : (
                     <div className="dsi-card dsi-card-static">{inner}</div>
                   )}
@@ -118,7 +119,7 @@ export function SoundLists({ onBack }: { onBack: () => void }) {
           <ul className="dsi-tracks" aria-label="Recently played">
             {recent.map(t => (
               <li key={`${t.title}|${t.artist}`}>
-                <a className="dsi-card" href={t.songUrl} target="_blank" rel="noopener noreferrer">
+                <a className="dsi-card" href={t.songUrl} {...externalProps(t.songUrl)}>
                   <Art src={t.albumImageUrl} size={30} />
                   <span className="dsi-card-text">
                     <b>{t.title}</b>
