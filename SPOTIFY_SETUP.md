@@ -52,5 +52,8 @@ Symptom: `/api/spotify/now-playing` on the site returns
 `{"error":"spotify_unavailable"}`, and Spotify's token endpoint answers
 `400 invalid_grant`.
 
+Check: `node scripts/spotify-auth.mjs --check` tests the token saved in
+`.env.local` and prints only statuses and Spotify's error codes.
+
 Fix: rerun `node scripts/spotify-auth.mjs`, update the Vercel env var, and
 redeploy. Expect this roughly every 6 months.

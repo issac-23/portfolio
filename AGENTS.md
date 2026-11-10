@@ -7,6 +7,9 @@ Tailwind. The DSi redesign lives at `/` and the previous site is kept at
 `npm run check` runs lint, the e2e type-check, then `test:e2e`. Tests are E2E
 only; there are no unit tests.
 
+Spotify section broken: `node scripts/spotify-auth.mjs --check`; details in
+`SPOTIFY_SETUP.md`.
+
 ## Agent skills
 
 ### Issue tracker
