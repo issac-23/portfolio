@@ -4,7 +4,8 @@ Issac's personal portfolio site, built with Next.js App Router, TypeScript and
 Tailwind. The DSi redesign lives at `/` and the previous site is kept at
 `/classic`.
 
-`npm run check` runs lint, the e2e type-check, then `test:e2e`. Tests are E2E
+`npm run check` runs lint, the e2e type-check, then `test:e2e`, and local e2e
+runs queue behind each other through a lock in the temp dir. Tests are E2E
 only; there are no unit tests.
 
 Spotify section broken: `node scripts/spotify-auth.mjs --check`; details in

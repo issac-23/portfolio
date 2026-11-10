@@ -15,7 +15,7 @@
     "shots:notfound": "node scripts/notfound-shot.mjs",
     "og": "node scripts/og.mjs",
     "photos:optimize": "node scripts/optimize-photos.mjs",
-    "test:e2e": "next build && playwright test",
+    "test:e2e": "node scripts/e2e.mjs",
     "typecheck:e2e": "tsc -p e2e/tsconfig.json"
   },
   "dependencies": {
