@@ -15,15 +15,24 @@ export interface Week {
   topArtists: { name: string; plays: number; imageUrl: string }[]
 }
 
-export function toTrack(item: any): WeekTrack {
-  const t = item.track
+/**
+ * Maps a Spotify track or podcast episode to the shape the site shows. A
+ * track carries its art on `album` and its name on `artists`; an episode
+ * carries them on `images` and `show`.
+ */
+export function toItemTrack(t: any): WeekTrack {
   return {
     title: t.name ?? '',
     artist: (t.artists ?? []).map((a: any) => a.name).join(', '),
-    album: t.album?.name ?? '',
-    albumImageUrl: t.album?.images?.[0]?.url ?? '',
+    album: t.album?.name ?? t.show?.name ?? '',
+    albumImageUrl: t.album?.images?.[0]?.url ?? t.images?.[0]?.url ?? '',
     songUrl: t.external_urls?.spotify ?? '',
   }
+}
+
+/** A recently-played entry wraps its track in `track`. */
+export function toTrack(item: any): WeekTrack {
+  return toItemTrack(item.track)
 }
 
 /** Local files and removed tracks come back with a null track. */
