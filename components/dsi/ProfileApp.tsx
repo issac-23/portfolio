@@ -1,4 +1,4 @@
-import { profile } from '@/data/profile'
+import { availability, profile } from '@/data/profile'
 import { APPS } from './apps'
 import { AppLower } from './screen'
 
@@ -18,6 +18,7 @@ export function ProfileCard() {
           <span className="dsi-sub">{profile.headline}</span>
         </div>
       </div>
+      <p className="dsi-avail">{availability}</p>
       {profile.bio.map(p => <p key={p}>{p}</p>)}
     </div>
   )

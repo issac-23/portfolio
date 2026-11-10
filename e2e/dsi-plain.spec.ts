@@ -1,4 +1,4 @@
-import { channels, profile } from '../data/profile'
+import { availability, channels, profile } from '../data/profile'
 import { galleryPhotos } from '../data/gallery'
 import { mediaItems } from '../data/media'
 import { projects } from '../data/projects'
@@ -21,6 +21,10 @@ test('renders without the shell, as one document with one h1', async ({ page }) 
   await expect(page.locator('.dsi-device, .dsi-screen, .dsi-rail')).toHaveCount(0)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(profile.name)
   await expect(page.getByRole('heading', { level: 2 })).toHaveText(['About', 'Projects', 'Photos', 'Listening', 'Shelf', 'Contact'])
+})
+
+test('says I am looking for a co-op, in the header', async ({ page }) => {
+  await expect(page.locator('.dsi-plain-head').getByText(availability)).toBeVisible()
 })
 
 test('holds everything the DSi does', async ({ page }) => {

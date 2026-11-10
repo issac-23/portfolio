@@ -1,3 +1,5 @@
+import { availability } from '@/data/profile'
+
 export default function Hero() {
   return (
     <section id="top" className="min-h-[76svh] md:min-h-[80vh] flex items-center px-6 pt-24 pb-16">
@@ -13,6 +15,7 @@ export default function Hero() {
         <p className="text-muted text-lg leading-relaxed max-w-xl mb-8">
           CS + Economics at Northeastern University.
         </p>
+        <p className="text-fg text-sm font-medium -mt-5 mb-8">{availability}</p>
         <div className="flex flex-wrap gap-2 mb-10">
           {['Northeastern', 'CS + Econ', 'Music', 'Photography'].map((item) => (
             <span

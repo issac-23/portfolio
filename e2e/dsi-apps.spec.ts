@@ -1,4 +1,5 @@
 import type { Page, Route } from '@playwright/test'
+import { availability } from '../data/profile'
 import { expect, test } from './fixtures'
 import { APPS, effectsEmpty, expectSettledOn, openApp, openMenu } from './helpers/dsi'
 import { mockSpotify, spotifyDown, track } from './helpers/spotify'
@@ -31,6 +32,11 @@ test('Profile lists the stats and links the resume', async ({ page }) => {
   await expect(stats.locator('dt')).toHaveText(['Studying', 'School', 'Year', 'Based'])
   await expect(stats).toContainText('Northeastern University')
   await expect(page.getByRole('link', { name: 'Resume (PDF, new tab)' })).toHaveAttribute('href', '/resume.pdf')
+})
+
+test('Profile says I am looking for a co-op, where the rail cannot hide it', async ({ page }) => {
+  await openApp(page, 'Profile')
+  await expect(page.locator('.dsi-detail').getByText(availability)).toBeVisible()
 })
 
 test('Camera moves through the album in two dimensions and the top screen follows', async ({ page }) => {
