@@ -32,5 +32,5 @@ jobs:
           echo "First attempt failed, retrying in 60s"
           sleep 60
           check && exit 0
-          echo "::error::Spotify now-playing is failing. If the response is spotify_unavailable the refresh token has probably expired: see SPOTIFY_SETUP.md, 'Token expired'."
+          echo "::error::Spotify now-playing is failing. If the response is spotify_auth the refresh token has probably expired: see SPOTIFY_SETUP.md, 'Token expired'."
           exit 1
