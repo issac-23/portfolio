@@ -51,10 +51,9 @@ export function NowPlayingCard() {
 /** Lower screen: the week's most played, then recently played, each song a link out to Spotify. */
 export function SoundLists({ onBack }: { onBack: () => void }) {
   const s = useNowPlaying()
-  const answer = useListeningWeek()
+  const week = useListeningWeek()
   const playing = s.kind === 'playing' ? s.track : undefined
   const recent = s.kind === 'playing' || s.kind === 'last' ? s.recent : []
-  const week = answer && answer.plays > 0 ? answer : undefined
 
   return (
     <AppLower
@@ -67,14 +66,14 @@ export function SoundLists({ onBack }: { onBack: () => void }) {
     >
       {/* While the first answer is out the lower screen stays quiet; the upper one says why. */}
       {s.kind === 'unreachable' && <p className="dsi-sound-note">No recent plays to show.</p>}
-      {s.kind !== 'loading' && s.kind !== 'unreachable' && !week && (
+      {s.kind !== 'loading' && s.kind !== 'unreachable' && week.kind !== 'week' && (
         <p className="dsi-sound-note">No plays this week yet.</p>
       )}
-      {week && (
+      {week.kind === 'week' && (
         <>
           <h3 className="dsi-list-head">Top artists this week</h3>
           <ul className="dsi-tracks">
-            {week.topArtists.slice(0, 3).map(a => (
+            {week.topArtists.map(a => (
               <li key={a.name}>
                 <div className="dsi-card dsi-card-static">
                   <Art src={a.imageUrl} size={30} />
@@ -88,7 +87,7 @@ export function SoundLists({ onBack }: { onBack: () => void }) {
           </ul>
           <h3 className="dsi-list-head">Top songs this week</h3>
           <ul className="dsi-tracks">
-            {week.topTracks.slice(0, 5).map(t => {
+            {week.topTracks.map(t => {
               // A local or partial item has no Spotify page, so it stays plain text.
               const inner = (
                 <>

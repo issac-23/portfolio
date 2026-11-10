@@ -32,6 +32,35 @@ export type Listening =
   | { kind: 'last'; track: Track; recent: Track[] }
   | { kind: 'nothing' }
 
+/**
+ * The week's most played, as every screen needs to say it. Like `Listening`,
+ * screens pick words and layout, and never work the kind out or cut the lists
+ * themselves.
+ *
+ * loading  no answer to show yet (still waiting, or Spotify has not answered)
+ * empty    an answer came back but nothing was played this week
+ * week     `topArtists` and `topTracks` are already cut to the lengths the
+ *          screens show, most played first
+ */
+export type ListeningWeek =
+  | { kind: 'loading' }
+  | { kind: 'empty' }
+  | { kind: 'week'; topArtists: Week['topArtists']; topTracks: Week['topTracks'] }
+
+// Both Sound screens show the same cut of the week.
+const TOP_ARTISTS = 3
+const TOP_TRACKS = 5
+
+function deriveWeek(w: Week | undefined): ListeningWeek {
+  if (!w) return { kind: 'loading' }
+  if (w.plays <= 0) return { kind: 'empty' }
+  return {
+    kind: 'week',
+    topArtists: w.topArtists.slice(0, TOP_ARTISTS),
+    topTracks: w.topTracks.slice(0, TOP_TRACKS),
+  }
+}
+
 /** What the route sends back: an answer, or `error` when it could not get one. */
 interface NowPlayingBody {
   error?: string
@@ -87,13 +116,14 @@ const POLL_MS = 30_000
  * reported, as `unreachable`.
  */
 const loading: Listening = { kind: 'loading' }
+const loadingWeek: ListeningWeek = { kind: 'loading' }
 let state: Listening = loading
 /** The week from the same answer as `state`, kept apart so `Listening` stays about right now. */
-let week: Week | undefined
+let week: ListeningWeek = loadingWeek
 const listeners = new Set<() => void>()
 let timer: ReturnType<typeof setInterval> | undefined
 
-function set(next: Listening, nextWeek = week) {
+function set(next: Listening, nextWeek: ListeningWeek = week) {
   state = next
   week = nextWeek
   listeners.forEach(l => l())
@@ -112,7 +142,7 @@ async function poll() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const body = (await res.json()) as NowPlayingBody
     if (body.error) throw new Error(body.error)
-    set(derive(body), body.week)
+    set(derive(body), deriveWeek(body.week))
   } catch {
     if (state.kind === 'loading' || state.kind === 'unreachable') set({ kind: 'unreachable' })
   }
@@ -129,7 +159,7 @@ function subscribe(listener: () => void) {
     if (listeners.size === 0) {
       clearInterval(timer)
       state = loading
-      week = undefined
+      week = loadingWeek
     }
   }
 }
@@ -140,11 +170,11 @@ export function useNowPlaying(): Listening {
 
 /**
  * The week's most played, from the same shared poll as `useNowPlaying`.
- * Undefined until an answer lands, and kept through a failed poll like the
+ * `loading` until an answer lands, and kept through a failed poll like the
  * rest of the answer.
  */
-export function useListeningWeek(): Week | undefined {
-  return useSyncExternalStore(subscribe, () => week, () => undefined)
+export function useListeningWeek(): ListeningWeek {
+  return useSyncExternalStore(subscribe, () => week, () => loadingWeek)
 }
 
 /** Ask again now, from the unreachable state. Shows loading until the answer lands. */
