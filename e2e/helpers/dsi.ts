@@ -1,16 +1,8 @@
 import { expect, type Page } from '@playwright/test'
+import { APPS as REGISTERED, type AppName } from '../../components/dsi/apps'
 
 /** Apps in rail order, by the accessible name each slot carries. */
-export const APPS = [
-  'Profile',
-  'Projects',
-  'Nintendo DSi Camera',
-  'Nintendo DSi Sound',
-  'Shelf',
-  'Contact',
-  'Resume',
-  'System Settings',
-] as const
+export const APPS = REGISTERED.map(a => a.name) as AppName[]
 
 export const mod = (n: number, m: number) => ((n % m) + m) % m
 
@@ -138,7 +130,7 @@ export const effectsEmpty = (page: Page) =>
   page.evaluate(() => [...document.querySelectorAll('.dsi-fx')].map(l => l.childElementCount))
 
 /** Starts `app` from a cold menu by walking the rail to it. */
-export async function openApp(page: Page, app: (typeof APPS)[number]) {
+export async function openApp(page: Page, app: AppName) {
   await openMenu(page)
   const steps = APPS.indexOf(app)
   for (let i = 0; i < steps; i++) await page.keyboard.press('ArrowRight')
