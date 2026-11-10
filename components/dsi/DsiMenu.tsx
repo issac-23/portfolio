@@ -3,9 +3,9 @@
 import { useCallback, useEffect } from 'react'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
-import { APPS } from './apps'
 import Device from './Device'
 import PhotoFrame from './PhotoFrame'
+import { APPS } from './apps'
 import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
 import { useConsole } from './useConsole'
@@ -42,8 +42,8 @@ export default function DsiMenu() {
   // Launching still shows the menu, and returning still shows the app: each
   // swaps at the white, not when it starts.
   const open = state.phase === 'app' || state.phase === 'returning' ? state.app : null
-  const screen = open ? SCREENS[open] : undefined
-  if (screen) {
+  if (open) {
+    const screen = SCREENS[open]
     const ctx: ScreenCtx = { sel: state.sel, setSel, back }
     return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} power phase={state.phase} onPower={togglePower} />
   }

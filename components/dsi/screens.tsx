@@ -2,18 +2,18 @@
 
 import type { ReactNode } from 'react'
 import { projects } from '@/data/projects'
-import type { AppId } from './apps'
-import { ProjectDetail, ProjectList } from './ProjectsApp'
-import { ProfileCard, ProfileStats } from './ProfileApp'
-import { Album, PhotoView } from './CameraApp'
 import { galleryPhotos } from '@/data/gallery'
-import { NowPlayingCard, SoundLists } from './SoundApp'
-import { ShelfItem, ShelfList } from './ShelfApp'
 import { mediaItems } from '@/data/media'
+import type { AppId } from './apps'
+import { Album, PhotoView } from './CameraApp'
 import { ChatRoom, Channels } from './ChatApp'
+import { ProfileCard, ProfileStats } from './ProfileApp'
+import { ProjectDetail, ProjectList } from './ProjectsApp'
 import { BookletContents, BookletCover } from './ResumeApp'
-import { SettingInfo, SettingsList } from './SettingsApp'
 import { AppTop } from './screen'
+import { SettingInfo, SettingsList } from './SettingsApp'
+import { ShelfItem, ShelfList } from './ShelfApp'
+import { NowPlayingCard, SoundLists } from './SoundApp'
 
 /**
  * What every open app is handed. One selection index covers every app that
@@ -32,18 +32,11 @@ export interface Screen {
 }
 
 /**
- * Every app that opens. Anything on the rail without an entry here ignores
- * START rather than opening onto an empty screen.
+ * What each app puts on its two screens. Typed over every `AppId`, so an app
+ * added to the registry without a screen here is a compile error rather than
+ * a START press that opens onto nothing.
  */
-export const SCREENS: Partial<Record<AppId, Screen>> = {
-  projects: {
-    top: c => (
-      <AppTop>
-        <ProjectDetail project={projects[c.sel]} index={c.sel} />
-      </AppTop>
-    ),
-    bottom: c => <ProjectList projects={projects} selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
-  },
+export const SCREENS: Record<AppId, Screen> = {
   profile: {
     top: () => (
       <AppTop>
@@ -51,6 +44,14 @@ export const SCREENS: Partial<Record<AppId, Screen>> = {
       </AppTop>
     ),
     bottom: c => <ProfileStats onBack={c.back} />,
+  },
+  projects: {
+    top: c => (
+      <AppTop>
+        <ProjectDetail project={projects[c.sel]} index={c.sel} />
+      </AppTop>
+    ),
+    bottom: c => <ProjectList projects={projects} selected={c.sel} onSelect={c.setSel} onBack={c.back} />,
   },
   camera: {
     top: c => (
