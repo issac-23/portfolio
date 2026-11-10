@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { isExternal } from '@/data/links'
+import { externalProps } from '@/data/links'
 import { channels, type Channel } from '@/data/profile'
 import { AppLower, useListNav } from './screen'
 
@@ -43,7 +43,6 @@ export function Channels({ selected, onSelect, onBack }: ChannelsProps) {
     <AppLower onBack={onBack}>
       <ul className="dsi-cards" ref={list} aria-label="Channels">
         {channels.map((c: Channel, i) => {
-          const external = isExternal(c.href)
           return (
             <li key={c.label}>
               <a
@@ -53,7 +52,7 @@ export function Channels({ selected, onSelect, onBack }: ChannelsProps) {
                 data-sel={i === selected || undefined}
                 tabIndex={i === selected ? 0 : -1}
                 onFocus={() => onSelect(i)}
-                {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                {...externalProps(c.href)}
               >
                 <span className="dsi-card-text">
                   <b>{c.label}</b>

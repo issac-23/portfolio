@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
-import { isExternal } from '@/data/links'
+import { isExternal, newTabProps } from '@/data/links'
 import StatusBar from './StatusBar'
 
 /**
@@ -53,7 +53,7 @@ function ActionButton({ action: a }: { action: Action }) {
         href={a.href}
         aria-label={a.name}
         download={a.download || undefined}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        {...(external ? newTabProps : {})}
       >
         {a.label}
       </a>

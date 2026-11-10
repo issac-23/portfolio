@@ -56,8 +56,8 @@ export default function PlainView() {
             <p>{p.description}</p>
             <p className="dsi-plain-meta">{p.tags.join(' · ')}</p>
             <p className="dsi-plain-links">
-              {p.url ? <a href={p.url} target="_blank" rel="noopener noreferrer">Open {p.title}</a> : <span>No live link yet</span>}
-              {p.github && <a href={p.github} target="_blank" rel="noopener noreferrer">{p.title} on GitHub</a>}
+              {p.url ? <a href={p.url} {...externalProps(p.url)}>Open {p.title}</a> : <span>No live link yet</span>}
+              {p.github && <a href={p.github} {...externalProps(p.github)}>{p.title} on GitHub</a>}
             </p>
           </article>
         ))}
@@ -85,7 +85,7 @@ export default function PlainView() {
         <ul className="dsi-plain-shelf">
           {mediaItems.map(m => (
             <li key={m.url}>
-              <a href={m.url} target="_blank" rel="noopener noreferrer">{m.title}</a>
+              <a href={m.url} {...externalProps(m.url)}>{m.title}</a>
               <span className="dsi-plain-meta">
                 {mediaTypeLabels[m.type].one} by {m.creator}
                 {m.date ? `, ${m.date}` : ''}
