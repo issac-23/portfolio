@@ -1,4 +1,4 @@
-import { aggregateWeek, playable, toTrack } from './week'
+import { aggregateWeek, playable, toItemTrack, toTrack } from './week'
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!
@@ -18,10 +18,24 @@ async function getAccessToken() {
     }),
     cache: 'no-store',
   })
-  if (!res.ok) throw new Error(`token request failed: ${res.status}`)
+  if (!res.ok) {
+    // Spotify's error code is safe to keep; the body can echo nothing secret.
+    const code = (await res.json().catch(() => null))?.error
+    throw new TokenError(res.status, typeof code === 'string' ? code : undefined)
+  }
   const body = await res.json()
   if (!body.access_token) throw new Error('token response had no access_token')
   return body as { access_token: string }
+}
+
+/** The token endpoint refused the refresh grant. Carries only status and Spotify's error code. */
+class TokenError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code?: string,
+  ) {
+    super(`token request failed: ${status}${code ? ` ${code}` : ''}`)
+  }
 }
 
 // Answers come from Spotify on every request; nothing here is worth building ahead.
@@ -32,13 +46,21 @@ export const dynamic = 'force-dynamic'
  * from "nothing is playing". Both used to look the same: a 200 with isPlaying
  * false, so an outage or a bad token read as a quiet day.
  *
- * It stays a 200 on purpose. A non-2xx fetch is logged by the browser as a
+ * `spotify_auth` is the one failure that needs a person: the refresh token
+ * was revoked or expired (400 invalid_grant) and only rerunning
+ * scripts/spotify-auth.mjs fixes it. Everything else is `spotify_unavailable`.
+ * The cause goes to the server log, never the body, and never a secret.
+ *
+ * Both stay a 200 on purpose. A non-2xx fetch is logged by the browser as a
  * console error on every poll of an outage, and the shared poll already
  * treats the body as the answer, so the field is enough to carry it.
  */
-function unavailable() {
-  return Response.json({ error: 'spotify_unavailable' }, { headers: { 'Cache-Control': 'no-store' } })
+function failure(error: 'spotify_unavailable' | 'spotify_auth', cause: string) {
+  console.error(`[spotify now-playing] ${error}: ${cause}`)
+  return Response.json({ error }, { headers: { 'Cache-Control': 'no-store' } })
 }
+
+const unavailable = (cause: string) => failure('spotify_unavailable', cause)
 
 export async function GET() {
   try {
@@ -59,7 +81,7 @@ export async function GET() {
     ])
 
     // Every answer carries the week, so without recent plays there is no answer.
-    if (!recentRes.ok) return unavailable()
+    if (!recentRes.ok) return unavailable(`recently-played ${recentRes.status}`)
     const recentItems: any[] = (await recentRes.json()).items ?? []
     const week = aggregateWeek(recentItems)
 
@@ -69,7 +91,7 @@ export async function GET() {
       return Response.json({ isPlaying: false, recentTracks: tracks, week })
     }
 
-    if (!nowRes.ok) return unavailable()
+    if (!nowRes.ok) return unavailable(`currently-playing ${nowRes.status}`)
 
     const data = await nowRes.json()
 
@@ -79,15 +101,16 @@ export async function GET() {
 
     return Response.json({
       isPlaying: data.is_playing,
-      title: data.item.name,
-      artist: data.item.artists?.map((a: any) => a.name).join(', ') ?? '',
-      album: data.item.album?.name ?? data.item.show?.name ?? '',
-      albumImageUrl: data.item.album?.images[0]?.url ?? data.item.images?.[0]?.url ?? '',
-      songUrl: data.item.external_urls?.spotify ?? '',
+      ...toItemTrack(data.item),
       recentTracks: [],
       week,
     })
-  } catch {
-    return unavailable()
+  } catch (err) {
+    if (err instanceof TokenError) {
+      const auth = err.status === 400 && err.code === 'invalid_grant'
+      return failure(auth ? 'spotify_auth' : 'spotify_unavailable', `token ${err.status} ${err.code ?? 'no error code'}`)
+    }
+    // Only the error's name: a message could carry something from a response.
+    return unavailable(`unexpected ${err instanceof Error ? err.name : typeof err}`)
   }
 }
