@@ -1,0 +1,36 @@
+name: spotify-health
+
+# Daily check that the live Spotify route still works. The refresh token
+# expires 6 months after authorization (next around May 2027).
+# GitHub disables scheduled workflows after 60 days without repository
+# activity in a public repo; re-enable it in the Actions tab if that happens.
+
+on:
+  schedule:
+    - cron: '17 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  now-playing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check /api/spotify/now-playing
+        run: |
+          url=https://www.issac-ip.com/api/spotify/now-playing
+          check() {
+            body=$(curl -fsS --max-time 30 "$url") || return 1
+            if printf '%s' "$body" | grep -q '"error"'; then
+              echo "response: $body"
+              return 1
+            fi
+          }
+          check && exit 0
+          echo "First attempt failed, retrying in 60s"
+          sleep 60
+          check && exit 0
+          echo "::error::Spotify now-playing is failing. If the response is spotify_unavailable the refresh token has probably expired: see SPOTIFY_SETUP.md, 'Token expired'."
+          exit 1
