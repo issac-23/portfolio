@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { Phase } from './console'
 
 interface DeviceProps {
   /** Rendered inside the upper screen. */
@@ -7,6 +8,8 @@ interface DeviceProps {
   bottom?: ReactNode
   /** Whether the console is switched on. */
   power: boolean
+  /** The console state, shown as data-console for the tests to read. */
+  phase: Phase
   /** The POWER button was pressed. */
   onPower: () => void
 }
@@ -18,9 +21,9 @@ interface DeviceProps {
  * Everything here is chrome. The screens are slots, so the apps that fill them
  * stay unaware of the hardware around them.
  */
-export default function Device({ top, bottom, power, onPower }: DeviceProps) {
+export default function Device({ top, bottom, power, phase, onPower }: DeviceProps) {
   return (
-    <div className="dsi-device" data-power={power ? undefined : 'off'}>
+    <div className="dsi-device" data-power={power ? undefined : 'off'} data-console={phase}>
       <span className="dsi-shoulder dsi-shoulder-l" aria-hidden="true">L</span>
       <span className="dsi-shoulder dsi-shoulder-r" aria-hidden="true">R</span>
 

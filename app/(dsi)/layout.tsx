@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import { bootScript, motionScript } from '@/components/dsi/console'
 import PrefsSync from '@/components/dsi/PrefsSync'
 import './dsi.css'
 
@@ -43,18 +44,6 @@ const rounded = localFont({
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
 }
-
-// Applies the stored motion choice before the device paints, the way the
-// root layout does for the theme, so a visitor who turned motion off never
-// sees one frame of it.
-const motionScript = `(function(){try{if(localStorage.getItem('dsi-motion')==='reduce')document.documentElement.dataset.motion='reduce'}catch(e){}})()`
-
-// The boot screen, decided before first paint so the menu never flashes up
-// ahead of it. Once a visit, and never when it would only be in the way:
-// less motion chosen in the DSi's own System Settings, plain view, or a link
-// straight to an app. The system's reduced-motion setting does not skip it:
-// the boot only fades, with no movement.
-const bootScript = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem('dsi-booted'))return;if(d.dataset.motion==='reduce')return;if(location.search.indexOf('view=plain')>-1||location.hash)return;d.dataset.boot=''}catch(e){}})()`
 
 export default function DsiLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -1,4 +1,7 @@
 .claude/
+# Domain glossary and ADRs, kept local
+/GLOSSARY.md
+/docs/adr/
 # separate projects that live in this folder but are not part of the site
 /tend
 /forge-campus-mobile

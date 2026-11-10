@@ -1,5 +1,3 @@
-import { lessMotion } from './prefs'
-
 /**
  * The DSi's launch: the selected icon blows up past the edges of both screens
  * at once, its corners squaring off as it goes, the screens flash white, and
@@ -48,11 +46,11 @@ function clear(nodes: HTMLElement[]) {
 
 /**
  * Plays the launch from `icon` and calls `swap` at the white, which is when
- * the app should replace the menu. Without motion it just swaps.
+ * the app should replace the menu. Without `animate` it just swaps.
  */
-export async function playLaunch(icon: HTMLElement, swap: () => void) {
+export async function playLaunch(icon: HTMLElement, swap: () => void, animate: boolean) {
   const layers = fxLayers(icon)
-  if (lessMotion() || !layers.length) return swap()
+  if (!animate || !layers.length) return swap()
 
   const r = icon.getBoundingClientRect()
   const cx = r.left + r.width / 2
@@ -106,9 +104,9 @@ export async function playLaunch(icon: HTMLElement, swap: () => void) {
 }
 
 /** Going back home: just the white, out and in, around the swap. */
-export async function playReturn(from: Element, swap: () => void) {
+export async function playReturn(from: Element, swap: () => void, animate: boolean) {
   const layers = fxLayers(from)
-  if (lessMotion() || !layers.length) return swap()
+  if (!animate || !layers.length) return swap()
 
   const whites: HTMLElement[] = []
   try {

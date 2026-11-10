@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useSyncExternalStore } from 'react'
+import { MOTION_KEY } from './console'
 
 /**
  * The settings System Settings can change, kept where the rest of the site
@@ -52,11 +53,11 @@ export function setTheme(choice: ThemeChoice) {
 }
 
 export function getMotion(): MotionChoice {
-  return read('dsi-motion') === 'reduce' ? 'reduce' : 'auto'
+  return read(MOTION_KEY) === 'reduce' ? 'reduce' : 'auto'
 }
 
 export function setMotion(choice: MotionChoice) {
-  write('dsi-motion', choice === 'reduce' ? 'reduce' : null)
+  write(MOTION_KEY, choice === 'reduce' ? 'reduce' : null)
   if (choice === 'reduce') document.documentElement.dataset.motion = 'reduce'
   else delete document.documentElement.dataset.motion
   emit()
