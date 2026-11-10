@@ -4,6 +4,11 @@
  * twice a year.
  *
  * Usage: node scripts/spotify-auth.mjs [CLIENT_ID] [CLIENT_SECRET]
+ *        node scripts/spotify-auth.mjs --check
+ *
+ * --check tests the saved refresh token from .env.local against Spotify and
+ * prints only statuses and error codes (never a secret or token). Exit code 0
+ * if everything works, 1 otherwise. It never prompts or starts the server.
  *
  * CLIENT_ID / CLIENT_SECRET default to SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET
  * in .env.local; arguments override it. If no secret is found, you are asked
@@ -115,6 +120,72 @@ const page = (body) =>
 
 const envText = existsSync(ENV_PATH) ? readFileSync(ENV_PATH, 'utf8') : ''
 const env = parseEnv(envText)
+
+// --check: health-check the saved credentials, then exit. Prints statuses and
+// Spotify's error code/description only, never a secret or a token.
+async function runCheck() {
+  const { SPOTIFY_CLIENT_ID: id, SPOTIFY_CLIENT_SECRET: secret, SPOTIFY_REFRESH_TOKEN: refresh } = env
+  const missing = ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET', 'SPOTIFY_REFRESH_TOKEN'].filter((k) => !env[k])
+  if (missing.length) {
+    console.log(`missing in .env.local: ${missing.join(', ')}`)
+    console.log('rerun without --check to re-authorize')
+    return 1
+  }
+  const describe = (data) => [data?.error?.message ?? data?.error, data?.error_description].filter(Boolean).join(' ')
+  const readJson = (r) => r.json().catch(() => null)
+
+  let tokenRes
+  let token
+  try {
+    tokenRes = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refresh }),
+    })
+    token = await readJson(tokenRes)
+  } catch (e) {
+    console.log(`token: request failed (${e.message})`)
+    return 1
+  }
+  if (!tokenRes.ok || !token?.access_token) {
+    console.log(`token: ${tokenRes.status} ${describe(token)}`.trim())
+    if (token?.error === 'invalid_grant') console.log('rerun without --check to re-authorize')
+    return 1
+  }
+  console.log(`token: ${tokenRes.status}`)
+
+  let ok = true
+  const headers = { Authorization: `Bearer ${token.access_token}` }
+  for (const [name, url] of [
+    ['currently-playing', 'https://api.spotify.com/v1/me/player/currently-playing'],
+    ['recently-played', 'https://api.spotify.com/v1/me/player/recently-played?limit=50'],
+  ]) {
+    try {
+      const res = await fetch(url, { headers })
+      if (res.status === 200 || res.status === 204) {
+        const data = name === 'recently-played' ? await readJson(res) : null
+        console.log(`${name}: ${res.status}${data?.items ? ` (${data.items.length} items)` : ''}`)
+      } else {
+        ok = false
+        console.log(`${name}: ${res.status} ${describe(await readJson(res))}`.trim())
+      }
+    } catch (e) {
+      ok = false
+      console.log(`${name}: request failed (${e.message})`)
+    }
+  }
+  return ok ? 0 : 1
+}
+
+if (process.argv.includes('--check')) {
+  const code = await runCheck()
+  // Let fetch's sockets close first; exiting at once can trip a libuv assertion on Windows.
+  await new Promise((r) => setTimeout(r, 100))
+  process.exit(code)
+}
 
 const clientId = process.argv[2] || env.SPOTIFY_CLIENT_ID || process.env.SPOTIFY_CLIENT_ID
 let clientSecret = process.argv[3] || env.SPOTIFY_CLIENT_SECRET || process.env.SPOTIFY_CLIENT_SECRET

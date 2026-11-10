@@ -13,5 +13,6 @@
         ]
       }
     ]
-  }
+  },
+  "overrides": [{ "files": ["scripts/**/*.mjs"], "env": { "node": true } }]
 }
