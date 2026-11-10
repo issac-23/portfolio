@@ -14,6 +14,9 @@ export const statusLabels: Record<Project['status'], string> = {
   concept: 'Concept',
 }
 
+/** What a project without a public url says in place of an Open link, on every screen. */
+export const NO_LIVE_LINK = 'No live link yet'
+
 // ─────────────────────────────────────────────────────────────────
 // HOW TO ADD PROJECTS:
 // Add new entries to the top of this array.

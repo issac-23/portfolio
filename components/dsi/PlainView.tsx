@@ -3,7 +3,7 @@ import { PHOTO_THUMB_SIZES, galleryPhotos, photoLabel } from '@/data/gallery'
 import { mediaItems, mediaTypeLabels } from '@/data/media'
 import { availability, channels, profile } from '@/data/profile'
 import { RESUME_PDF, externalProps, newTabProps } from '@/data/links'
-import { projects, statusLabels } from '@/data/projects'
+import { NO_LIVE_LINK, projects, statusLabels } from '@/data/projects'
 import PlainListening from './PlainListening'
 import ViewLink from './ViewLink'
 import { FAN_MADE } from './disclaimer'
@@ -56,7 +56,7 @@ export default function PlainView() {
             <p>{p.description}</p>
             <p className="dsi-plain-meta">{p.tags.join(' · ')}</p>
             <p className="dsi-plain-links">
-              {p.url ? <a href={p.url} {...externalProps(p.url)}>Open {p.title}</a> : <span>No live link yet</span>}
+              {p.url ? <a href={p.url} {...externalProps(p.url)}>Open {p.title}</a> : <span>{NO_LIVE_LINK}</span>}
               {p.github && <a href={p.github} {...externalProps(p.github)}>{p.title} on GitHub</a>}
             </p>
           </article>
