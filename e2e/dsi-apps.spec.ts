@@ -55,7 +55,7 @@ test('Camera moves through the album in two dimensions and the top screen follow
   // Down is a whole row, four across.
   await page.keyboard.press('ArrowDown')
   await expect(album.nth(5)).toBeFocused()
-  await expect(album.nth(5)).toHaveAttribute('aria-pressed', 'true')
+  await expect(album.nth(5)).toHaveAttribute('aria-current', 'true')
   await expect(page.locator('.dsi-photo-tag')).toContainText('6 /')
 })
 

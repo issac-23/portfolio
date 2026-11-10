@@ -56,7 +56,7 @@ interface ProjectListProps {
 export function ProjectList({ projects, selected, onSelect, onBack }: ProjectListProps) {
   const list = useRef<HTMLUListElement>(null)
   const project = projects[selected]
-  useListNav({ container: list, count: projects.length, selected, onSelect })
+  const { itemProps } = useListNav({ container: list, count: projects.length, selected, onSelect })
 
   return (
     <AppLower
@@ -76,10 +76,8 @@ export function ProjectList({ projects, selected, onSelect, onBack }: ProjectLis
             <button
               type="button"
               className="dsi-card"
-              data-idx={i}
-              aria-pressed={i === selected}
-              tabIndex={i === selected ? 0 : -1}
               onClick={() => onSelect(i)}
+              {...itemProps(i)}
             >
               <CardArt project={p} index={i} />
               <span className="dsi-card-text">
