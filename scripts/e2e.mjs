@@ -11,7 +11,8 @@
 // A bare `npx playwright test` skips the lock; use `npm run test:e2e`.
 //
 // CI is a single checkout and skips the lock. E2E_LOCK_TIMEOUT_MIN changes how
-// long to wait (default 30), and also how old a lock must be to count as stale.
+// long to wait (default 30). A lock only counts as stale when its pid is no
+// longer running, so a slow but healthy run keeps it however long it takes.
 import { spawn, spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -20,6 +21,8 @@ import path from 'node:path'
 const LOCK = path.join(os.tmpdir(), 'portfolio-e2e.lock')
 const TIMEOUT_MS = Number(process.env.E2E_LOCK_TIMEOUT_MIN ?? 30) * 60_000
 const POLL_MS = 2_000
+// An unreadable lock is probably being written right now; give it this long.
+const GRACE_MS = 10_000
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function isRunning(pid) {
@@ -40,10 +43,19 @@ function readLock() {
   }
 }
 
+function lockAgeMs() {
+  try {
+    return Date.now() - fs.statSync(LOCK).mtimeMs
+  } catch {
+    return 0
+  }
+}
+
 function isStale(info) {
-  if (!info || !Number.isInteger(info.pid)) return true
-  if (!isRunning(info.pid)) return true
-  return Date.now() - info.time > TIMEOUT_MS
+  // Without a readable pid the lock is junk, but only once it is old enough
+  // that it cannot be a fresh lock mid-write.
+  if (!info || !Number.isInteger(info.pid)) return lockAgeMs() > GRACE_MS
+  return !isRunning(info.pid)
 }
 
 // Rename rather than delete: if two waiters both see the stale lock, only one
@@ -56,18 +68,23 @@ function removeStale() {
   } catch {}
 }
 
+// Write the full JSON to a private temp file, then hard-link it to LOCK. The
+// link fails with EEXIST if LOCK exists, so it is still exclusive, and LOCK
+// never appears half written.
 function tryTake() {
+  const tmp = `${LOCK}.${process.pid}.tmp`
+  fs.writeFileSync(
+    tmp,
+    JSON.stringify({ pid: process.pid, cwd: process.cwd(), time: Date.now() }),
+  )
   try {
-    const fd = fs.openSync(LOCK, 'wx')
-    fs.writeSync(
-      fd,
-      JSON.stringify({ pid: process.pid, cwd: process.cwd(), time: Date.now() }),
-    )
-    fs.closeSync(fd)
+    fs.linkSync(tmp, LOCK)
     return true
   } catch (err) {
     if (err.code === 'EEXIST') return false
     throw err
+  } finally {
+    fs.rmSync(tmp, { force: true })
   }
 }
 
@@ -81,15 +98,14 @@ async function acquire() {
       removeStale()
       continue
     }
+    const holder = info ? `pid ${info.pid}, checkout ${info.cwd}` : 'unreadable lock'
     if (!announced) {
-      console.log(
-        `[e2e-lock] Another e2e run holds the lock (pid ${info.pid}, checkout ${info.cwd}); waiting...`,
-      )
+      console.log(`[e2e-lock] Another e2e run holds the lock (${holder}); waiting...`)
       announced = true
     }
     if (Date.now() - start > TIMEOUT_MS) {
       console.error(
-        `[e2e-lock] Gave up after ${TIMEOUT_MS / 60_000} min waiting on pid ${info.pid} (${info.cwd}). ` +
+        `[e2e-lock] Gave up after ${TIMEOUT_MS / 60_000} min waiting on ${holder}. ` +
           `Delete ${LOCK} if that run is dead, or raise E2E_LOCK_TIMEOUT_MIN.`,
       )
       process.exit(1)
