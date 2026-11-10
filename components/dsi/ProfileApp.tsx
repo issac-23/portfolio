@@ -1,18 +1,16 @@
 import { RESUME_PDF } from '@/data/links'
 import { availability, profile } from '@/data/profile'
-import { APPS } from './apps'
+import { Person } from './apps'
 import { AppLower } from './screen'
-
-// The Profile tile's own artwork, so the card matches the icon you launched.
-const Avatar = APPS.find(a => a.id === 'profile')!.Glyph
 
 /** Upper screen: the user card the DSi opened its settings with. */
 export function ProfileCard() {
   return (
     <div className="dsi-detail">
       <div className="dsi-detail-head">
+        {/* The Profile tile's own artwork, so the card matches the icon you launched. */}
         <span className="dsi-avatar" aria-hidden="true">
-          <Avatar />
+          <Person />
         </span>
         <div>
           <h2>{profile.name}</h2>

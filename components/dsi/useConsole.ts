@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { flushSync } from 'react-dom'
-import { APPS } from './apps'
 import {
   BOOTED_KEY,
   BOOT_DATASET,
@@ -15,13 +14,13 @@ import {
 import { appFromHash, writeHash } from './deepLink'
 import { playLaunch, playReturn } from './launch'
 import { chosenLessMotion, lessMotion } from './prefs'
-import { SCREENS } from './screens'
+import { railIndex } from './apps'
 
 // Rules b and c from console.ts. They read different settings on purpose.
 const replaysBoot = () => !chosenLessMotion()
 const animates = () => !lessMotion()
 
-const ENV: ConsoleEnv = { replaysBoot, opens: app => !!SCREENS[app] }
+const ENV: ConsoleEnv = { replaysBoot }
 
 /**
  * Arms the listeners that end the boot screen: when its fade finishes, or
@@ -190,7 +189,7 @@ export function useConsole() {
     // the link was the click, so there is nothing to animate from.
     const go = () => {
       const app = appFromHash(location.hash)
-      c.send({ type: 'hash', app, slot: app ? APPS.findIndex(a => a.id === app) : 0 })
+      c.send({ type: 'hash', app, slot: app ? railIndex(app) : 0 })
     }
     go()
     window.addEventListener('hashchange', go)

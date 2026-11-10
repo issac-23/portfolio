@@ -10,7 +10,7 @@ const SETTLE_MS = 320
 const mod = (n: number, m: number) => ((n % m) + m) % m
 
 interface AppRailProps {
-  apps: DsiApp[]
+  apps: readonly DsiApp[]
   /** Reports the selected app's index into `apps`, not the slot index. */
   onChange?: (index: number) => void
   /** Index into `apps` to start on, so coming back from an app lands where it left. */

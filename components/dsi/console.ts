@@ -61,8 +61,6 @@ export type Trigger =
 export interface ConsoleEnv {
   /** Whether switching on plays the boot again. */
   replaysBoot: () => boolean
-  /** Whether the app has a screen to open onto. */
-  opens: (app: AppId) => boolean
 }
 
 type Of<T extends Trigger['type']> = Extract<Trigger, { type: T }>
@@ -77,8 +75,8 @@ const to = (s: ConsoleState, phase: Phase): ConsoleState => ({ ...s, phase })
 
 // An address that names an app opens it straight away, from anywhere the
 // console is on and not mid-transition: the link was the click.
-const openFromHash = (s: ConsoleState, t: Of<'hash'>, env: ConsoleEnv): ConsoleState | null =>
-  t.app && env.opens(t.app) ? { phase: 'app', app: t.app, sel: 0, rail: t.slot, refocus: false, moveId: s.moveId } : null
+const openFromHash = (s: ConsoleState, t: Of<'hash'>): ConsoleState | null =>
+  t.app ? { phase: 'app', app: t.app, sel: 0, rail: t.slot, refocus: false, moveId: s.moveId } : null
 
 const railMoved = (s: ConsoleState, t: Of<'railMoved'>): ConsoleState => (s.rail === t.index ? s : { ...s, rail: t.index })
 
@@ -102,7 +100,7 @@ const MOVES: Record<Phase, Row> = {
   menu: {
     arrive: (s, t) => (t.booting ? to(s, 'booting') : null),
     power: s => reset(s, 'off'),
-    launch: (s, t, env) => (env.opens(t.app) ? { ...s, phase: 'launching', app: t.app, refocus: false, moveId: s.moveId + 1 } : null),
+    launch: (s, t) => ({ ...s, phase: 'launching', app: t.app, refocus: false, moveId: s.moveId + 1 }),
     hash: openFromHash,
     railMoved,
   },
