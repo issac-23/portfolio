@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { AppLower, useListNav } from './screen'
-import { rememberView } from './view'
+import ViewLink from './ViewLink'
 import { setMotion, setTheme, useMotion, useTheme, type ThemeChoice } from './prefs'
 
 const THEME_LABEL: Record<ThemeChoice, string> = { auto: 'Auto', light: 'Light Blue', dark: 'Matte Black' }
@@ -47,10 +47,9 @@ interface SettingsListProps {
  */
 export function SettingsList({ selected, onSelect, onBack }: SettingsListProps) {
   const list = useRef<HTMLUListElement>(null)
-  useListNav({ container: list, count: ROWS.length, selected, onSelect })
+  const { itemProps } = useListNav({ container: list, count: ROWS.length, selected, onSelect })
   const theme = useTheme()
   const motion = useMotion()
-  const row = (i: number) => ({ 'data-idx': i, tabIndex: i === selected ? 0 : -1, onFocus: () => onSelect(i) })
 
   return (
     <AppLower onBack={onBack}>
@@ -59,9 +58,8 @@ export function SettingsList({ selected, onSelect, onBack }: SettingsListProps) 
           <button
             type="button"
             className="dsi-card"
-            data-sel={selected === 0 || undefined}
             onClick={() => setTheme(NEXT_THEME[theme])}
-            {...row(0)}
+            {...itemProps(0)}
           >
             <span className="dsi-card-text"><b>Theme</b></span>
             <span className="dsi-setting-value">{THEME_LABEL[theme]}</span>
@@ -72,20 +70,19 @@ export function SettingsList({ selected, onSelect, onBack }: SettingsListProps) 
             type="button"
             role="switch"
             className="dsi-card"
-            data-sel={selected === 1 || undefined}
             aria-checked={motion === 'reduce'}
             onClick={() => setMotion(motion === 'reduce' ? 'auto' : 'reduce')}
-            {...row(1)}
+            {...itemProps(1)}
           >
             <span className="dsi-card-text"><b>Reduce motion</b></span>
             <span className="dsi-switch" aria-hidden="true" />
           </button>
         </li>
         <li>
-          <a className="dsi-card" href="/?view=plain" data-sel={selected === 2 || undefined} onClick={() => rememberView('plain')} {...row(2)}>
+          <ViewLink to="plain" className="dsi-card" {...itemProps(2)}>
             <span className="dsi-card-text"><b>Plain view</b></span>
             <span className="dsi-setting-value" aria-hidden="true">Open ▸</span>
-          </a>
+          </ViewLink>
         </li>
       </ul>
     </AppLower>

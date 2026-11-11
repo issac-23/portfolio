@@ -136,7 +136,7 @@ export function BookletContents({ selected, onSelect, onBack }: BookletContentsP
   const pages = useResume()?.numPages ?? 0
   const list = useRef<HTMLUListElement>(null)
   // With one page there is no list: the arrow keys are left to scroll the preview.
-  useListNav({ container: list, count: pages > 1 ? pages : 0, selected, onSelect })
+  const { itemProps } = useListNav({ container: list, count: pages > 1 ? pages : 0, selected, onSelect })
 
   return (
     <AppLower
@@ -153,12 +153,8 @@ export function BookletContents({ selected, onSelect, onBack }: BookletContentsP
               <button
                 type="button"
                 className="dsi-card"
-                data-idx={i}
-                data-sel={i === selected || undefined}
-                aria-pressed={i === selected}
-                tabIndex={i === selected ? 0 : -1}
-                onFocus={() => onSelect(i)}
                 onClick={() => onSelect(i)}
+                {...itemProps(i)}
               >
                 <span className="dsi-card-text">
                   <b>Page {i + 1}</b>

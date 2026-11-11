@@ -52,7 +52,7 @@ test('Enter with nothing focused starts the selected app', async ({ page }) => {
   await launchProjects(page)
   await expect(page.getByRole('heading', { level: 2, name: CARDS[0] })).toBeVisible()
   await expect(cards(page).first()).toBeFocused()
-  await expect(cards(page).first()).toHaveAttribute('aria-pressed', 'true')
+  await expect(cards(page).first()).toHaveAttribute('aria-current', 'true')
 })
 
 test('tapping another app selects it, tapping the selected one starts it', async ({ page }) => {
@@ -85,13 +85,13 @@ test('up and down move through the cards and the top screen follows', async ({ p
   await page.keyboard.press('ArrowDown')
   await expect(page.getByRole('heading', { level: 2, name: CARDS[1] })).toBeVisible()
   await expect(cards(page).nth(1)).toBeFocused()
-  await expect(cards(page).nth(1)).toHaveAttribute('aria-pressed', 'true')
+  await expect(cards(page).nth(1)).toHaveAttribute('aria-current', 'true')
 
   // Stops at the ends rather than wrapping; it is a list, not the rail.
   await page.keyboard.press('ArrowDown')
-  await expect(cards(page).nth(2)).toHaveAttribute('aria-pressed', 'true')
+  await expect(cards(page).nth(2)).toHaveAttribute('aria-current', 'true')
   await page.keyboard.press('ArrowDown')
-  await expect(cards(page).nth(2)).toHaveAttribute('aria-pressed', 'true')
+  await expect(cards(page).nth(2)).toHaveAttribute('aria-current', 'true')
   await page.keyboard.press('ArrowUp')
   await page.keyboard.press('ArrowUp')
   await expect(page.getByRole('heading', { level: 2, name: CARDS[0] })).toBeVisible()

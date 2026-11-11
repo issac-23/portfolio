@@ -108,7 +108,7 @@ export function AppLower({ children, actions = [], onBack }: AppLowerProps) {
 }
 
 interface ListNavOptions {
-  /** Holds the items, each marked with data-idx. */
+  /** Holds the items; each one spreads itemProps(i) so the keys can find it. */
   container: RefObject<HTMLElement>
   count: number
   selected: number
@@ -124,9 +124,31 @@ interface ListNavOptions {
  *
  * Also lands focus on the selected item when the app opens, so the keyboard
  * carries straight on from the menu without a trip through the tab order.
+ *
+ * Returns itemProps(i), which every item in the container must spread. It is
+ * the whole contract between the list and the hook: data-idx (how the keys
+ * find the item), a roving tabindex (only the selected item is in the tab
+ * order), the selection marker, and onFocus (focus is selection, so Tab and a
+ * click agree with the arrows).
+ *
+ * The marker is aria-current, not aria-pressed. These items are not toggles:
+ * picking one does not switch it on or off, it moves "you are here" within a
+ * list. aria-pressed has a screen reader say "toggle button, pressed" and
+ * move that to the next item as you arrow; aria-current says "current".
+ * aria-selected is the other candidate, but it only means something on
+ * option, gridcell and tab roles, and these are plain buttons and links, so
+ * using it would mean remaking each list as a listbox. aria-current needs no
+ * role, works on buttons and links alike, and CSS styles the one attribute.
  */
 export function useListNav({ container, count, selected, onSelect, cols = 1 }: ListNavOptions) {
   const item = (i: number) => container.current?.querySelector<HTMLElement>(`[data-idx="${i}"]`)
+
+  const itemProps = (i: number) => ({
+    'data-idx': i,
+    tabIndex: i === selected ? 0 : -1,
+    'aria-current': i === selected ? ('true' as const) : undefined,
+    onFocus: () => onSelect(i),
+  })
 
   // Arrival only, and when the list first has something to focus: a list
   // that fills in late (the resume's pages) still gets it. Afterwards focus
@@ -162,4 +184,6 @@ export function useListNav({ container, count, selected, onSelect, cols = 1 }: L
     return () => document.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, selected, onSelect, cols])
+
+  return { itemProps }
 }

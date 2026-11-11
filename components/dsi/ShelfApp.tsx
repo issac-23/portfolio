@@ -29,7 +29,7 @@ interface ShelfListProps {
 /** Lower screen: everything on the shelf, newest first. */
 export function ShelfList({ items, selected, onSelect, onBack }: ShelfListProps) {
   const list = useRef<HTMLUListElement>(null)
-  useListNav({ container: list, count: items.length, selected, onSelect })
+  const { itemProps } = useListNav({ container: list, count: items.length, selected, onSelect })
   const item = items[selected]
 
   return (
@@ -43,10 +43,8 @@ export function ShelfList({ items, selected, onSelect, onBack }: ShelfListProps)
             <button
               type="button"
               className="dsi-card"
-              data-idx={i}
-              aria-pressed={i === selected}
-              tabIndex={i === selected ? 0 : -1}
               onClick={() => onSelect(i)}
+              {...itemProps(i)}
             >
               <span className="dsi-card-text">
                 <b>{m.title}</b>

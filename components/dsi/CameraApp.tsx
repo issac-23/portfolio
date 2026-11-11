@@ -39,7 +39,7 @@ interface AlbumProps {
 /** Lower screen: the album grid. Arrows move in two dimensions. */
 export function Album({ photos, selected, onSelect, onBack }: AlbumProps) {
   const grid = useRef<HTMLUListElement>(null)
-  useListNav({ container: grid, count: photos.length, selected, onSelect, cols: COLS })
+  const { itemProps } = useListNav({ container: grid, count: photos.length, selected, onSelect, cols: COLS })
   const photo = photos[selected]
 
   return (
@@ -53,11 +53,9 @@ export function Album({ photos, selected, onSelect, onBack }: AlbumProps) {
             <button
               type="button"
               className="dsi-thumb"
-              data-idx={i}
-              aria-pressed={i === selected}
               aria-label={photoLabel(p, i)}
-              tabIndex={i === selected ? 0 : -1}
               onClick={() => onSelect(i)}
+              {...itemProps(i)}
             >
               <Image src={p.src} alt="" fill sizes="96px" />
             </button>
