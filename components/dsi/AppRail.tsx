@@ -9,6 +9,13 @@ const SETTLE_MS = 320
 
 const mod = (n: number, m: number) => ((n % m) + m) % m
 
+/**
+ * The console only lets the menu be driven while it is showing the menu. The
+ * device carries that as data-console, read when a key arrives rather than
+ * passed down, so a key in the same task as a launch sees the new state.
+ */
+const menuIsLive = (from: HTMLElement | null) => from?.closest('[data-console]')?.getAttribute('data-console') === 'menu'
+
 interface AppRailProps {
   apps: readonly DsiApp[]
   /** Reports the selected app's index into `apps`, not the slot index. */
@@ -129,6 +136,9 @@ export default function AppRail({ apps, onChange, initial = 0, autoFocus, onLaun
   // instead of only once something inside the rail has been focused.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Not while the console is launching, booting or returning: the rail
+      // would move behind the animation, or start a second launch.
+      if (!menuIsLive(rail.current)) return
       // Enter with nothing focused is START. Enter on a slot arrives as that
       // button's click instead, so it is left alone here.
       if (e.key === 'Enter' && document.activeElement === document.body) {
