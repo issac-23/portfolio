@@ -1,4 +1,5 @@
 import type { AppId } from './apps'
+import { APP_HASHES } from './deepLink'
 
 /**
  * The console's state and the moves between states, kept apart from React and
@@ -8,8 +9,8 @@ import type { AppId } from './apps'
  * The boot has three rules that look alike and deliberately differ. Merging
  * them would change what a visitor sees, so that is a separate decision.
  *  a. Before first paint: no boot if this visit already booted, if the DSi's
- *     own less-motion setting is on, in plain view, or on any address with a
- *     hash. See bootScript.
+ *     own less-motion setting is on, in plain view, or when the address's hash
+ *     names an app. See bootScript.
  *  b. Switching back on replays the boot unless the DSi's own less-motion
  *     setting is on. The system's reduced-motion preference does not count,
  *     because the boot only fades. See replaysBoot in useConsole.ts.
@@ -148,7 +149,9 @@ export const motionScript = `(function(){try{if(localStorage.getItem('${MOTION_K
 // Rule a. The boot screen, decided before first paint so the menu never
 // flashes up ahead of it. Once a visit, and never when it would only be in the
 // way: less motion chosen in the DSi's own System Settings, plain view, or a
-// link straight to an app. Any hash counts as a link, so an address that names
-// nothing skips it too. The system's reduced-motion setting does not skip it:
-// the boot only fades, with no movement.
-export const bootScript = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem('${BOOTED_KEY}'))return;if(d.dataset.${MOTION_DATASET}==='reduce')return;if(location.search.indexOf('${PLAIN_QUERY}')>-1||location.hash)return;d.dataset.${BOOT_DATASET}=''}catch(e){}})()`
+// link straight to an app. Only a hash that names an app counts as a link: an
+// app's address or one of its aliases, read the way appFromHash reads it (the
+// text after the '#', exactly), so a stray anchor still boots.
+// The system's reduced-motion setting does not skip it: the boot only fades,
+// with no movement.
+export const bootScript = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem('${BOOTED_KEY}'))return;if(d.dataset.${MOTION_DATASET}==='reduce')return;if(location.search.indexOf('${PLAIN_QUERY}')>-1||${JSON.stringify(APP_HASHES)}.indexOf(location.hash.replace(/^#/,''))>-1)return;d.dataset.${BOOT_DATASET}=''}catch(e){}})()`

@@ -7,6 +7,13 @@ import { APPS, APP_BY_ID, type AppId } from './apps'
  * on each app in apps.tsx.
  */
 
+/**
+ * Every anchor that opens an app: each app's address and its aliases. The
+ * layout's pre-paint script is built from this list, so it skips the boot for
+ * exactly the hashes appFromHash resolves.
+ */
+export const APP_HASHES: readonly string[] = APPS.flatMap(a => [a.hash, ...(a.aliases ?? [])])
+
 export function appFromHash(hash: string): AppId | null {
   const key = hash.replace(/^#/, '')
   if (!key) return null
