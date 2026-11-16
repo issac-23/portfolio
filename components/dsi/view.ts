@@ -29,7 +29,7 @@ export function rememberView(view: View) {
  * still being parsed and the device markup after it is never painted. Doing
  * this after hydration let the DSi flash up first. Storage is the only record
  * of the choice and middleware cannot read it, so this has to run in the
- * browser. A bare / is the only address the layout serves, and one already
- * asking for plain view is left alone.
+ * browser. The page shows plain view only for ?view=plain exactly, so the
+ * guard reads the parameter the same way and cannot loop.
  */
-export const plainRedirectScript = `(function(){try{if(localStorage.getItem('${KEY}')==='plain'&&location.search.indexOf('view=plain')<0)location.replace('/?view=plain')}catch(e){}})()`
+export const plainRedirectScript = `(function(){try{if(localStorage.getItem('${KEY}')==='plain'&&new URLSearchParams(location.search).get('view')!=='plain')location.replace('/?view=plain')}catch(e){}})()`
