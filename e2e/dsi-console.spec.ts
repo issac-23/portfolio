@@ -250,7 +250,8 @@ test.describe('the pre-paint boot rule', () => {
   for (const hash of ['#projects', '#about']) {
     test(`${hash}, an app's address or an alias, does not boot`, async ({ page }) => {
       await page.goto(`/${hash}`)
-      await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 20_000 })
+      // A deep link opens the app straight away, so there is no rail to wait on.
+      await expect(phase(page)).toHaveAttribute('data-console', 'app', { timeout: 20_000 })
       expect(await bootSeen(page)).toBe(false)
     })
   }
