@@ -1,8 +1,11 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createChiptune, type Chiptune } from '@/components/dsi/lab/chiptune'
+import { createSfx, type Cue } from '@/components/dsi/lab/sfx'
 
-// three and the model load only in the browser, and only on this route.
+// three, the model and the whole DSi UI load only in the browser, and only on this route.
 const DsiScene = dynamic(() => import('./DsiScene'), {
   ssr: false,
   loading: () => <p className="absolute inset-0 grid place-items-center text-sm text-[#0e4155]">Loading the DSi...</p>,
@@ -14,13 +17,104 @@ const CREDIT = {
   license: 'http://creativecommons.org/licenses/by/4.0/',
 }
 
+const MUTE_KEY = 'dsi-lab-muted'
+const readMuted = () => {
+  try {
+    return localStorage.getItem(MUTE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 export default function DsiLab() {
+  const [lit, setLit] = useState(false)
+  const [muted, setMuted] = useState(false)
+  const mutedRef = useRef(false)
+  const power = useRef<() => void>(() => {})
+  const music = useRef<Chiptune | null>(null)
+  const sfx = useRef(createSfx(() => music.current?.context() ?? null))
+  const cue = useCallback((name: Cue) => void sfx.current.play(name), [])
+
+  // The saved choice is read after hydration, so the first render matches the server's.
+  useEffect(() => {
+    mutedRef.current = readMuted()
+    setMuted(mutedRef.current)
+    const w = window as unknown as { __dsiLab?: Record<string, unknown> }
+    w.__dsiLab = { ...w.__dsiLab, audioState: () => music.current?.state() ?? null, sfxLog: () => sfx.current.log() }
+    const stop = () => music.current?.dispose()
+    window.addEventListener('pagehide', stop)
+    return () => {
+      window.removeEventListener('pagehide', stop)
+      stop()
+      music.current = null
+    }
+  }, [])
+
+  // Every way of pressing POWER ends here, and so starts the music: the first
+  // press is the user gesture the browser wants before it will play anything.
+  const press = useCallback(() => {
+    if (!music.current) music.current = createChiptune(mutedRef.current)
+    music.current.start()
+    cue('power')
+    power.current()
+  }, [cue])
+
+  const register = useCallback((fn: () => void) => {
+    power.current = fn
+  }, [])
+
+  const toggleMute = () => {
+    const next = !mutedRef.current
+    mutedRef.current = next
+    setMuted(next)
+    try {
+      localStorage.setItem(MUTE_KEY, next ? '1' : '0')
+    } catch {
+      // Blocked storage: the choice holds for this visit.
+    }
+    music.current?.setMuted(next)
+  }
+
+  // Enter or Space before anything has focus is the same as pressing POWER.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (lit || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return
+      if ((e.key === 'Enter' || e.key === ' ') && document.activeElement === document.body) {
+        e.preventDefault()
+        press()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lit, press])
+
   return (
     <main
       className="relative h-[100svh] w-full overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #a9cbee 0%, #bad6f2 35%, #cbe1f4 65%, #dcebf4 100%)' }}
     >
-      <DsiScene />
+      <DsiScene onPress={press} register={register} onLit={setLit} lit={lit} onCue={cue} onOpened={() => cue('reveal')} />
+
+      {/* The keyboard and screen reader way to press the model's POWER button. */}
+      <button
+        type="button"
+        onClick={press}
+        aria-label={lit ? 'Power off' : 'Power on'}
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[#0e4155] focus:px-3 focus:py-1.5 focus:text-sm focus:text-white"
+      >
+        {lit ? 'Power off' : 'Power on'}
+      </button>
+
+      <button
+        type="button"
+        onClick={toggleMute}
+        aria-pressed={muted}
+        aria-label={muted ? 'Unmute music' : 'Mute music'}
+        className="absolute right-3 top-3 z-50 rounded-full bg-[#0e4155]/85 px-3 py-1.5 text-xs text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0e4155]"
+      >
+        {muted ? 'Music off' : 'Music on'}
+      </button>
+
       <p className="pointer-events-none absolute inset-x-0 bottom-2 px-4 text-center text-[10px] leading-snug text-[#0e4155]/80">
         <span className="pointer-events-auto">
           This work is based on &quot;DSi&quot; (<a href={CREDIT.model}>{CREDIT.model}</a>) by Cleanman00 (
