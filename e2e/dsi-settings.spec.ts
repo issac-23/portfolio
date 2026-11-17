@@ -113,3 +113,21 @@ test('Plain view opens from Settings, is remembered, and the DSi is one link awa
   await openMenu(page)
   expect(await stored(page, 'dsi-view')).toBeNull()
 })
+
+test('a remembered plain view leaves before the DSi is drawn', async ({ page }) => {
+  await mockSpotifyQuiet(page)
+  // Runs in every document, so it sees the bare / that the redirect leaves.
+  // Whether that document ever had the device in it is kept in sessionStorage,
+  // which survives the redirect.
+  await page.addInitScript(() => {
+    localStorage.setItem('dsi-view', 'plain')
+    if (new URLSearchParams(location.search).get('view') === 'plain') return
+    new MutationObserver(() => {
+      if (document.querySelector('.dsi-device')) sessionStorage.setItem('dsi-drawn', '1')
+    }).observe(document, { childList: true, subtree: true })
+  })
+  await page.goto('/')
+  await page.waitForURL('**/?view=plain')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Issac Ip')
+  expect(await page.evaluate(() => sessionStorage.getItem('dsi-drawn'))).toBeNull()
+})
