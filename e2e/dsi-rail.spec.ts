@@ -1,4 +1,4 @@
-import { projects } from '../data/projects'
+import { APPS as REGISTRY } from '../components/dsi/apps'
 import { expect, test } from './fixtures'
 import { APPS, expectSettledOn, mod, openMenu } from './helpers/dsi'
 
@@ -109,7 +109,7 @@ test('the arrow buttons step the selection and announce it', async ({ page }) =>
   await page.getByRole('button', { name: 'Next app' }).click()
   const s = await expectSettledOn(page, APPS[1])
   expect(s.lit, 'track lights the selected segment').toBe(1)
-  await expect(page.locator('[aria-live="polite"]')).toHaveText(`${APPS[1]}, ${projects.length} Game Cards`)
+  await expect(page.locator('[aria-live="polite"]')).toHaveText(`${APPS[1]}, ${REGISTRY[1].publisher}`)
 
   await page.getByRole('button', { name: 'Previous app' }).click()
   await page.getByRole('button', { name: 'Previous app' }).click()

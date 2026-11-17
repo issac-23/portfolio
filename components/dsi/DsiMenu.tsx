@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, type ReactNode } from 'react'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
-import Device from './Device'
+import Device, { type DeviceProps } from './Device'
+import type { ConsoleState } from './console'
 import PhotoFrame from './PhotoFrame'
 import { APPS } from './apps'
 import { SCREENS, type ScreenCtx } from './screens'
@@ -15,8 +16,17 @@ import { useConsole } from './useConsole'
  * app is open and what is selected in it live in the console, because opening
  * one replaces both screens at once and the top and bottom have to agree.
  */
-export default function DsiMenu() {
-  const [state, send] = useConsole()
+export interface DsiMenuProps {
+  /** Where the console starts. The home page starts on the menu. */
+  initial?: ConsoleState
+  /** Draws the shell around the two screens. The home page draws <Device>. */
+  shell?: (props: DeviceProps) => ReactNode
+}
+
+const deviceShell = (props: DeviceProps) => <Device {...props} />
+
+export default function DsiMenu({ initial, shell = deviceShell }: DsiMenuProps = {}) {
+  const [state, send] = useConsole(initial)
 
   const launch = useCallback((index: number, icon: HTMLElement) => send({ type: 'launch', app: APPS[index].id, icon }), [send])
   const back = useCallback(() => send({ type: 'back' }), [send])
@@ -30,7 +40,7 @@ export default function DsiMenu() {
   // effects layers survive the swap that happens mid-launch. Off renders
   // nothing in either screen, so no handler from the rail or an app is left
   // listening to a dark console.
-  if (state.phase === 'off') return <Device top={null} bottom={null} power={false} phase={state.phase} onPower={togglePower} />
+  if (state.phase === 'off') return shell({ top: null, bottom: null, power: false, phase: state.phase, onPower: togglePower })
 
   // Launching still shows the menu, and returning still shows the app: each
   // swaps at the white, not when it starts.
@@ -38,25 +48,23 @@ export default function DsiMenu() {
   if (open) {
     const screen = SCREENS[open]
     const ctx: ScreenCtx = { sel: state.sel, setSel, back }
-    return <Device top={screen.top(ctx)} bottom={screen.bottom(ctx)} power phase={state.phase} onPower={togglePower} />
+    return shell({ top: screen.top(ctx), bottom: screen.bottom(ctx), power: true, phase: state.phase, onPower: togglePower })
   }
 
-  return (
-    <Device
-      power
-      phase={state.phase}
-      onPower={togglePower}
-      top={
-        <>
-          <StatusBar user="Issac" />
-          <PhotoFrame photos={galleryPhotos} />
-        </>
-      }
-      bottom={
-        <div className="dsi-lower">
-          <AppRail apps={APPS} initial={state.rail} autoFocus={state.refocus} onChange={railMoved} onLaunch={launch} />
-        </div>
-      }
-    />
-  )
+  return shell({
+    power: true,
+    phase: state.phase,
+    onPower: togglePower,
+    top: (
+      <>
+        <StatusBar user="Issac" />
+        <PhotoFrame photos={galleryPhotos} />
+      </>
+    ),
+    bottom: (
+      <div className="dsi-lower">
+        <AppRail apps={APPS} initial={state.rail} autoFocus={state.refocus} onChange={railMoved} onLaunch={launch} live={state.phase === 'menu'} />
+      </div>
+    ),
+  })
 }

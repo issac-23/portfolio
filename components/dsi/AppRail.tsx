@@ -23,6 +23,11 @@ interface AppRailProps {
    * out of the one on screen rather than a hidden copy.
    */
   onLaunch?: (index: number, icon: HTMLElement) => void
+  /**
+   * Whether the console is showing the menu. Keys are ignored while it isn't,
+   * so the rail can't move behind a launch or start a second one.
+   */
+  live?: boolean
 }
 
 /**
@@ -37,13 +42,19 @@ interface AppRailProps {
  * two are scenery, so a screen reader hears eight apps rather than
  * twenty-four.
  */
-export default function AppRail({ apps, onChange, initial = 0, autoFocus, onLaunch }: AppRailProps) {
+export default function AppRail({ apps, onChange, initial = 0, autoFocus, onLaunch, live = true }: AppRailProps) {
   const N = apps.length
   const [pos, setPos] = useState(N + initial)
   const posRef = useRef(N + initial)
   const animate = useRef(false)
   const settle = useRef<ReturnType<typeof setTimeout>>()
   const rail = useRef<HTMLDivElement>(null)
+  // Read through a ref so the key listener sees the state committed with the
+  // launch, without being torn down and re-added on every phase change.
+  const liveRef = useRef(live)
+  useLayoutEffect(() => {
+    liveRef.current = live
+  }, [live])
 
   const logical = mod(pos, N)
 
@@ -129,6 +140,9 @@ export default function AppRail({ apps, onChange, initial = 0, autoFocus, onLaun
   // instead of only once something inside the rail has been focused.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Not while the console is launching, booting or returning: the rail
+      // would move behind the animation, or start a second launch.
+      if (!liveRef.current) return
       // Enter with nothing focused is START. Enter on a slot arrives as that
       // button's click instead, so it is left alone here.
       if (e.key === 'Enter' && document.activeElement === document.body) {

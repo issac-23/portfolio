@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
-import { expectSettledOn, openApp, openMenu } from './helpers/dsi'
+import { APPS, expectSettledOn, openApp, openMenu } from './helpers/dsi'
 
 /**
  * Every move the console makes, read off data-console on the device.
@@ -138,6 +138,35 @@ test('a second launch, and power, are ignored while a launch is running', async 
   })
   await page.locator('.dsi-app-lower').waitFor()
   await sequence(page).toEqual(['menu', 'launching', 'app'])
+})
+
+test('the arrow keys do not move the rail while an app is launching', async ({ page }) => {
+  await openMenu(page)
+  // The keys go out in the same task that paints `launching`, from the
+  // observer that sees it, so they land mid-launch every time. The launch
+  // needs frames and timers to finish, so it cannot get there first.
+  const during = await page.evaluate(
+    () =>
+      new Promise<string | null>(resolve => {
+        const device = document.querySelector('.dsi-device')!
+        const watch = new MutationObserver(() => {
+          if (device.getAttribute('data-console') !== 'launching') return
+          watch.disconnect()
+          for (const key of ['ArrowRight', 'ArrowRight', 'ArrowLeft', 'ArrowRight']) {
+            document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
+          }
+          resolve(device.getAttribute('data-console'))
+        })
+        watch.observe(device, { attributes: true, attributeFilter: ['data-console'] })
+        document.querySelector<HTMLElement>('.dsi-slot[data-sel]')!.click()
+      }),
+  )
+  expect(during, 'the keys were sent mid-launch').toBe('launching')
+  await page.locator('.dsi-app-lower').waitFor()
+
+  await page.keyboard.press('Escape')
+  await expectSettledOn(page, APPS[0])
+  await sequence(page).toEqual(['menu', 'launching', 'app', 'returning', 'menu'])
 })
 
 test('a second Escape, and power, are ignored while returning', async ({ page }) => {

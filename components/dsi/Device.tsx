@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Phase } from './console'
 
-interface DeviceProps {
+export interface DeviceProps {
   /** Rendered inside the upper screen. */
   top?: ReactNode
   /** Rendered inside the lower screen. */
