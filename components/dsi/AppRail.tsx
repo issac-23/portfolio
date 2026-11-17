@@ -9,13 +9,6 @@ const SETTLE_MS = 320
 
 const mod = (n: number, m: number) => ((n % m) + m) % m
 
-/**
- * The console only lets the menu be driven while it is showing the menu. The
- * device carries that as data-console, read when a key arrives rather than
- * passed down, so a key in the same task as a launch sees the new state.
- */
-const menuIsLive = (from: HTMLElement | null) => from?.closest('[data-console]')?.getAttribute('data-console') === 'menu'
-
 interface AppRailProps {
   apps: readonly DsiApp[]
   /** Reports the selected app's index into `apps`, not the slot index. */
@@ -30,6 +23,11 @@ interface AppRailProps {
    * out of the one on screen rather than a hidden copy.
    */
   onLaunch?: (index: number, icon: HTMLElement) => void
+  /**
+   * Whether the console is showing the menu. Keys are ignored while it isn't,
+   * so the rail can't move behind a launch or start a second one.
+   */
+  live?: boolean
 }
 
 /**
@@ -44,13 +42,19 @@ interface AppRailProps {
  * two are scenery, so a screen reader hears eight apps rather than
  * twenty-four.
  */
-export default function AppRail({ apps, onChange, initial = 0, autoFocus, onLaunch }: AppRailProps) {
+export default function AppRail({ apps, onChange, initial = 0, autoFocus, onLaunch, live = true }: AppRailProps) {
   const N = apps.length
   const [pos, setPos] = useState(N + initial)
   const posRef = useRef(N + initial)
   const animate = useRef(false)
   const settle = useRef<ReturnType<typeof setTimeout>>()
   const rail = useRef<HTMLDivElement>(null)
+  // Read through a ref so the key listener sees the state committed with the
+  // launch, without being torn down and re-added on every phase change.
+  const liveRef = useRef(live)
+  useLayoutEffect(() => {
+    liveRef.current = live
+  }, [live])
 
   const logical = mod(pos, N)
 
@@ -138,7 +142,7 @@ export default function AppRail({ apps, onChange, initial = 0, autoFocus, onLaun
     const onKey = (e: KeyboardEvent) => {
       // Not while the console is launching, booting or returning: the rail
       // would move behind the animation, or start a second launch.
-      if (!menuIsLive(rail.current)) return
+      if (!liveRef.current) return
       // Enter with nothing focused is START. Enter on a slot arrives as that
       // button's click instead, so it is left alone here.
       if (e.key === 'Enter' && document.activeElement === document.body) {
