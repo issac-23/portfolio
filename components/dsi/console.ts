@@ -1,5 +1,4 @@
 import type { AppId } from './apps'
-import { APP_HASHES } from './deepLink'
 
 /**
  * The console's state and the moves between states, kept apart from React and
@@ -154,4 +153,6 @@ export const motionScript = `(function(){try{if(localStorage.getItem('${MOTION_K
 // text after the '#', exactly), so a stray anchor still boots.
 // The system's reduced-motion setting does not skip it: the boot only fades,
 // with no movement.
-export const bootScript = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem('${BOOTED_KEY}'))return;if(d.dataset.${MOTION_DATASET}==='reduce')return;if(location.search.indexOf('${PLAIN_QUERY}')>-1||${JSON.stringify(APP_HASHES)}.indexOf(location.hash.replace(/^#/,''))>-1)return;d.dataset.${BOOT_DATASET}=''}catch(e){}})()`
+// Takes the app hashes rather than importing the registry, so this module
+// stays free of React and the app data. The layout passes APP_HASHES.
+export const bootScript = (appHashes: readonly string[]) => `(function(){try{var d=document.documentElement;if(sessionStorage.getItem('${BOOTED_KEY}'))return;if(d.dataset.${MOTION_DATASET}==='reduce')return;if(location.search.indexOf('${PLAIN_QUERY}')>-1||${JSON.stringify(appHashes)}.indexOf(location.hash.replace(/^#/,''))>-1)return;d.dataset.${BOOT_DATASET}=''}catch(e){}})()`
