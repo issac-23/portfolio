@@ -12,8 +12,15 @@ function portForCheckout(dir: string) {
   return 3100 + (hash % 900)
 }
 
-function workerCount(value = '50%') {
-  return value.endsWith('%') ? value : Number(value)
+const DEFAULT_WORKERS = '50%'
+
+// An empty or malformed E2E_WORKERS (Number('') is 0, Number('abc') is NaN)
+// falls back to the default instead of reaching Playwright as 0 or NaN.
+function workerCount(value = DEFAULT_WORKERS) {
+  const text = value.trim()
+  if (/^[1-9]\d*%$/.test(text)) return text
+  if (/^[1-9]\d*$/.test(text)) return Number(text)
+  return DEFAULT_WORKERS
 }
 
 const PORT = Number(

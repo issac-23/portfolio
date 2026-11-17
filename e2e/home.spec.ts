@@ -1,4 +1,5 @@
 import { SITE_URL } from '../app/site'
+import { availability } from '../data/profile'
 import { expect, test } from './fixtures'
 import { APPS, expectSettledOn, openApp, openMenu } from './helpers/dsi'
 
@@ -88,9 +89,8 @@ test('the Spotify token setup routes are gone', async ({ request }) => {
 
 test('search results and link previews carry the co-op line', async ({ page }) => {
   await page.goto('/')
-  const line = 'Available for co-op: January – June 2027'
   for (const sel of ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']) {
-    await expect(page.locator(sel), sel).toHaveAttribute('content', new RegExp(line))
+    await expect(page.locator(sel), sel).toHaveAttribute('content', new RegExp(availability.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   }
 })
 
