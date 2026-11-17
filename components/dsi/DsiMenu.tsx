@@ -61,7 +61,7 @@ export default function DsiMenu() {
       }
       bottom={
         <div className="dsi-lower">
-          <AppRail apps={APPS} initial={state.rail} autoFocus={state.refocus} onChange={railMoved} onLaunch={launch} />
+          <AppRail apps={APPS} initial={state.rail} autoFocus={state.refocus} onChange={railMoved} onLaunch={launch} live={state.phase === 'menu'} />
         </div>
       }
     />
