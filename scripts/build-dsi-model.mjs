@@ -199,6 +199,21 @@ const plateBot = planeNormal(worldVerts(byName(/^Plast_nere/)))
 // Orient normals to face out of their own body.
 if (dot(plateTop.n, sub(plateTop.c, centroid(worldVerts(lidShell)))) < 0) plateTop.n = plateTop.n.map(x => -x)
 if (dot(plateBot.n, sub(plateBot.c, centroid(worldVerts(baseShell)))) < 0) plateBot.n = plateBot.n.map(x => -x)
+// Where each screen sits, as a frame the page can hang live content on:
+// `right` runs along the hinge, `up` across the screen, `normal` out of it.
+// `center` is on the outer face of the screen protector.
+function screenFrame(verts, normal, shift = [0, 0, 0]) {
+  const right = unit(perpTo(axis, normal))
+  const up = cross(normal, right)
+  const pr = verts.map(v => dot(v, right)), pu = verts.map(v => dot(v, up)), pn = verts.map(v => dot(v, normal))
+  const mid = a => (Math.min(...a) + Math.max(...a)) / 2
+  const center = [0, 1, 2].map(k => right[k] * mid(pr) + up[k] * mid(pu) + normal[k] * Math.max(...pn) - shift[k])
+  return { center, right, up, normal, width: Math.max(...pr) - Math.min(...pr), height: Math.max(...pu) - Math.min(...pu) }
+}
+function perpTo(v, n) {
+  const k = dot(v, n)
+  return v.map((x, i) => x - k * n[i])
+}
 // Signed angle about `axis` taking the lid normal onto the opposite of the base normal.
 const target = plateBot.n.map(x => -x)
 const perp = v => { const k = dot(v, axis); return v.map((x, i) => x - k * axis[i]) }
@@ -235,7 +250,8 @@ const qLevel = qMul([Math.sin(pitch / 2), 0, 0, Math.cos(pitch / 2)], qAxis)
 const dsi = doc.createNode('DSi').setRotation(qLevel)
 const base = doc.createNode('Base')
 const lid = doc.createNode('Lid').setTranslation(hinge)
-lid.setExtras({ hingeAxis: axis, closeAngle })
+lid.setExtras({ hingeAxis: axis, closeAngle, screen: screenFrame(worldVerts(byName(/^Plast_uppe/)), plateTop.n, hinge) })
+base.setExtras({ screen: screenFrame(worldVerts(byName(/^Plast_nere/)), plateBot.n) })
 dsi.addChild(base).addChild(lid)
 
 const names = new Set()
