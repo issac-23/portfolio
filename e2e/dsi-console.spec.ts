@@ -245,6 +245,7 @@ test.describe('the pre-paint boot rule', () => {
   test('a hash that names no app still boots', async ({ page }) => {
     await page.goto('/#nothing')
     expect(await bootSeen(page)).toBe(true)
+    await expect(phase(page)).toHaveAttribute('data-console', 'menu', { timeout: 20_000 })
   })
 
   for (const hash of ['#projects', '#about']) {
