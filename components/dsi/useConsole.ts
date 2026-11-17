@@ -80,8 +80,8 @@ function armBoot(onEnd: () => void) {
  * motion the launch and return swap synchronously, which sends the next
  * trigger from inside the first one's effects.
  */
-function createConsole(env: ConsoleEnv) {
-  let state = INITIAL
+function createConsole(env: ConsoleEnv, initial: ConsoleState) {
+  let state = initial
   let boot: ReturnType<typeof armBoot> | null = null
   const listeners = new Set<() => void>()
 
@@ -176,11 +176,11 @@ function createConsole(env: ConsoleEnv) {
  * through. Also feeds it the two things that come from outside, the page
  * arriving and the address changing.
  */
-export function useConsole() {
+export function useConsole(initial: ConsoleState = INITIAL) {
   const ref = useRef<ReturnType<typeof createConsole>>()
-  if (!ref.current) ref.current = createConsole(ENV)
+  if (!ref.current) ref.current = createConsole(ENV, initial)
   const c = ref.current
-  const state = useSyncExternalStore(c.subscribe, c.get, () => INITIAL)
+  const state = useSyncExternalStore(c.subscribe, c.get, () => initial)
 
   useEffect(() => {
     c.send({ type: 'arrive', booting: BOOT_DATASET in document.documentElement.dataset })
