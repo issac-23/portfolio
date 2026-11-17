@@ -90,7 +90,7 @@ test('the Spotify token setup routes are gone', async ({ request }) => {
 test('search results and link previews carry the co-op line', async ({ page }) => {
   await page.goto('/')
   for (const sel of ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']) {
-    await expect(page.locator(sel), sel).toHaveAttribute('content', new RegExp(availability))
+    await expect(page.locator(sel), sel).toHaveAttribute('content', new RegExp(availability.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   }
 })
 
