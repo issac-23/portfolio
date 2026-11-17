@@ -668,6 +668,8 @@
   --dsi-track: #cfe7f4;
   /* Coloured text, not fills. The START blues are too light for small type. */
   --dsi-accent-ink: #1a5da8;
+  /* Fill for "live" and "available" marks. One green in both themes. */
+  --dsi-ok: #237a45;
 }
 :root.dark .dsi-root {
   --dsi-navy: #091b3a;
@@ -1071,7 +1073,7 @@
   color: #fff;
   background: #5b6d78;
 }
-.dsi-badge[data-status='live'] { background: #237a45; }
+.dsi-badge[data-status='live'] { background: var(--dsi-ok); }
 .dsi-tags {
   display: flex;
   flex-wrap: wrap;
@@ -1214,7 +1216,7 @@
   align-self: flex-start;
   padding: 2px 9px;
   border-radius: 999px;
-  background: #237a45;
+  background: var(--dsi-ok);
   color: #fff;
   font-size: 0.74rem;
   font-weight: 800;
@@ -1315,7 +1317,7 @@
   width: 2px;
   height: 100%;
   border-radius: 1px;
-  background: #237a45;
+  background: var(--dsi-ok);
   transform-origin: bottom;
   animation: dsi-bar 0.9s ease-in-out infinite alternate;
 }
@@ -1563,7 +1565,7 @@ a.dsi-card:focus-visible { outline: 2px solid var(--dsi-start); outline-offset: 
   margin-left: 4px;
   padding: 1px 8px;
   border-radius: 999px;
-  background: #237a45;
+  background: var(--dsi-ok);
   color: #fff;
   font-size: 0.7rem;
   vertical-align: middle;
