@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { bootScript, motionScript } from '@/components/dsi/console'
 import PrefsSync from '@/components/dsi/PrefsSync'
+import { plainRedirectScript } from '@/components/dsi/view'
 import './dsi.css'
 
 // Self-hosted the same way the site's other faces are. The DSi's system font
@@ -51,6 +52,8 @@ export default function DsiLayout({ children }: { children: React.ReactNode }) {
       className={`dsi-root ${rounded.variable}`}
       style={{ fontFamily: 'var(--font-rounded)' }}
     >
+      {/* First, so a remembered plain view leaves before anything else runs. */}
+      <script dangerouslySetInnerHTML={{ __html: plainRedirectScript }} />
       <script dangerouslySetInnerHTML={{ __html: motionScript }} />
       <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       <PrefsSync />

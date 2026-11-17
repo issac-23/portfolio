@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, type ReactNode } from 'react'
+import { useCallback, type ReactNode } from 'react'
 import { galleryPhotos } from '@/data/gallery'
 import AppRail from './AppRail'
 import Device, { type DeviceProps } from './Device'
@@ -10,7 +10,6 @@ import { APPS } from './apps'
 import { SCREENS, type ScreenCtx } from './screens'
 import StatusBar from './StatusBar'
 import { useConsole } from './useConsole'
-import { rememberedView } from './view'
 
 /**
  * Owns both screens, and draws whatever the console says is showing. Which
@@ -28,12 +27,6 @@ const deviceShell = (props: DeviceProps) => <Device {...props} />
 
 export default function DsiMenu({ initial, shell = deviceShell }: DsiMenuProps = {}) {
   const [state, send] = useConsole(initial)
-
-  // Someone who chose plain view last time gets it again without hunting
-  // for the setting. Plain view links back here and clears the choice.
-  useEffect(() => {
-    if (shell === deviceShell && rememberedView() === 'plain') window.location.replace('/?view=plain')
-  }, [shell])
 
   const launch = useCallback((index: number, icon: HTMLElement) => send({ type: 'launch', app: APPS[index].id, icon }), [send])
   const back = useCallback(() => send({ type: 'back' }), [send])
