@@ -70,7 +70,7 @@ export default function DsiMenu({ initial, shell = deviceShell }: DsiMenuProps =
     ),
     bottom: (
       <div className="dsi-lower">
-        <AppRail apps={APPS} initial={state.rail} autoFocus={state.refocus} onChange={railMoved} onLaunch={launch} />
+        <AppRail apps={APPS} initial={state.rail} autoFocus={state.refocus} onChange={railMoved} onLaunch={launch} live={state.phase === 'menu'} />
       </div>
     ),
   })

@@ -12,10 +12,10 @@ export default function Hero() {
         >
           Issac Ip
         </h1>
-        <p className="text-muted text-lg leading-relaxed max-w-xl mb-8">
+        <p className="text-muted text-lg leading-relaxed max-w-xl mb-3">
           CS + Economics at Northeastern University.
         </p>
-        <p className="text-fg text-sm font-medium -mt-5 mb-8">{availability}</p>
+        <p className="text-fg text-sm font-medium mb-8">{availability}</p>
         <div className="flex flex-wrap gap-2 mb-10">
           {['Northeastern', 'CS + Econ', 'Music', 'Photography'].map((item) => (
             <span
