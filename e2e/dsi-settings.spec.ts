@@ -131,3 +131,28 @@ test('a remembered plain view leaves before the DSi is drawn', async ({ page }) 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Issac Ip')
   expect(await page.evaluate(() => sessionStorage.getItem('dsi-drawn'))).toBeNull()
 })
+
+test.describe('a remembered plain view keeps the deep link', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockSpotifyQuiet(page)
+    await page.addInitScript(() => localStorage.setItem('dsi-view', 'plain'))
+  })
+
+  test('/#projects lands on the Projects section', async ({ page }) => {
+    await page.goto('/#projects')
+    await page.waitForURL('**/?view=plain#plain-projects')
+    await expect(page.getByRole('heading', { name: 'Projects', level: 2 })).toBeInViewport()
+  })
+
+  test('an alias lands on its section', async ({ page }) => {
+    await page.goto('/#about')
+    await page.waitForURL('**/?view=plain#plain-about')
+    await expect(page.getByRole('heading', { name: 'About', level: 2 })).toBeInViewport()
+  })
+
+  test('an unknown hash lands at the top with no hash', async ({ page }) => {
+    await page.goto('/#nothing')
+    await page.waitForURL('**/?view=plain')
+    expect(new URL(page.url()).hash).toBe('')
+  })
+})
