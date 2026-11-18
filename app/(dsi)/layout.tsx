@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { bootScript, motionScript } from '@/components/dsi/console'
+import { APP_HASHES } from '@/components/dsi/deepLink'
 import PrefsSync from '@/components/dsi/PrefsSync'
 import { plainRedirectScript } from '@/components/dsi/view'
 import './dsi.css'
@@ -55,7 +56,7 @@ export default function DsiLayout({ children }: { children: React.ReactNode }) {
       {/* First, so a remembered plain view leaves before anything else runs. */}
       <script dangerouslySetInnerHTML={{ __html: plainRedirectScript }} />
       <script dangerouslySetInnerHTML={{ __html: motionScript }} />
-      <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+      <script dangerouslySetInnerHTML={{ __html: bootScript(APP_HASHES) }} />
       <PrefsSync />
       {children}
     </div>

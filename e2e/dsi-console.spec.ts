@@ -271,10 +271,18 @@ test.describe('the pre-paint boot rule', () => {
     await expect(page.locator('html')).not.toHaveAttribute('data-boot', '')
   })
 
-  test('any hash does not boot, even one that names no app', async ({ page }) => {
+  test('a hash that names no app still boots', async ({ page }) => {
     await page.goto('/#nothing')
-    await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 20_000 })
-    expect(await bootSeen(page)).toBe(false)
-    await expect(phase(page)).toHaveAttribute('data-console', 'menu')
+    expect(await bootSeen(page)).toBe(true)
+    await expect(phase(page)).toHaveAttribute('data-console', 'menu', { timeout: 20_000 })
   })
+
+  for (const hash of ['#projects', '#about']) {
+    test(`${hash}, an app's address or an alias, does not boot`, async ({ page }) => {
+      await page.goto(`/${hash}`)
+      // A deep link opens the app straight away, so there is no rail to wait on.
+      await expect(phase(page)).toHaveAttribute('data-console', 'app', { timeout: 20_000 })
+      expect(await bootSeen(page)).toBe(false)
+    })
+  }
 })
