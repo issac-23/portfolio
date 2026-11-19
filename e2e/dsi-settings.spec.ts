@@ -133,6 +133,26 @@ test('a remembered plain view leaves before the DSi is drawn', async ({ page }) 
   expect(await page.evaluate(() => sessionStorage.getItem('dsi-drawn'))).toBeNull()
 })
 
+test('Back from plain view returns to the DSi instead of bouncing to plain again', async ({ page }) => {
+  await mockSpotifyQuiet(page)
+  await page.goto('/')
+  await expect(page.locator('.dsi-device')).toBeVisible()
+  await page.evaluate(() => localStorage.setItem('dsi-view', 'plain'))
+  // A document load, not a client-side push, so Back has to load / again.
+  // Playwright's Chromium has no back-forward cache, which is the case that bounced.
+  await page.goto('/?view=plain')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Issac Ip')
+
+  await page.goBack()
+  await expect(page.locator('.dsi-device')).toBeVisible()
+  expect(new URL(page.url()).search).toBe('')
+  expect(await stored(page, 'dsi-view')).toBe('plain')
+
+  // The choice is still remembered: a reload of / is a fresh visit and redirects.
+  await page.reload()
+  await page.waitForURL('**/?view=plain')
+})
+
 test.describe('a remembered plain view keeps the deep link', () => {
   test.beforeEach(async ({ page }) => {
     await mockSpotifyQuiet(page)
