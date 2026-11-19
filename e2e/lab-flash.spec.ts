@@ -30,13 +30,14 @@ test('a launch in the 3D lab flashes both screens', async ({ page }) => {
   test.setTimeout(90_000)
   await page.goto('/lab/dsi-3d')
   await page.locator('canvas').waitFor({ timeout: 30_000 })
-  // Enter on an unfocused page is the same as pressing POWER. Hydration is
-  // not observable, so a press that lands too early is simply repeated until
-  // the console is on.
-  await expect(async () => {
-    if ((await page.locator('.dsi-rail').count()) === 0) await page.keyboard.press('Enter')
-    await expect(page.locator('.dsi-rail[data-ready]')).toBeAttached({ timeout: 1_500 })
-  }).toPass({ timeout: 40_000 })
+  // The lab sets window.__dsiLab in an effect, so it marks hydration. Then one
+  // press of the screen-reader power button, which ends in the same press as
+  // the 3D one: repeating it while the console boots would turn it off again.
+  await page.waitForFunction(() => '__dsiLab' in window, null, { timeout: 30_000 })
+  const power = page.getByRole('button', { name: /^Power (on|off)$/ })
+  await power.evaluate(el => (el as HTMLButtonElement).click())
+  await expect(power).toHaveAttribute('aria-label', 'Power off', { timeout: 20_000 })
+  await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 30_000 })
   await expect(page.locator('.dsi-fx')).toHaveCount(2)
   await page.keyboard.press('Enter')
   await page.locator('.dsi-app-lower').waitFor({ timeout: 15_000 })
