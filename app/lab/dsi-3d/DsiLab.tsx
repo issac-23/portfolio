@@ -51,14 +51,19 @@ export default function DsiLab() {
     }
   }, [])
 
-  // Every way of pressing POWER ends here, and so starts the music: the first
-  // press is the user gesture the browser wants before it will play anything.
+  // Every way of pressing POWER ends here. Powering on starts the music: the
+  // first press is the user gesture the browser wants before it will play
+  // anything. Powering off stops it.
   const press = useCallback(() => {
-    if (!music.current) music.current = createChiptune(mutedRef.current)
-    music.current.start()
+    if (lit) {
+      music.current?.stop()
+    } else {
+      if (!music.current) music.current = createChiptune(mutedRef.current)
+      music.current.start()
+    }
     cue('power')
     power.current()
-  }, [cue])
+  }, [cue, lit])
 
   const register = useCallback((fn: () => void) => {
     power.current = fn
