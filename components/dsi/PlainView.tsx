@@ -6,7 +6,7 @@ import { availability, channels, profile } from '@/data/profile'
 import { RESUME_PDF, externalProps, newTabProps } from '@/data/links'
 import { NO_LIVE_LINK, projects, statusLabels } from '@/data/projects'
 import PlainListening from './PlainListening'
-import { APPS, type AppId } from './apps'
+import { APPS, APP_BY_ID, type AppId } from './apps'
 import ViewLink from './ViewLink'
 import { FAN_MADE } from './disclaimer'
 
@@ -16,8 +16,8 @@ import { FAN_MADE } from './disclaimer'
  */
 const SECTIONS: Record<AppId, ReactElement | null> = {
   profile: (
-    <section aria-labelledby="plain-about">
-      <h2 id="plain-about">About</h2>
+    <section aria-labelledby={APP_BY_ID.profile.plain}>
+      <h2 id={APP_BY_ID.profile.plain}>About</h2>
       {profile.bio.map(p => <p key={p}>{p}</p>)}
       <dl className="dsi-plain-stats">
         {profile.stats.map(s => (
@@ -30,8 +30,8 @@ const SECTIONS: Record<AppId, ReactElement | null> = {
     </section>
   ),
   projects: (
-    <section aria-labelledby="plain-projects">
-      <h2 id="plain-projects">Projects</h2>
+    <section aria-labelledby={APP_BY_ID.projects.plain}>
+      <h2 id={APP_BY_ID.projects.plain}>Projects</h2>
       {projects.map(p => (
         <article key={p.title} className="dsi-plain-card">
           <h3>
@@ -48,8 +48,8 @@ const SECTIONS: Record<AppId, ReactElement | null> = {
     </section>
   ),
   camera: (
-    <section aria-labelledby="plain-photos">
-      <h2 id="plain-photos">Photos</h2>
+    <section aria-labelledby={APP_BY_ID.camera.plain}>
+      <h2 id={APP_BY_ID.camera.plain}>Photos</h2>
       <ul className="dsi-plain-photos">
         {galleryPhotos.map((ph, i) => (
           <li key={ph.src}>
@@ -61,14 +61,14 @@ const SECTIONS: Record<AppId, ReactElement | null> = {
     </section>
   ),
   sound: (
-    <section aria-labelledby="plain-listening">
-      <h2 id="plain-listening">Listening</h2>
+    <section aria-labelledby={APP_BY_ID.sound.plain}>
+      <h2 id={APP_BY_ID.sound.plain}>Listening</h2>
       <PlainListening />
     </section>
   ),
   shelf: (
-    <section aria-labelledby="plain-shelf">
-      <h2 id="plain-shelf">Shelf</h2>
+    <section aria-labelledby={APP_BY_ID.shelf.plain}>
+      <h2 id={APP_BY_ID.shelf.plain}>Shelf</h2>
       <ul className="dsi-plain-shelf">
         {mediaItems.map(m => (
           <li key={m.url}>
@@ -84,8 +84,8 @@ const SECTIONS: Record<AppId, ReactElement | null> = {
     </section>
   ),
   chat: (
-    <section aria-labelledby="plain-contact">
-      <h2 id="plain-contact">Contact</h2>
+    <section aria-labelledby={APP_BY_ID.chat.plain}>
+      <h2 id={APP_BY_ID.chat.plain}>Contact</h2>
       <ul className="dsi-plain-contact">
         {channels.map(c => (
           <li key={c.label}>
