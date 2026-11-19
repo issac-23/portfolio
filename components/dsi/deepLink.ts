@@ -14,6 +14,17 @@ import { APPS, APP_BY_ID, type AppId } from './apps'
  */
 export const APP_HASHES: readonly string[] = APPS.flatMap(a => [a.hash, ...(a.aliases ?? [])])
 
+/**
+ * Plain view's section id for each hash that has one, aliases included. The
+ * layout's redirect script is built from this, so a deep link survives the
+ * switch to plain view. Resume and Settings have no plain section.
+ */
+export const PLAIN_SECTIONS: Readonly<Record<string, string>> = Object.fromEntries(
+  APPS.flatMap(({ hash, aliases = [], plain }) =>
+    plain === undefined ? [] : [hash, ...aliases].map((h): [string, string] => [h, plain]),
+  ),
+)
+
 export function appFromHash(hash: string): AppId | null {
   const key = hash.replace(/^#/, '')
   if (!key) return null

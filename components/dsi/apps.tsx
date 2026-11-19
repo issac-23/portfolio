@@ -101,6 +101,11 @@ interface AppDef {
    * to /#about or /#contact already out on a resume or a profile still work.
    */
   aliases?: readonly string[]
+  /**
+   * The id of this app's section in plain view, so a deep link still lands on
+   * the matching content there. Apps with no plain section leave it out.
+   */
+  plain?: string
 }
 
 const REGISTRY = [
@@ -113,6 +118,7 @@ const REGISTRY = [
     Glyph: Person,
     hash: 'profile',
     aliases: ['about'],
+    plain: 'plain-about',
   },
   {
     id: 'projects',
@@ -122,6 +128,7 @@ const REGISTRY = [
     face: ['#e9e2f6', '#b7a7d8'],
     Glyph: Card,
     hash: 'projects',
+    plain: 'plain-projects',
   },
   {
     id: 'camera',
@@ -132,6 +139,7 @@ const REGISTRY = [
     Glyph: Camera,
     hash: 'camera',
     aliases: ['gallery'],
+    plain: 'plain-photos',
   },
   {
     id: 'sound',
@@ -142,6 +150,7 @@ const REGISTRY = [
     Glyph: Note,
     hash: 'sound',
     aliases: ['music'],
+    plain: 'plain-listening',
   },
   {
     id: 'shelf',
@@ -152,6 +161,7 @@ const REGISTRY = [
     Glyph: Book,
     hash: 'shelf',
     aliases: ['media'],
+    plain: 'plain-shelf',
   },
   {
     id: 'chat',
@@ -162,6 +172,7 @@ const REGISTRY = [
     Glyph: Chat,
     hash: 'chat',
     aliases: ['contact'],
+    plain: 'plain-contact',
   },
   {
     id: 'resume',

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { plural } from './apps'
 import { externalProps } from '@/data/links'
 import { useListeningWeek, useNowPlaying } from '../useNowPlaying'
@@ -8,6 +9,14 @@ import { useListeningWeek, useNowPlaying } from '../useNowPlaying'
 export default function PlainListening() {
   const s = useNowPlaying()
   const week = useListeningWeek()
+
+  // The list grows once Spotify answers, which pushes a deep-linked section
+  // below it out of view, so scroll to the address again when it settles.
+  const settled = s.kind !== 'loading'
+  useEffect(() => {
+    if (settled && location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView()
+  }, [settled])
+
   if (s.kind === 'loading') return <p>Checking Spotify…</p>
   if (s.kind === 'unreachable') return <p>Couldn&apos;t reach Spotify just now.</p>
 

@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
 import { openApp, openMenu } from './helpers/dsi'
-import { mockSpotifyQuiet } from './helpers/spotify'
+import { mockSpotifyQuiet, track } from './helpers/spotify'
+import { APPS } from '../components/dsi/apps'
 
 /**
  * System Settings: the three switches that let the theme exist without
@@ -130,4 +131,53 @@ test('a remembered plain view leaves before the DSi is drawn', async ({ page }) 
   await page.waitForURL('**/?view=plain')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Issac Ip')
   expect(await page.evaluate(() => sessionStorage.getItem('dsi-drawn'))).toBeNull()
+})
+
+test.describe('a remembered plain view keeps the deep link', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockSpotifyQuiet(page)
+    await page.addInitScript(() => localStorage.setItem('dsi-view', 'plain'))
+  })
+
+  test('/#projects lands on the Projects section', async ({ page }) => {
+    await page.goto('/#projects')
+    await page.waitForURL('**/?view=plain#plain-projects')
+    await expect(page.getByRole('heading', { name: 'Projects', level: 2 })).toBeInViewport()
+  })
+
+  test('an alias lands on its section', async ({ page }) => {
+    await page.goto('/#about')
+    await page.waitForURL('**/?view=plain#plain-about')
+    await expect(page.getByRole('heading', { name: 'About', level: 2 })).toBeInViewport()
+  })
+
+  test('a section below Listening stays in view after the list fills in', async ({ page }) => {
+    const recentTracks = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight'].map(t => track(t))
+    await page.route('**/api/spotify/now-playing', async route => {
+      await new Promise(r => setTimeout(r, 600))
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({ isPlaying: false, recentTracks }),
+      })
+    })
+    await page.goto('/#contact')
+    await page.waitForURL('**/?view=plain#plain-contact')
+    await expect(page.getByRole('link', { name: 'Eight' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Contact', level: 2 })).toBeInViewport()
+  })
+
+  test('every plain section is reachable from its address', async ({ page }) => {
+    for (const { hash, plain } of APPS) {
+      if (!plain) continue
+      await page.goto(`/#${hash}`)
+      await page.waitForURL(`**/?view=plain#${plain}`)
+      await expect(page.locator(`#${plain}`)).toHaveCount(1)
+    }
+  })
+
+  test('an unknown hash lands at the top with no hash', async ({ page }) => {
+    await page.goto('/#nothing')
+    await page.waitForURL('**/?view=plain')
+    expect(new URL(page.url()).hash).toBe('')
+  })
 })
