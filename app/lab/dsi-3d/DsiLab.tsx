@@ -32,15 +32,16 @@ export default function DsiLab() {
   const mutedRef = useRef(false)
   const power = useRef<() => void>(() => {})
   const music = useRef<Chiptune | null>(null)
-  const sfx = useRef(createSfx(() => music.current?.context() ?? null))
-  const cue = useCallback((name: Cue) => void sfx.current.play(name), [])
+  const sfx = useRef<ReturnType<typeof createSfx> | null>(null)
+  if (!sfx.current) sfx.current = createSfx(() => music.current?.context() ?? null)
+  const cue = useCallback((name: Cue) => void sfx.current?.play(name), [])
 
   // The saved choice is read after hydration, so the first render matches the server's.
   useEffect(() => {
     mutedRef.current = readMuted()
     setMuted(mutedRef.current)
     const w = window as unknown as { __dsiLab?: Record<string, unknown> }
-    w.__dsiLab = { ...w.__dsiLab, audioState: () => music.current?.state() ?? null, sfxLog: () => sfx.current.log() }
+    w.__dsiLab = { ...w.__dsiLab, audioState: () => music.current?.state() ?? null, sfxLog: () => sfx.current?.log() ?? [], musicPlaying: () => music.current?.playing() ?? false }
     const stop = () => music.current?.dispose()
     window.addEventListener('pagehide', stop)
     return () => {

@@ -78,6 +78,8 @@ const MELODY_EVENTS = parseMelody()
 export interface Chiptune {
   /** Creates the context and starts the loop. Call from a user gesture. */
   start(): void
+  /** True while the loop is scheduling notes. For tests. */
+  playing(): boolean
   /** Mute or unmute. Safe before `start()`. */
   setMuted(muted: boolean): void
   /** Stops the loop and closes the context. */
@@ -168,6 +170,7 @@ export function createChiptune(initiallyMuted: boolean): Chiptune {
       master.gain.linearRampToValueAtTime(MASTER, ctx.currentTime + FADE_IN)
       if (muted) void ctx.suspend()
     },
+    playing: () => timer !== null,
     setMuted(next) {
       muted = next
       const c = ctx
