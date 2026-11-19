@@ -1,0 +1,42 @@
+name: lab
+
+# The 3D lab's specs are skipped on every PR (see playwright.config.ts), so
+# this runs them once a week and on demand, to catch shared code breaking
+# /lab/dsi-3d. One worker: the scene renders in software WebGL here, and two
+# pages at once starved each other until the tests timed out.
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  lab-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - run: npm run build
+
+      - name: 3D lab end-to-end tests
+        run: npx playwright test --workers=1
+        env:
+          E2E_LAB: '1'
+
+      - name: Keep the trace when e2e fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab-playwright-traces
+          path: test-results/
+          retention-days: 7
