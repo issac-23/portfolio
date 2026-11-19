@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createChiptune, type Chiptune } from '@/components/dsi/lab/chiptune'
 import { createSfx, type Cue } from '@/components/dsi/lab/sfx'
@@ -17,6 +18,16 @@ const CREDIT = {
   license: 'http://creativecommons.org/licenses/by/4.0/',
 }
 
+// Without WebGL the scene can only show its loading line or a blank canvas.
+const hasWebGL = () => {
+  try {
+    const c = document.createElement('canvas')
+    return !!(c.getContext('webgl2') ?? c.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
+
 const MUTE_KEY = 'dsi-lab-muted'
 const readMuted = () => {
   try {
@@ -29,6 +40,9 @@ const readMuted = () => {
 export default function DsiLab() {
   const [lit, setLit] = useState(false)
   const [muted, setMuted] = useState(false)
+  // Unknown until the browser has been asked, so the server render matches.
+  const [webgl, setWebgl] = useState<boolean | null>(null)
+  useEffect(() => setWebgl(hasWebGL()), [])
   const mutedRef = useRef(false)
   const power = useRef<() => void>(() => {})
   const music = useRef<Chiptune | null>(null)
@@ -99,27 +113,43 @@ export default function DsiLab() {
       className="relative h-[100svh] w-full overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #a9cbee 0%, #bad6f2 35%, #cbe1f4 65%, #dcebf4 100%)' }}
     >
-      <DsiScene onPress={press} register={register} onLit={setLit} lit={lit} onCue={cue} onOpened={() => cue('reveal')} />
+      {webgl === false ? (
+        <div className="absolute inset-0 grid place-items-center px-6 text-center text-sm text-[#0e4155]">
+          <p>
+            This browser can&apos;t show the 3D DSi (WebGL is off or unavailable).{' '}
+            <Link href="/" className="underline">
+              The regular DSi home page
+            </Link>{' '}
+            has everything in it.
+          </p>
+        </div>
+      ) : webgl ? (
+        <DsiScene onPress={press} register={register} onLit={setLit} lit={lit} onCue={cue} onOpened={() => cue('reveal')} />
+      ) : null}
 
-      {/* The keyboard and screen reader way to press the model's POWER button. */}
-      <button
-        type="button"
-        onClick={press}
-        aria-label={lit ? 'Power off' : 'Power on'}
-        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[#0e4155] focus:px-3 focus:py-1.5 focus:text-sm focus:text-white"
-      >
-        {lit ? 'Power off' : 'Power on'}
-      </button>
+      {webgl !== false && (
+        <>
+          {/* The keyboard and screen reader way to press the model's POWER button. */}
+          <button
+            type="button"
+            onClick={press}
+            aria-label={lit ? 'Power off' : 'Power on'}
+            className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[#0e4155] focus:px-3 focus:py-1.5 focus:text-sm focus:text-white"
+          >
+            {lit ? 'Power off' : 'Power on'}
+          </button>
 
-      <button
-        type="button"
-        onClick={toggleMute}
-        aria-pressed={muted}
-        aria-label={muted ? 'Unmute music' : 'Mute music'}
-        className="absolute right-3 top-3 z-50 rounded-full bg-[#0e4155]/85 px-3 py-1.5 text-xs text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0e4155]"
-      >
-        {muted ? 'Music off' : 'Music on'}
-      </button>
+          <button
+            type="button"
+            onClick={toggleMute}
+            aria-pressed={muted}
+            aria-label={muted ? 'Unmute music' : 'Mute music'}
+            className="absolute right-3 top-3 z-50 rounded-full bg-[#0e4155]/85 px-3 py-1.5 text-xs text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0e4155]"
+          >
+            {muted ? 'Music off' : 'Music on'}
+          </button>
+        </>
+      )}
 
       <p className="pointer-events-none absolute inset-x-0 bottom-2 px-4 text-center text-[10px] leading-snug text-[#0e4155]/80">
         <span className="pointer-events-auto">
