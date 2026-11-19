@@ -19,9 +19,12 @@ const GROW_MS = 340
 const FLASH_IN_MS = 110
 const FLASH_OUT_MS = 240
 
+// Every screen's layer on the page. There is one console per page, and the 3D
+// lab draws each screen in its own .dsi-device, so looking inside only the
+// device `from` sits in would find just the one screen.
 function fxLayers(from: Element): HTMLElement[] {
-  const device = from.closest('.dsi-device')
-  return device ? Array.from(device.querySelectorAll<HTMLElement>('.dsi-fx')) : []
+  if (!from.closest('.dsi-device')) return []
+  return Array.from(document.querySelectorAll<HTMLElement>('.dsi-device .dsi-fx'))
 }
 
 function flash(layer: HTMLElement) {
