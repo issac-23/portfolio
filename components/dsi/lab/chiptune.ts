@@ -131,7 +131,9 @@ export function createChiptune(initiallyMuted: boolean): Chiptune {
 
   function schedule(step: number, t: number) {
     const c = ctx
-    if (!c || !master) return
+    // Muted: the loop keeps its place, so unmuting comes in on the beat, but
+    // builds no silent oscillators.
+    if (!c || !master || muted) return
     const bar = Math.floor(step / 8) % BARS
     const inBar = step % 8
     const chord = CHORDS[bar]
