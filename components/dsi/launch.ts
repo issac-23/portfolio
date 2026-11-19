@@ -60,10 +60,16 @@ export async function playLaunch(icon: HTMLElement, swap: () => void, animate: b
   const cy = r.top + r.height / 2
   const radius = getComputedStyle(icon).borderRadius
 
+  // The icon only grows on screens in its own device: their rects share one
+  // flat plane with it. The 3D lab draws each screen as its own transformed
+  // device, where rect offsets are projections, so those screens just flash.
+  const device = icon.closest('.dsi-device')
+  const flat = layers.filter(l => l.closest('.dsi-device') === device)
+
   // Big enough to cover the farthest corner of either screen from the icon's
   // centre, plus a little so the edges are well past the bezel by the end.
   let reach = 0
-  for (const l of layers) {
+  for (const l of flat) {
     const s = l.getBoundingClientRect()
     reach = Math.max(reach, Math.abs(s.left - cx), Math.abs(s.right - cx), Math.abs(s.top - cy), Math.abs(s.bottom - cy))
   }
@@ -71,7 +77,7 @@ export async function playLaunch(icon: HTMLElement, swap: () => void, animate: b
 
   const drawn: HTMLElement[] = []
   try {
-    const grows = layers.map(layer => {
+    const grows = flat.map(layer => {
       const at = layer.getBoundingClientRect()
       const copy = icon.cloneNode(true) as HTMLElement
       copy.classList.add('dsi-fx-icon')
