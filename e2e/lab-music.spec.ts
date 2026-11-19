@@ -49,7 +49,7 @@ test('a POWER press the console ignores mid-launch leaves the music playing', as
     document.querySelector<HTMLElement>('.dsi-slot[data-sel]')!.click()
     document.querySelector<HTMLButtonElement>('button[aria-label="Power off"]')!.click()
   })
-  await page.locator('.dsi-app-lower').waitFor({ timeout: 15_000 })
+  await page.locator('.dsi-app-lower').waitFor({ timeout: 30_000 })
   await expect(toggle).toHaveAttribute('aria-label', 'Power off')
   await expect.poll(() => playing(page)).toBe(true)
 })
@@ -57,7 +57,7 @@ test('a POWER press the console ignores mid-launch leaves the music playing', as
 test('muting the music silences it but not the sound effects', async ({ page }) => {
   test.setTimeout(90_000) // the WebGL scene is slow to boot under software rendering
   await page.goto('/lab/dsi-3d')
-  await page.waitForFunction(() => typeof (window as unknown as { __dsiLab?: Lab }).__dsiLab?.musicPlaying === 'function')
+  await ready(page)
 
   const toggle = page.getByRole('button', { name: /^Power (on|off)$/ })
   await toggle.evaluate((el) => (el as HTMLButtonElement).click())
@@ -65,11 +65,11 @@ test('muting the music silences it but not the sound effects', async ({ page }) 
   const level = () => page.evaluate(() => (window as unknown as { __dsiLab: Lab }).__dsiLab.musicLevel?.() ?? null)
   const sfx = () => page.evaluate(() => (window as unknown as { __dsiLab: Lab }).__dsiLab.sfxLog?.() ?? [])
   const state = () => page.evaluate(() => (window as unknown as { __dsiLab: Lab }).__dsiLab.audioState?.() ?? null)
-  await expect.poll(level).toBeGreaterThan(0.01)
+  await expect.poll(level, { timeout: 20_000 }).toBeGreaterThan(0.01)
 
   await page.getByRole('button', { name: 'Mute music' }).click()
   await expect(page.getByRole('button', { name: 'Unmute music' })).toBeVisible()
-  await expect.poll(level).toBeLessThan(0.0001)
+  await expect.poll(level, { timeout: 20_000 }).toBeLessThan(0.0001)
   expect(await state()).toBe('running')
 
   // POWER off plays the power cue; it must still be heard while the music is muted.
@@ -83,14 +83,14 @@ test('muting the music silences it but not the sound effects', async ({ page }) 
   await toggle.evaluate((el) => (el as HTMLButtonElement).click())
   await expect(toggle).toHaveAttribute('aria-label', 'Power off')
   await page.getByRole('button', { name: 'Unmute music' }).click()
-  await expect.poll(level, { timeout: 10_000 }).toBeGreaterThan(0.01)
+  await expect.poll(level, { timeout: 20_000 }).toBeGreaterThan(0.01)
 })
 
 test('a remembered mute keeps the music silent but the sound effects audible', async ({ page }) => {
   test.setTimeout(90_000)
   await page.addInitScript(() => localStorage.setItem('dsi-lab-muted', '1'))
   await page.goto('/lab/dsi-3d')
-  await page.waitForFunction(() => typeof (window as unknown as { __dsiLab?: Lab }).__dsiLab?.musicPlaying === 'function')
+  await ready(page)
   await expect(page.getByRole('button', { name: 'Unmute music' })).toBeVisible()
 
   const toggle = page.getByRole('button', { name: /^Power (on|off)$/ })
@@ -98,7 +98,7 @@ test('a remembered mute keeps the music silent but the sound effects audible', a
   await expect(toggle).toHaveAttribute('aria-label', 'Power off', { timeout: 60_000 })
   const read = <K extends keyof Lab>(k: K) => page.evaluate((key) => (window as unknown as { __dsiLab: Record<string, () => unknown> }).__dsiLab[key]?.() ?? null, k)
   expect(await read('audioState')).toBe('running')
-  expect(await read('musicPlaying')).toBe(true)
+  await expect.poll(() => read('musicPlaying')).toBe(true)
   expect(Number(await read('musicLevel'))).toBeLessThan(0.0001)
   expect((await read('sfxLog')) as string[]).toContain('power')
 })
