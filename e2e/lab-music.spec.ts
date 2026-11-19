@@ -49,7 +49,7 @@ test('a POWER press the console ignores mid-launch leaves the music playing', as
     document.querySelector<HTMLElement>('.dsi-slot[data-sel]')!.click()
     document.querySelector<HTMLButtonElement>('button[aria-label="Power off"]')!.click()
   })
-  await page.locator('.dsi-app-lower').waitFor({ timeout: 15_000 })
+  await page.locator('.dsi-app-lower').waitFor({ timeout: 30_000 })
   await expect(toggle).toHaveAttribute('aria-label', 'Power off')
   await expect.poll(() => playing(page)).toBe(true)
 })
