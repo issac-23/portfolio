@@ -78,6 +78,10 @@ const MELODY_EVENTS = parseMelody()
 export interface Chiptune {
   /** Creates the context and starts the loop. Call from a user gesture. */
   start(): void
+  /** Fades out and halts the loop, keeping the context for sound effects. `start()` resumes it. */
+  stop(): void
+  /** True while the loop is scheduling notes. For tests. */
+  playing(): boolean
   /** Mute or unmute. Safe before `start()`. */
   setMuted(muted: boolean): void
   /** Stops the loop and closes the context. */
@@ -151,7 +155,17 @@ export function createChiptune(initiallyMuted: boolean): Chiptune {
 
   return {
     start() {
-      if (ctx) return
+      if (ctx) {
+        // Restarting after `stop()`: same context, loop from the top.
+        if (timer || !master) return
+        nextTime = ctx.currentTime + 0.1
+        nextStep = 0
+        timer = setInterval(tick, TICK_MS)
+        master.gain.cancelScheduledValues(ctx.currentTime)
+        master.gain.setValueAtTime(0, ctx.currentTime)
+        master.gain.linearRampToValueAtTime(MASTER, ctx.currentTime + FADE_IN)
+        return
+      }
       const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
       if (!Ctor) return
       ctx = new Ctor()
@@ -168,6 +182,16 @@ export function createChiptune(initiallyMuted: boolean): Chiptune {
       master.gain.linearRampToValueAtTime(MASTER, ctx.currentTime + FADE_IN)
       if (muted) void ctx.suspend()
     },
+    stop() {
+      if (timer) clearInterval(timer)
+      timer = null
+      if (ctx && master) {
+        master.gain.cancelScheduledValues(ctx.currentTime)
+        master.gain.setValueAtTime(master.gain.value, ctx.currentTime)
+        master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15)
+      }
+    },
+    playing: () => timer !== null,
     setMuted(next) {
       muted = next
       const c = ctx
