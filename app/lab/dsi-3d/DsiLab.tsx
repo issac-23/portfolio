@@ -51,19 +51,25 @@ export default function DsiLab() {
     }
   }, [])
 
-  // Every way of pressing POWER ends here. Powering on starts the music: the
-  // first press is the user gesture the browser wants before it will play
-  // anything. Powering off stops it.
+  // Every way of pressing POWER ends here. The first press is the user gesture
+  // the browser wants before it will play anything, so it creates the audio,
+  // but whether the loop plays is left to the console below.
   const press = useCallback(() => {
-    if (lit) {
-      music.current?.stop()
-    } else {
-      if (!music.current) music.current = createChiptune(mutedRef.current)
+    if (!music.current) {
+      music.current = createChiptune(mutedRef.current)
       music.current.start()
+      music.current.stop()
     }
     cue('power')
     power.current()
-  }, [cue, lit])
+  }, [cue])
+
+  // The music follows the console, not the press: POWER is ignored while an
+  // app launches or returns, and does nothing before the scene has loaded.
+  useEffect(() => {
+    if (lit) music.current?.start()
+    else music.current?.stop()
+  }, [lit])
 
   const register = useCallback((fn: () => void) => {
     power.current = fn
