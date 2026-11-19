@@ -22,7 +22,10 @@ const CREDIT = {
 const hasWebGL = () => {
   try {
     const c = document.createElement('canvas')
-    return !!(c.getContext('webgl2') ?? c.getContext('webgl'))
+    const gl = c.getContext('webgl2') ?? c.getContext('webgl')
+    // Hand the probe's context straight back, so it never competes with the scene's.
+    gl?.getExtension('WEBGL_lose_context')?.loseContext()
+    return !!gl
   } catch {
     return false
   }
