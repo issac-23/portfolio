@@ -6,9 +6,9 @@
  * and not taken from, or modelled on, any console's menu or shop music.
  *
  * Browsers only allow audio after a user gesture, so nothing here runs until
- * `start()` is called from a click or key press. Muting suspends the context,
- * so a muted visit costs nothing. Drop this file, and its one caller, to remove
- * the music.
+ * `start()` is called from a click or key press. Muting only silences the
+ * music's own gain node; the context keeps running so sound effects still
+ * play. Drop this file, and its one caller, to remove the music.
  */
 
 const BPM = 96
@@ -82,12 +82,14 @@ export interface Chiptune {
   stop(): void
   /** True while the loop is scheduling notes. For tests. */
   playing(): boolean
-  /** Mute or unmute. Safe before `start()`. */
+  /** Mute or unmute the music only. Safe before `start()`. The context keeps running. */
   setMuted(muted: boolean): void
   /** Stops the loop and closes the context. */
   dispose(): void
   /** The context's state, or null before `start()`. For tests. */
   state(): AudioContextState | null
+  /** The music's current gain, 0 while muted. Null before `start()`. For tests. */
+  level(): number | null
   /** The live context, for the sound effects to share. Null before `start()`. */
   context(): AudioContext | null
 }
@@ -129,7 +131,9 @@ export function createChiptune(initiallyMuted: boolean): Chiptune {
 
   function schedule(step: number, t: number) {
     const c = ctx
-    if (!c || !master) return
+    // Muted: the loop keeps its place, so unmuting comes in on the beat, but
+    // builds no silent oscillators.
+    if (!c || !master || muted) return
     const bar = Math.floor(step / 8) % BARS
     const inBar = step % 8
     const chord = CHORDS[bar]
@@ -163,7 +167,7 @@ export function createChiptune(initiallyMuted: boolean): Chiptune {
         timer = setInterval(tick, TICK_MS)
         master.gain.cancelScheduledValues(ctx.currentTime)
         master.gain.setValueAtTime(0, ctx.currentTime)
-        master.gain.linearRampToValueAtTime(MASTER, ctx.currentTime + FADE_IN)
+        master.gain.linearRampToValueAtTime(muted ? 0 : MASTER, ctx.currentTime + FADE_IN)
         return
       }
       const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
@@ -179,8 +183,7 @@ export function createChiptune(initiallyMuted: boolean): Chiptune {
       timer = setInterval(tick, TICK_MS)
       // A short fade-in, so the first note does not click.
       master.gain.setValueAtTime(0, ctx.currentTime)
-      master.gain.linearRampToValueAtTime(MASTER, ctx.currentTime + FADE_IN)
-      if (muted) void ctx.suspend()
+      master.gain.linearRampToValueAtTime(muted ? 0 : MASTER, ctx.currentTime + FADE_IN)
     },
     stop() {
       if (timer) clearInterval(timer)
@@ -195,9 +198,12 @@ export function createChiptune(initiallyMuted: boolean): Chiptune {
     setMuted(next) {
       muted = next
       const c = ctx
-      if (!c) return
-      if (next) void c.suspend()
-      else void c.resume()
+      if (!c || !master || !timer) return
+      // Only the music's gain moves. The context stays running for the sfx.
+      const g = master.gain
+      g.cancelScheduledValues(c.currentTime)
+      g.setValueAtTime(g.value, c.currentTime)
+      g.linearRampToValueAtTime(next ? 0 : MASTER, c.currentTime + 0.1)
     },
     dispose() {
       if (timer) clearInterval(timer)
@@ -208,6 +214,7 @@ export function createChiptune(initiallyMuted: boolean): Chiptune {
       if (c && c.state !== 'closed') void c.close()
     },
     state: () => (ctx ? ctx.state : null),
+    level: () => (master ? master.gain.value : null),
     context: () => ctx,
   }
 }
