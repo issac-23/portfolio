@@ -5,9 +5,9 @@
  * little figures here were written for this prototype.
  *
  * They share the chiptune's AudioContext, so they obey the same gesture rule
- * and the same mute: a muted context is suspended, and a cue asked of a
- * context that is not running is dropped. Drop this file and its caller to
- * remove them.
+ * (a cue asked of a context that is not running is dropped). The music's mute
+ * is its own gain node, so it does not touch them. Drop this file and its
+ * caller to remove them.
  */
 
 export type Cue = 'power' | 'boot-chime' | 'move' | 'bump' | 'confirm' | 'whoosh' | 'back' | 'reveal'

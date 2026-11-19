@@ -41,7 +41,7 @@ export default function DsiLab() {
     mutedRef.current = readMuted()
     setMuted(mutedRef.current)
     const w = window as unknown as { __dsiLab?: Record<string, unknown> }
-    w.__dsiLab = { ...w.__dsiLab, audioState: () => music.current?.state() ?? null, sfxLog: () => sfx.current?.log() ?? [], musicPlaying: () => music.current?.playing() ?? false }
+    w.__dsiLab = { ...w.__dsiLab, audioState: () => music.current?.state() ?? null, sfxLog: () => sfx.current?.log() ?? [], musicPlaying: () => music.current?.playing() ?? false, musicLevel: () => music.current?.level() ?? null }
     const stop = () => music.current?.dispose()
     window.addEventListener('pagehide', stop)
     return () => {
