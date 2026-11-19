@@ -37,8 +37,15 @@ const PORT = Number(
  *
  * Run `npm run build` first, or use `npm run test:e2e`, which does both.
  */
+// The /lab specs render the 3D scene in software WebGL, which starves the page
+// on CI runners and loads a laptop more than the rest of the suite together.
+// They run only on demand: E2E_LAB=1 (or `npm run test:e2e:lab`) runs just them.
+const LAB_SPECS = /lab-[^/\\]*\.spec\.ts$/
+const lab = !!process.env.E2E_LAB
+
 export default defineConfig({
   testDir: './e2e',
+  ...(lab ? { testMatch: LAB_SPECS } : { testIgnore: LAB_SPECS }),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   // retries: 1 is intentional locally too: a load timeout then shows up as

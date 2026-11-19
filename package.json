@@ -16,6 +16,7 @@
     "og": "node scripts/og.mjs",
     "photos:optimize": "node scripts/optimize-photos.mjs",
     "test:e2e": "node scripts/e2e.mjs",
+    "test:e2e:lab": "node scripts/e2e.mjs --lab",
     "typecheck:e2e": "tsc -p e2e/tsconfig.json"
   },
   "dependencies": {
