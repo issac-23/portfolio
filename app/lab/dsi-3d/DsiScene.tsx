@@ -261,7 +261,11 @@ function Screens({ top, bottom, power, phase, onPower, topEl, bottomEl, register
     } else if (was === 'app' && phase === 'returning') onCue('back')
   }, [phase, onCue])
   useEffect(() => {
-    const current = () => document.querySelector('.dsi-screen [aria-current="true"]')?.textContent ?? null
+    // The list the arrow keys move is the one whose items carry data-idx
+    // (useListNav's contract), on whichever screen it is; the top screen's own
+    // aria-current marks are not that list. Items can be images with no text,
+    // so the position is what is compared.
+    const current = () => document.querySelector('.dsi-screen [data-idx][aria-current="true"]')?.getAttribute('data-idx') ?? null
     const onKey = (e: KeyboardEvent) => {
       if (!/^Arrow(Left|Right|Up|Down)$/.test(e.key) || e.metaKey || e.ctrlKey || e.altKey) return
       const p = phaseNow.current
@@ -273,8 +277,9 @@ function Screens({ top, bottom, power, phase, onPower, topEl, bottomEl, register
         setTimeout(() => onCue(current() === before ? 'bump' : 'move'), 60)
       }
     }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    // Capture phase, so `before` is read ahead of the list's own key handler.
+    document.addEventListener('keydown', onKey, true)
+    return () => document.removeEventListener('keydown', onKey, true)
   }, [onCue])
 
   const screen = (content: React.ReactNode, mark: boolean) => (
