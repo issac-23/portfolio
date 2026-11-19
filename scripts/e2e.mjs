@@ -185,13 +185,15 @@ if (useLock) {
   }
 }
 
-const rawArgs = process.argv.slice(2)
+// --lab runs only the /lab specs, which the config skips otherwise.
+const lab = process.argv.includes('--lab')
+const rawArgs = process.argv.slice(2).filter((a) => a !== '--lab')
 const args = rawArgs.map((a) => JSON.stringify(a)).join(' ')
 // --workers, --workers=N, -j, -jN and -j=N all choose the count themselves.
 const argsChooseWorkers = rawArgs.some((a) => /^(--workers(=|$)|-j)/.test(a))
 let code = await run('npx next build')
 if (code === 0) {
-  const env = {}
+  const env = lab ? { E2E_LAB: '1' } : {}
   // Sampled after the build, which would otherwise count as load.
   // Nothing to lower when the default is already at or under the busy count.
   if (

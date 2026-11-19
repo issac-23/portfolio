@@ -7,7 +7,8 @@ Tailwind. The DSi redesign lives at `/` and the previous site is kept at
 `npm run check` runs lint, the e2e type-check, then `test:e2e`, and local e2e
 runs queue behind each other through a lock in the temp dir, and drop to 2 workers
 when the CPU is already busy (set E2E_WORKERS to override). Tests are E2E only;
-there are no unit tests.
+there are no unit tests. The 3D lab's `e2e/lab-*.spec.ts` are skipped there and
+in CI; run them with `npm run test:e2e:lab`.
 
 Spotify section broken: `node scripts/spotify-auth.mjs --check`; details in
 `SPOTIFY_SETUP.md`.
