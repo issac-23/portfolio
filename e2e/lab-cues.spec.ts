@@ -11,7 +11,6 @@ import type { AppName } from '../components/dsi/apps'
  * The 3D scene does render headless (software WebGL), so this drives the real
  * console: power on, pick the app on the rail, then arrow around its list.
  */
-test.describe.configure({ timeout: 90_000 })
 
 const cues = (page: Page) => page.evaluate(() => (window as unknown as { __dsiLab: { sfxLog(): string[] } }).__dsiLab.sfxLog())
 
