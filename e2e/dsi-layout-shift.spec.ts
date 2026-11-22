@@ -25,12 +25,19 @@ for (const [where, path] of [
     await page.route('**/api/spotify/now-playing', r =>
       r.fulfill({ contentType: 'application/json', body: '{"isPlaying":false,"recentTracks":[]}' }),
     )
+    // Only shifts from the swap itself count. On a loaded machine the page can
+    // also shift while it is still assembling, before the font arrives, and
+    // that is not what this test is about.
     await page.addInitScript(() => {
-      const w = window as unknown as { __cls: number }
-      w.__cls = 0
+      const w = window as unknown as { __shifts: { at: number; value: number }[]; __fontAt: number | null }
+      w.__shifts = []
+      w.__fontAt = null
+      document.fonts.addEventListener('loadingdone', () => {
+        w.__fontAt ??= performance.now()
+      })
       new PerformanceObserver(list => {
         for (const e of list.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) {
-          if (!e.hadRecentInput) w.__cls += e.value
+          if (!e.hadRecentInput) w.__shifts.push({ at: e.startTime, value: e.value })
         }
       }).observe({ type: 'layout-shift', buffered: true })
     })
@@ -39,7 +46,12 @@ for (const [where, path] of [
     await page.evaluate(() => document.fonts.ready)
     // Let the swap's shift, if any, get reported.
     await page.waitForTimeout(500)
-    const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls)
+    const { fontAt, cls } = await page.evaluate(() => {
+      const w = window as unknown as { __shifts: { at: number; value: number }[]; __fontAt: number | null }
+      const from = (w.__fontAt ?? 0) - 50
+      return { fontAt: w.__fontAt, cls: w.__shifts.filter(s => s.at >= from).reduce((n, s) => n + s.value, 0) }
+    })
+    expect(fontAt, 'the held-back font loaded').not.toBeNull()
     expect(cls).toBeLessThan(BUDGET)
   })
 }
