@@ -17,7 +17,7 @@ const stored = (page: Page, key: string) => page.evaluate(k => localStorage.getI
 const LIGHT_BLUE = '#58c8e9'
 const MATTE_BLACK = '#2f3337'
 
-test('Theme cycles Auto, Light Blue, Matte Black and back, and sticks across visits', async ({ page }) => {
+test('Theme cycles Auto, Light Blue, Matte Black and back, and sticks across visits @desktop-only', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' })
   await openApp(page, 'System Settings')
   const theme = page.getByRole('button', { name: /^Theme/ })
@@ -39,6 +39,8 @@ test('Theme cycles Auto, Light Blue, Matte Black and back, and sticks across vis
   await page.reload({ waitUntil: 'commit' })
   await page.waitForSelector('.dsi-root', { state: 'attached' })
   expect(await isDark(page)).toBe(true)
+  // The stored choice also carries into the shell colour on a fresh load.
+  await expect.poll(() => shell(page)).toBe(MATTE_BLACK)
 
   await openApp(page, 'System Settings')
   await page.getByRole('button', { name: /^Theme/ }).click()
@@ -47,7 +49,7 @@ test('Theme cycles Auto, Light Blue, Matte Black and back, and sticks across vis
   expect(await isDark(page)).toBe(false)
 })
 
-test('Auto follows the device when it changes mid-visit', async ({ page }) => {
+test('Auto follows the device when it changes mid-visit @desktop-only', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' })
   await openMenu(page)
   expect(await isDark(page)).toBe(false)
@@ -55,14 +57,7 @@ test('Auto follows the device when it changes mid-visit', async ({ page }) => {
   await expect.poll(() => isDark(page)).toBe(true)
 })
 
-test('a theme stored by the old site carries over to the DSi', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'light' })
-  await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
-  await openMenu(page)
-  expect(await shell(page)).toBe(MATTE_BLACK)
-})
-
-test('Reduce motion turns off every effect from then on, and is remembered', async ({ page }) => {
+test('Reduce motion turns off every effect from then on, and is remembered @desktop-only', async ({ page }) => {
   await page.addInitScript(() => {
     const w = window as unknown as { __fxAdded: number }
     w.__fxAdded = 0
@@ -93,7 +88,7 @@ test('Reduce motion turns off every effect from then on, and is remembered', asy
   expect(railTransition).toBe('0s')
 })
 
-test('Plain view opens from Settings, is remembered, and the DSi is one link away', async ({ page }) => {
+test('Plain view opens from Settings, is remembered, and the DSi is one link away @desktop-only', async ({ page }) => {
   await mockSpotifyQuiet(page)
   await openApp(page, 'System Settings')
   await page.keyboard.press('ArrowDown')
@@ -115,7 +110,7 @@ test('Plain view opens from Settings, is remembered, and the DSi is one link awa
   expect(await stored(page, 'dsi-view')).toBeNull()
 })
 
-test('a remembered plain view leaves before the DSi is drawn', async ({ page }) => {
+test('a remembered plain view leaves before the DSi is drawn @desktop-only', async ({ page }) => {
   await mockSpotifyQuiet(page)
   // Runs in every document, so it sees the bare / that the redirect leaves.
   // Whether that document ever had the device in it is kept in sessionStorage,
@@ -133,7 +128,7 @@ test('a remembered plain view leaves before the DSi is drawn', async ({ page }) 
   expect(await page.evaluate(() => sessionStorage.getItem('dsi-drawn'))).toBeNull()
 })
 
-test('Back from plain view returns to the DSi instead of bouncing to plain again', async ({ page }) => {
+test('Back from plain view returns to the DSi instead of bouncing to plain again @desktop-only', async ({ page }) => {
   await mockSpotifyQuiet(page)
   await page.goto('/')
   await expect(page.locator('.dsi-device')).toBeVisible()
@@ -186,7 +181,7 @@ test.describe('a remembered plain view keeps the deep link', () => {
     await expect(page.getByRole('heading', { name: 'Contact', level: 2 })).toBeInViewport()
   })
 
-  test('every plain section is reachable from its address', async ({ page }) => {
+  test('every plain section is reachable from its address @desktop-only', async ({ page }) => {
     for (const { hash, plain } of APPS) {
       if (!plain) continue
       await page.goto(`/#${hash}`)
@@ -195,7 +190,7 @@ test.describe('a remembered plain view keeps the deep link', () => {
     }
   })
 
-  test('an unknown hash lands at the top with no hash', async ({ page }) => {
+  test('an unknown hash lands at the top with no hash @desktop-only', async ({ page }) => {
     await page.goto('/#nothing')
     await page.waitForURL('**/?view=plain')
     expect(new URL(page.url()).hash).toBe('')

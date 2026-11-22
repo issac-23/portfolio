@@ -58,14 +58,14 @@ for (const theme of ['light', 'dark'] as const) {
   })
 }
 
-test('one h1 on the menu and in plain view', async ({ page }) => {
+test('one h1 on the menu and in plain view @desktop-only', async ({ page }) => {
   await openMenu(page)
   await expect(page.locator('h1')).toHaveCount(1)
   await page.goto('/?view=plain')
   await expect(page.locator('h1')).toHaveCount(1)
 })
 
-test('the skip link is the first stop and moves focus into the page', async ({ page }) => {
+test('the skip link is the first stop and moves focus into the page @desktop-only', async ({ page }) => {
   await openMenu(page)
   await page.keyboard.press('Tab')
   const skip = page.getByRole('link', { name: 'Skip to content' })

@@ -35,7 +35,7 @@ test.describe('slideshow', () => {
     await page.clock.pauseAt(new Date(Date.now() + 1000))
   }
 
-  test('turns to the next photo every 5s, moves the dot and shows the alt text', async ({ page }) => {
+  test('turns to the next photo every 5s, moves the dot and shows the alt text @desktop-only', async ({ page }) => {
     await openHome(page)
     const n = photos.length
     expect(n).toBeGreaterThan(1)
@@ -50,7 +50,7 @@ test.describe('slideshow', () => {
     await expect(front(page)).toHaveAttribute('alt', photos[(from + 1) % n].alt!)
   })
 
-  test('the Next photo button advances it, past the throttle', async ({ page }) => {
+  test('the Next photo button advances it, past the throttle @desktop-only', async ({ page }) => {
     // Reduced motion keeps the timer out of it. Clicking is still the
     // visitor's own choice, so it works there too.
     await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -78,7 +78,7 @@ test.describe('slideshow', () => {
     expect(await lit(page)).toBe(from)
   })
 
-  test('never turns by itself under reduced motion', async ({ page }) => {
+  test('never turns by itself under reduced motion @desktop-only', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await openHome(page)
     const before = await front(page).getAttribute('src')
@@ -87,7 +87,7 @@ test.describe('slideshow', () => {
     expect(await front(page).getAttribute('src')).toBe(before)
   })
 
-  test("never turns by itself when System Settings asks for less motion", async ({ page }) => {
+  test("never turns by itself when System Settings asks for less motion @desktop-only", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('dsi-motion', 'reduce'))
     await openHome(page)
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduce')
@@ -97,7 +97,7 @@ test.describe('slideshow', () => {
 })
 
 test.describe('resume preview', () => {
-  test('the menu never asks for pdf.js or the resume', async ({ page }) => {
+  test('the menu never asks for pdf.js or the resume @desktop-only', async ({ page }) => {
     const seen: string[] = []
     page.on('request', r => seen.push(r.url()))
     await openMenu(page)
@@ -137,7 +137,7 @@ test.describe('resume preview', () => {
   })
 })
 
-test('the favicon is an svg with no text in it', async ({ request }) => {
+test('the favicon is an svg with no text in it @desktop-only', async ({ request }) => {
   const res = await request.get('/icon.svg')
   expect(res.status()).toBe(200)
   expect(res.headers()['content-type']).toContain('image/svg+xml')

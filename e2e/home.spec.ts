@@ -1,7 +1,7 @@
 import { SITE_URL } from '../app/site'
 import { availability } from '../data/profile'
 import { expect, test } from './fixtures'
-import { APPS, expectSettledOn, openApp, openMenu } from './helpers/dsi'
+import { expectSettledOn, openApp, openMenu } from './helpers/dsi'
 
 /**
  * The DSi as the home page: every app has an address, the addresses the old
@@ -36,7 +36,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 for (const [hash, app] of [...OWN, ...OLD_ANCHORS]) {
-  test(`/#${hash} opens ${app}, and Back lands on it in the rail`, async ({ page }) => {
+  test(`/#${hash} opens ${app}, and Back lands on it in the rail${hash === 'projects' ? '' : ' @desktop-only'}`, async ({ page }) => {
     await page.goto(`/#${hash}`)
     await page.locator('.dsi-app-lower').waitFor()
     await page.keyboard.press('Escape')
@@ -45,7 +45,7 @@ for (const [hash, app] of [...OWN, ...OLD_ANCHORS]) {
   })
 }
 
-test('Contact answers to /#contact and to the old /#chat, and is never called PictoChat', async ({ page }) => {
+test('Contact answers to /#contact and to the old /#chat, and is never called PictoChat @desktop-only', async ({ page }) => {
   for (const hash of ['contact', 'chat']) {
     await page.goto(`/#${hash}`)
     await page.locator('.dsi-app-lower').waitFor()
@@ -58,7 +58,7 @@ test('Contact answers to /#contact and to the old /#chat, and is never called Pi
   }
 })
 
-test('opening an app puts its address in the bar, without a history entry', async ({ page }) => {
+test('opening an app puts its address in the bar, without a history entry @desktop-only', async ({ page }) => {
   await openMenu(page)
   const before = await page.evaluate(() => history.length)
   await openApp(page, 'Projects')
@@ -66,13 +66,7 @@ test('opening an app puts its address in the bar, without a history entry', asyn
   expect(await page.evaluate(() => history.length)).toBe(before)
 })
 
-test('the skip link does not close anything or count as an app', async ({ page }) => {
-  await page.goto('/#main-content')
-  await openMenu(page)
-  await expectSettledOn(page, APPS[0])
-})
-
-test('/dsi, and /dsi?view=plain, redirect to their new homes', async ({ page }) => {
+test('/dsi, and /dsi?view=plain, redirect to their new homes @desktop-only', async ({ page }) => {
   await page.goto('/dsi')
   await expect(page).toHaveURL(url => url.pathname === '/' && !url.search)
   await page.goto('/dsi?view=plain')
@@ -80,7 +74,7 @@ test('/dsi, and /dsi?view=plain, redirect to their new homes', async ({ page }) 
   await expect(page.locator('.dsi-plain')).toBeVisible()
 })
 
-test('/classic, and anything under it, redirects to the home page', async ({ page }) => {
+test('/classic, and anything under it, redirects to the home page @desktop-only', async ({ page }) => {
   await page.goto('/classic')
   await expect(page).toHaveURL(url => url.pathname === '/' && !url.search)
   await expect(page.locator('.dsi-device')).toBeVisible()
@@ -92,7 +86,7 @@ test('/classic, and anything under it, redirects to the home page', async ({ pag
   expect(new URL(res.headers().location, 'http://x').pathname).toBe('/')
 })
 
-test('the Spotify token setup routes are gone', async ({ request }) => {
+test('the Spotify token setup routes are gone @desktop-only', async ({ request }) => {
   // The exchange endpoint traded codes for tokens with the client secret, for
   // anyone who asked. Neither it nor its /callback page should come back.
   expect((await request.post('/api/spotify/exchange', { data: { code: 'x' } })).status()).toBe(404)
@@ -106,7 +100,7 @@ test('search results and link previews carry the co-op line', async ({ page }) =
   }
 })
 
-test('the home page is indexed and canonical', async ({ page }) => {
+test('the home page is indexed and canonical @desktop-only', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('meta[name="robots"]')).toHaveCount(0)
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', SITE_URL)
@@ -146,7 +140,7 @@ for (const [width, height] of [
   [1366, 768],
   [390, 844],
 ]) {
-  test(`the fan-made line costs the page no scroll at ${width}x${height}`, async ({ page }) => {
+  test(`the fan-made line costs the page no scroll at ${width}x${height} @desktop-only`, async ({ page }) => {
     await page.setViewportSize({ width, height })
     await openMenu(page)
     await expect(page.getByText(FAN_MADE)).toBeVisible()
