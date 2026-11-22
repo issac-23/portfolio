@@ -19,9 +19,9 @@ const OWN = [
   ['settings', 'System Settings'],
 ] as const
 
-// The classic site's section anchors, as found on resumes and profiles.
+// The old site's section anchors, as found on resumes and profiles.
 // #projects is both, so it is covered above.
-const CLASSIC = [
+const OLD_ANCHORS = [
   ['about', 'Profile'],
   ['gallery', 'Nintendo DSi Camera'],
   ['music', 'Nintendo DSi Sound'],
@@ -35,7 +35,7 @@ test.beforeEach(async ({ page }) => {
   )
 })
 
-for (const [hash, app] of [...OWN, ...CLASSIC]) {
+for (const [hash, app] of [...OWN, ...OLD_ANCHORS]) {
   test(`/#${hash} opens ${app}, and Back lands on it in the rail`, async ({ page }) => {
     await page.goto(`/#${hash}`)
     await page.locator('.dsi-app-lower').waitFor()
@@ -80,6 +80,18 @@ test('/dsi, and /dsi?view=plain, redirect to their new homes', async ({ page }) 
   await expect(page.locator('.dsi-plain')).toBeVisible()
 })
 
+test('/classic, and anything under it, redirects to the home page', async ({ page }) => {
+  await page.goto('/classic')
+  await expect(page).toHaveURL(url => url.pathname === '/' && !url.search)
+  await expect(page.locator('.dsi-device')).toBeVisible()
+  await page.goto('/classic/old-page')
+  await expect(page).toHaveURL(url => url.pathname === '/')
+
+  const res = await page.request.get('/classic', { maxRedirects: 0 })
+  expect(res.status()).toBe(308)
+  expect(new URL(res.headers().location, 'http://x').pathname).toBe('/')
+})
+
 test('the Spotify token setup routes are gone', async ({ request }) => {
   // The exchange endpoint traded codes for tokens with the client secret, for
   // anyone who asked. Neither it nor its /callback page should come back.
@@ -94,7 +106,7 @@ test('search results and link previews carry the co-op line', async ({ page }) =
   }
 })
 
-test('the home page is indexed and canonical; the classic one is kept but not indexed', async ({ page }) => {
+test('the home page is indexed and canonical', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('meta[name="robots"]')).toHaveCount(0)
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', SITE_URL)
@@ -102,10 +114,6 @@ test('the home page is indexed and canonical; the classic one is kept but not in
 
   await page.goto('/?view=plain')
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', SITE_URL)
-
-  await page.goto('/classic')
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
-  await expect(page.locator('#projects')).toBeAttached()
 })
 
 test('the resume is one Tab from the top of the page', async ({ page }) => {
