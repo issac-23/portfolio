@@ -229,6 +229,13 @@ test.describe('with the boot screen on', () => {
     // The server's own menu comes first, then the boot the script started.
     await sequence(page).toEqual(['menu', 'booting', 'menu'])
     await expectSettledOn(page, 'Profile')
+
+    // A skipped first boot must not leave the next one stuck: off and back on boots again.
+    await power(page, 'Power off').click()
+    await expect(phase(page)).toHaveAttribute('data-console', 'off')
+    await power(page, 'Power on').click()
+    await expect(html(page)).toHaveAttribute('data-boot', '')
+    await expect(phase(page)).toHaveAttribute('data-console', 'booting')
   })
 })
 
