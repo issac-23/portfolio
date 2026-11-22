@@ -27,7 +27,6 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('a launch in the 3D lab flashes both screens', async ({ page }) => {
-  test.setTimeout(90_000)
   await page.goto('/lab/dsi-3d')
   await page.locator('canvas').waitFor({ timeout: 30_000 })
   // The lab sets window.__dsiLab in an effect, so it marks hydration. Then one
