@@ -2,39 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Motion tokens (transitions.dev shared scale) ── */
-:root {
-  --duration-stagger: 40ms;
-  --duration-micro: 80ms;
-  --duration-quick: 150ms;
-  --duration-fast: 250ms;
-  --duration-medium: 350ms;
-  --duration-slow: 400ms;
-  --duration-very-slow: 500ms;
-
-  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: ease-in-out;
-  --ease-out: ease-out;
-  --ease-linear: linear;
-  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
-
-  --distance-micro: 4px;
-  --distance-base: 8px;
-  --distance-medium: 12px;
-
-  --scale-large: 0.96;
-  --scale-medium: 0.97;
-
-  --blur-small: 2px;
-  --blur-medium: 3px;
-
-  --modal-open-dur: var(--duration-fast);
-  --modal-close-dur: var(--duration-quick);
-  --modal-scale: var(--scale-large);
-  --modal-scale-close: var(--scale-large);
-  --modal-ease: var(--ease-smooth-out);
-}
-
 /* ── Light mode (default) ── */
 :root {
   --bg:        #F7F2ED;
@@ -53,15 +20,6 @@
   /* The brand tan only reaches 2.37:1 on the cream background, so light mode
      uses a deepened version for anything that renders as text. */
   --accent:    #85572E;
-  /* Deepened from #2E6B43. The status badge draws its text in this colour on
-     a 12% tint of the same colour, which compresses contrast by construction:
-     the old value measured 4.46:1 on --surface and 4.05:1 once the card
-     picked up its hover background, so it passed at rest and failed under the
-     cursor. Now 4.97:1 and 4.52:1. */
-  --status-ok: #26633B;
-  --glow:      rgba(200, 149, 108, 0.18);
-  --accent-soft: rgba(200, 149, 108, 0.12);
-  --shadow: rgba(43, 33, 25, 0.08);
 }
 
 /* ── Dark mode ── */
@@ -73,10 +31,6 @@ html.dark {
   --fg:        #EDE8E3;
   --muted:     #9A8F85;
   --accent:    #C8956C;
-  --status-ok: #6EBF8B;
-  --glow:      rgba(255, 255, 255, 0.22);
-  --accent-soft: rgba(200, 149, 108, 0.12);
-  --shadow: rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -105,15 +59,6 @@ button:focus-visible {
   outline: 1px solid var(--fg);
 }
 
-/* The lightbox backdrop is a fixed dark surface in both themes, so the
-   theme-reactive outline above disappears on it in light mode: --fg is
-   #1A1714 there, which measures 1.04:1 against the backdrop and leaves
-   keyboard users with no visible position among the three controls. */
-.lightbox-surface a:focus-visible,
-.lightbox-surface button:focus-visible {
-  outline: 2px solid #fff;
-}
-
 ::selection {
   background-color: rgba(200, 149, 108, 0.25);
   color: var(--fg);
@@ -139,32 +84,11 @@ html {
   background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--border);
-  transition: top var(--duration-quick) var(--ease-smooth-out);
+  transition: top 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .skip-link:focus-visible {
   top: 1rem;
-}
-
-/* Section entrance animation */
-.section-fade {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.lift-card {
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.28s ease,
-              background-color 0.28s ease,
-              box-shadow 0.28s ease;
-}
-
-.lift-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 48px var(--shadow);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -180,171 +104,4 @@ html {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
-}
-.section-fade.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Staggered children fade-up (apply to direct children of animated lists) */
-.stagger-children > * {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.stagger-children.visible > *:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.05s; }
-.stagger-children.visible > *:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.12s; }
-.stagger-children.visible > *:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.19s; }
-.stagger-children.visible > *:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.26s; }
-.stagger-children.visible > *:nth-child(5) { opacity: 1; transform: none; transition-delay: 0.33s; }
-.stagger-children.visible > *:nth-child(n+6) { opacity: 1; transform: none; transition-delay: 0.38s; }
-
-/* Background blob animations */
-@keyframes blobDrift1 {
-  0%   { transform: translate(0, 0) scale(1); }
-  33%  { transform: translate(60px, 40px) scale(1.08); }
-  66%  { transform: translate(-30px, 70px) scale(0.95); }
-  100% { transform: translate(0, 0) scale(1); }
-}
-@keyframes blobDrift2 {
-  0%   { transform: translate(0, 0) scale(1); }
-  33%  { transform: translate(-50px, -60px) scale(1.05); }
-  66%  { transform: translate(40px, -30px) scale(0.97); }
-  100% { transform: translate(0, 0) scale(1); }
-}
-@keyframes blobDrift3 {
-  0%   { transform: translate(-50%, -50%) scale(1); }
-  50%  { transform: translate(-50%, -50%) scale(1.15); }
-  100% { transform: translate(-50%, -50%) scale(1); }
-}
-
-/* Music bars pulse */
-@keyframes barPulse {
-  0%, 100% { transform: scaleY(0.5); }
-  50%       { transform: scaleY(1); }
-}
-
-/* ── Modal open / close (transitions.dev 06-modal) ── */
-.t-modal-backdrop {
-  opacity: 0;
-  transition: opacity var(--modal-open-dur) var(--modal-ease);
-}
-.t-modal-backdrop.is-open { opacity: 1; }
-.t-modal-backdrop.is-closing {
-  opacity: 0;
-  transition: opacity var(--modal-close-dur) var(--modal-ease);
-}
-
-.t-modal {
-  transform-origin: center;
-  transform: scale(var(--modal-scale));
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    transform var(--modal-open-dur) var(--modal-ease),
-    opacity   var(--modal-open-dur) var(--modal-ease);
-  will-change: transform, opacity;
-}
-.t-modal.is-open {
-  transform: scale(1);
-  opacity: 1;
-  pointer-events: auto;
-}
-.t-modal.is-closing {
-  transform: scale(var(--modal-scale-close));
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    transform var(--modal-close-dur) var(--modal-ease),
-    opacity   var(--modal-close-dur) var(--modal-ease);
-}
-
-/* ── Icon swap (transitions.dev 09-icon-swap) ── */
-.t-icon-swap {
-  display: grid;
-  place-items: center;
-}
-.t-icon-swap > * {
-  grid-area: 1 / 1;
-  transition:
-    opacity   var(--duration-fast) var(--ease-in-out),
-    transform var(--duration-fast) var(--ease-in-out),
-    filter    var(--duration-fast) var(--ease-in-out);
-}
-.t-icon-swap > [data-state='out'] {
-  opacity: 0;
-  transform: scale(0.7) rotate(-90deg);
-  filter: blur(var(--blur-small));
-}
-.t-icon-swap > [data-state='in'] {
-  opacity: 1;
-  transform: scale(1) rotate(0deg);
-  filter: blur(0);
-}
-
-/* Theme icons are driven by the `html.dark` class, not React state, so the
-   correct icon paints before hydration and never mismatches the server. */
-.t-theme-icon > .icon-sun,
-.t-theme-icon > .icon-moon {
-  transition:
-    opacity   var(--duration-fast) var(--ease-in-out),
-    transform var(--duration-fast) var(--ease-in-out),
-    filter    var(--duration-fast) var(--ease-in-out);
-}
-.t-theme-icon > .icon-sun {
-  opacity: 0;
-  transform: scale(0.7) rotate(-90deg);
-  filter: blur(var(--blur-small));
-}
-.t-theme-icon > .icon-moon {
-  opacity: 1;
-  transform: scale(1) rotate(0deg);
-  filter: blur(0);
-}
-html.dark .t-theme-icon > .icon-sun {
-  opacity: 1;
-  transform: scale(1) rotate(0deg);
-  filter: blur(0);
-}
-html.dark .t-theme-icon > .icon-moon {
-  opacity: 0;
-  transform: scale(0.7) rotate(90deg);
-  filter: blur(var(--blur-small));
-}
-
-/* ── Filter list cross-fade ── */
-.t-filter-list {
-  transition:
-    opacity var(--duration-quick) var(--ease-in-out),
-    filter  var(--duration-quick) var(--ease-in-out);
-}
-.t-filter-list.is-swapping {
-  opacity: 0;
-  filter: blur(var(--blur-small));
-}
-
-/* ── Skeleton pulse + content reveal (transitions.dev 14-skeleton-reveal) ── */
-@keyframes skelPulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.45; }
-}
-.t-skel {
-  animation: skelPulse 1.4s var(--ease-linear) infinite;
-}
-.t-skel-reveal {
-  animation: skelReveal var(--duration-slow) var(--ease-in-out) both;
-}
-@keyframes skelReveal {
-  from { opacity: 0; filter: blur(var(--blur-small)); }
-  to   { opacity: 1; filter: blur(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .t-modal,
-  .t-modal-backdrop,
-  .t-icon-swap > *,
-  .t-filter-list { transition: none !important; }
-  .t-skel,
-  .t-skel-reveal { animation: none !important; }
 }
