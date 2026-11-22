@@ -47,7 +47,7 @@ test.describe('with the boot screen on', () => {
     await expectSettledOn(page, 'Profile')
   })
 
-  test('the boot plays once a visit', async ({ page }) => {
+  test('the boot plays once a visit @desktop-only', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     await expect(html(page)).toHaveAttribute('data-boot', '')
     await ready(page)
@@ -56,7 +56,7 @@ test.describe('with the boot screen on', () => {
     await expect(html(page)).not.toHaveAttribute('data-boot', '')
   })
 
-  test('the boot still plays under the system reduced motion, with its fades at full length', async ({ page }) => {
+  test('the boot still plays under the system reduced motion, with its fades at full length @desktop-only', async ({ page }) => {
     await holdBoot(page)
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/', { waitUntil: 'domcontentloaded' })
@@ -87,7 +87,7 @@ test('power turns the screens off and back on', async ({ page }) => {
   await expectSettledOn(page, 'Profile')
 })
 
-test('the power button comes after the rail in the Tab order', async ({ page }) => {
+test('the power button comes after the rail in the Tab order @desktop-only', async ({ page }) => {
   await openMenu(page)
   // Skip link, Resume, Plain view, then the selected app.
   for (let i = 0; i < 4; i++) await page.keyboard.press('Tab')

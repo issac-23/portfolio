@@ -39,7 +39,7 @@ const html = (page: Page) => page.locator('html')
 const power = (page: Page, name: 'Power off' | 'Power on') => page.getByRole('button', { name })
 const hash = (page: Page) => new URL(page.url()).hash
 
-test('menu to launching to app, and back through returning to the menu', async ({ page }) => {
+test('menu to launching to app, and back through returning to the menu @desktop-only', async ({ page }) => {
   await openApp(page, 'Projects')
   await expect(phase(page)).toHaveAttribute('data-console', 'app')
   await sequence(page).toEqual(['menu', 'launching', 'app'])
@@ -52,14 +52,14 @@ test('menu to launching to app, and back through returning to the menu', async (
   expect(hash(page)).toBe('')
 })
 
-test('the Back button returns the same way as Escape', async ({ page }) => {
+test('the Back button returns the same way as Escape @desktop-only', async ({ page }) => {
   await openApp(page, 'Profile')
   await page.getByRole('button', { name: 'Back' }).click()
   await expectSettledOn(page, 'Profile')
   await sequence(page).toEqual(['menu', 'launching', 'app', 'returning', 'menu'])
 })
 
-test('power off from the menu, then back on, plays the boot', async ({ page }) => {
+test('power off from the menu, then back on, plays the boot @desktop-only', async ({ page }) => {
   await openMenu(page)
   await power(page, 'Power off').click()
   await expect(phase(page)).toHaveAttribute('data-console', 'off')
@@ -69,7 +69,7 @@ test('power off from the menu, then back on, plays the boot', async ({ page }) =
   await sequence(page).toEqual(['menu', 'off', 'booting', 'menu'])
 })
 
-test('power off from an app goes straight to off and clears the address', async ({ page }) => {
+test('power off from an app goes straight to off and clears the address @desktop-only', async ({ page }) => {
   await openApp(page, 'Projects')
   await expect.poll(() => hash(page)).toBe('#projects')
   await power(page, 'Power off').click()
@@ -81,21 +81,21 @@ test('power off from an app goes straight to off and clears the address', async 
   await sequence(page).toEqual(['menu', 'launching', 'app', 'off'])
 })
 
-test('switching on after an app lands on the menu with the rail on Profile', async ({ page }) => {
+test('switching on after an app lands on the menu with the rail on Profile @desktop-only', async ({ page }) => {
   await openApp(page, 'Projects')
   await power(page, 'Power off').click()
   await power(page, 'Power on').click()
   await expectSettledOn(page, 'Profile')
 })
 
-test('an address that names an app opens it with no launch', async ({ page }) => {
+test('an address that names an app opens it with no launch @desktop-only', async ({ page }) => {
   await page.goto('/#projects')
   await page.locator('.dsi-app-lower').waitFor({ timeout: 20_000 })
   await expect(phase(page)).toHaveAttribute('data-console', 'app')
   await sequence(page).toEqual(['menu', 'app'])
 })
 
-test('a hash change opens an app from the menu and switches apps from an app', async ({ page }) => {
+test('a hash change opens an app from the menu and switches apps from an app @desktop-only', async ({ page }) => {
   await openMenu(page)
   await page.evaluate(() => {
     location.hash = '#projects'
@@ -112,7 +112,7 @@ test('a hash change opens an app from the menu and switches apps from an app', a
   await expectSettledOn(page, 'Nintendo DSi Sound')
 })
 
-test('a hash that names no app, or a dark console, changes nothing', async ({ page }) => {
+test('a hash that names no app, or a dark console, changes nothing @desktop-only', async ({ page }) => {
   await openMenu(page)
   await page.evaluate(() => {
     location.hash = '#nothing'
@@ -132,7 +132,7 @@ test('a hash that names no app, or a dark console, changes nothing', async ({ pa
   await sequence(page).toEqual(['menu', 'off'])
 })
 
-test('a second launch, and power, are ignored while a launch is running', async ({ page }) => {
+test('a second launch, and power, are ignored while a launch is running @desktop-only', async ({ page }) => {
   await openMenu(page)
   // All in one task, so nothing can finish in between.
   await page.evaluate(() => {
@@ -145,7 +145,7 @@ test('a second launch, and power, are ignored while a launch is running', async 
   await sequence(page).toEqual(['menu', 'launching', 'app'])
 })
 
-test('the arrow keys do not move the rail while an app is launching', async ({ page }) => {
+test('the arrow keys do not move the rail while an app is launching @desktop-only', async ({ page }) => {
   await openMenu(page)
   // The keys go out in the same task that paints `launching`, from the
   // observer that sees it, so they land mid-launch every time. The launch
@@ -174,7 +174,7 @@ test('the arrow keys do not move the rail while an app is launching', async ({ p
   await sequence(page).toEqual(['menu', 'launching', 'app', 'returning', 'menu'])
 })
 
-test('a second Escape, and power, are ignored while returning', async ({ page }) => {
+test('a second Escape, and power, are ignored while returning @desktop-only', async ({ page }) => {
   await openApp(page, 'Profile')
   await page.evaluate(() => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
@@ -207,7 +207,7 @@ test.describe('with the DSi less-motion setting on', () => {
 test.describe('with the boot screen on', () => {
   test.use({ boot: true })
 
-  test('booting hands over to the menu, and any key skips it', async ({ page }) => {
+  test('booting hands over to the menu, and any key skips it @desktop-only', async ({ page }) => {
     // Hold the fade and the timer, so only the key can end it.
     await page.addInitScript(() => {
       const set = window.setTimeout.bind(window)
@@ -251,7 +251,7 @@ test.describe('the pre-paint boot rule', () => {
 
   const bootSeen = (page: Page) => page.evaluate(() => (window as unknown as { __bootSeen: boolean }).__bootSeen)
 
-  test('a visit that already booted does not boot again', async ({ page }) => {
+  test('a visit that already booted does not boot again @desktop-only', async ({ page }) => {
     await page.addInitScript(() => sessionStorage.setItem('dsi-booted', '1'))
     await page.goto('/')
     await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 20_000 })
@@ -259,7 +259,7 @@ test.describe('the pre-paint boot rule', () => {
     await expect(phase(page)).toHaveAttribute('data-console', 'menu')
   })
 
-  test("the DSi's own less-motion setting does not boot", async ({ page }) => {
+  test("the DSi's own less-motion setting does not boot @desktop-only", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('dsi-motion', 'reduce'))
     await page.goto('/')
     await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 20_000 })
@@ -267,20 +267,20 @@ test.describe('the pre-paint boot rule', () => {
     await expect(phase(page)).toHaveAttribute('data-console', 'menu')
   })
 
-  test('plain view does not boot', async ({ page }) => {
+  test('plain view does not boot @desktop-only', async ({ page }) => {
     await page.goto('/?view=plain')
     expect(await bootSeen(page)).toBe(false)
     await expect(page.locator('html')).not.toHaveAttribute('data-boot', '')
   })
 
-  test('a hash that names no app still boots', async ({ page }) => {
+  test('a hash that names no app still boots @desktop-only', async ({ page }) => {
     await page.goto('/#nothing')
     expect(await bootSeen(page)).toBe(true)
     await expect(phase(page)).toHaveAttribute('data-console', 'menu', { timeout: 20_000 })
   })
 
   for (const hash of ['#projects', '#about']) {
-    test(`${hash}, an app's address or an alias, does not boot`, async ({ page }) => {
+    test(`${hash}, an app's address or an alias, does not boot @desktop-only`, async ({ page }) => {
       await page.goto(`/${hash}`)
       // A deep link opens the app straight away, so there is no rail to wait on.
       await expect(phase(page)).toHaveAttribute('data-console', 'app', { timeout: 20_000 })

@@ -67,9 +67,17 @@ export default defineConfig({
   // Plain viewports rather than device presets. The presets turn on touch and
   // mobile emulation, which changes how clicks and hover behave, and these
   // tests are about layout at a size, not about a particular phone.
+  //
+  // A test titled with @desktop-only is keyboard, state or URL logic that a
+  // phone-width run would only repeat, so the mobile project skips it. Tag a
+  // test only when it has no layout or viewport-dependent assertion.
   projects: [
     { name: 'desktop', use: { viewport: { width: 1280, height: 900 } } },
-    { name: 'mobile', use: { viewport: { width: 390, height: 844 } } },
+    {
+      name: 'mobile',
+      use: { viewport: { width: 390, height: 844 } },
+      ...(lab ? {} : { grepInvert: /@desktop-only/ }),
+    },
   ],
 
   webServer: {

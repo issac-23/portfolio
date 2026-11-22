@@ -80,7 +80,7 @@ test('reduced motion swaps straight to the app with no effects', async ({ page }
   expect((await effects(page)).added).toBe(0)
 })
 
-test('up and down move through the cards and the top screen follows', async ({ page }) => {
+test('up and down move through the cards and the top screen follows @desktop-only', async ({ page }) => {
   await launchProjects(page)
   await page.keyboard.press('ArrowDown')
   await expect(page.getByRole('heading', { level: 2, name: CARDS[1] })).toBeVisible()
@@ -97,14 +97,14 @@ test('up and down move through the cards and the top screen follows', async ({ p
   await expect(page.getByRole('heading', { level: 2, name: CARDS[0] })).toBeVisible()
 })
 
-test('the site itself is listed, with a link to it', async ({ page }) => {
+test('the site itself is listed, with a link to it @desktop-only', async ({ page }) => {
   await launchProjects(page)
   await cards(page).nth(2).click()
   await expect(cards(page).nth(2)).toContainText(CARDS[2])
   await expect(page.getByRole('link', { name: `Open ${CARDS[2]} (new tab)` })).toHaveAttribute('href', 'https://www.issac-ip.com')
 })
 
-test('Open and GitHub point at the selected card, in a new tab', async ({ page }) => {
+test('Open and GitHub point at the selected card, in a new tab @desktop-only', async ({ page }) => {
   await launchProjects(page)
   const open = page.getByRole('link', { name: `Open ${CARDS[0]} (new tab)` })
   await expect(open).toHaveAttribute('href', 'https://dcf-calculator-issac.streamlit.app')
