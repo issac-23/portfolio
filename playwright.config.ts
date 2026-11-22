@@ -42,10 +42,16 @@ const PORT = Number(
 // They run only on demand: E2E_LAB=1 (or `npm run test:e2e:lab`) runs just them.
 const LAB_SPECS = /lab-[^/\\]*\.spec\.ts$/
 const lab = !!process.env.E2E_LAB
+// Under software WebGL every frame of the lab is hundreds of ms of browser work
+// and grows with the window (#74), so the lab runs once, in a small window, on
+// one worker. Layout at phone size is not what these specs check.
+const LAB_PROJECTS = [{ name: 'lab', use: { viewport: { width: 800, height: 600 } } }]
 
 export default defineConfig({
   testDir: './e2e',
   ...(lab ? { testMatch: LAB_SPECS } : { testIgnore: LAB_SPECS }),
+  // One limit for the whole lab instead of a 90 s guess in each spec.
+  ...(lab ? { timeout: 240_000 } : {}),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   // retries: 1 is intentional locally too: a load timeout then shows up as
@@ -56,7 +62,8 @@ export default defineConfig({
   // run, so default to half the cores. E2E_WORKERS overrides it with a plain
   // count ("2") or a percentage ("25%"); Playwright only accepts a string that
   // ends in "%", so a bare number has to be passed through as a Number.
-  workers: process.env.CI ? undefined : workerCount(process.env.E2E_WORKERS),
+  // The lab specs run one at a time (see LAB_PROJECTS).
+  workers: lab ? 1 : process.env.CI ? undefined : workerCount(process.env.E2E_WORKERS),
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
 
   use: {
@@ -71,13 +78,9 @@ export default defineConfig({
   // A test titled with @desktop-only is keyboard, state or URL logic that a
   // phone-width run would only repeat, so the mobile project skips it. Tag a
   // test only when it has no layout or viewport-dependent assertion.
-  projects: [
+  projects: lab ? LAB_PROJECTS : [
     { name: 'desktop', use: { viewport: { width: 1280, height: 900 } } },
-    {
-      name: 'mobile',
-      use: { viewport: { width: 390, height: 844 } },
-      ...(lab ? {} : { grepInvert: /@desktop-only/ }),
-    },
+    { name: 'mobile', use: { viewport: { width: 390, height: 844 } }, grepInvert: /@desktop-only/ },
   ],
 
   webServer: {

@@ -13,9 +13,6 @@ const ready = async (page: import('@playwright/test').Page) => {
   await page.locator('.dsi-device').first().waitFor({ state: 'attached', timeout: 30_000 })
 }
 
-// The 3D scene alone can take most of the default 30 s to load on a busy machine.
-test.describe.configure({ timeout: 90_000 })
-
 test('powering off the lab console stops the music, powering on starts it again', async ({ page }) => {
   await page.goto('/lab/dsi-3d')
   await ready(page)
@@ -36,7 +33,6 @@ test('powering off the lab console stops the music, powering on starts it again'
 })
 
 test('a POWER press the console ignores mid-launch leaves the music playing', async ({ page }) => {
-  test.setTimeout(90_000)
   await page.goto('/lab/dsi-3d')
   await ready(page)
   const toggle = page.getByRole('button', { name: /^Power (on|off)$/ })
@@ -55,7 +51,6 @@ test('a POWER press the console ignores mid-launch leaves the music playing', as
 })
 
 test('muting the music silences it but not the sound effects', async ({ page }) => {
-  test.setTimeout(90_000) // the WebGL scene is slow to boot under software rendering
   await page.goto('/lab/dsi-3d')
   await ready(page)
 
@@ -87,7 +82,6 @@ test('muting the music silences it but not the sound effects', async ({ page }) 
 })
 
 test('a remembered mute keeps the music silent but the sound effects audible', async ({ page }) => {
-  test.setTimeout(90_000)
   await page.addInitScript(() => localStorage.setItem('dsi-lab-muted', '1'))
   await page.goto('/lab/dsi-3d')
   await ready(page)
