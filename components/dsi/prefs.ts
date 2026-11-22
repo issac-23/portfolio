@@ -82,9 +82,9 @@ export function useMotion() {
 }
 
 /**
- * Follows the OS between light and dark until the visitor picks one, the
- * same as ThemeToggle does on /. The first paint is already right, from the
- * root layout's inline script; this only covers a change mid-visit.
+ * Follows the OS between light and dark until the visitor picks one. The
+ * first paint is already right, from the root layout's inline script; this
+ * only covers a change mid-visit.
  */
 export function useFollowSystemTheme() {
   useEffect(() => {
