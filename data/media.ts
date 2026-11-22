@@ -11,7 +11,7 @@ export interface MediaItem {
 
 /**
  * How each type reads on every screen. `one` labels a single item, `many`
- * names the group, as on the classic filter chips.
+ * names the group.
  */
 export const mediaTypeLabels: Record<MediaType, { one: string; many: string }> = {
   article: { one: 'Article', many: 'Articles' },

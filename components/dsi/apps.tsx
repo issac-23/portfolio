@@ -97,7 +97,7 @@ interface AppDef {
    */
   hash: string
   /**
-   * Other anchors that land here: the classic site's section names, so links
+   * Other anchors that land here: the old site's section names, so links
    * to /#about or /#contact already out on a resume or a profile still work.
    */
   aliases?: readonly string[]

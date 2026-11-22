@@ -105,8 +105,8 @@ const POLL_MS = 30_000
 
 /**
  * One poll of /api/spotify/now-playing shared by every screen that asks. The
- * classic page and both of Sound's DSi screens read it, and each fetching on
- * its own would multiply the requests and let them disagree for a moment.
+ * Both of Sound's DSi screens read it, and each fetching on its own would
+ * multiply the requests and let them disagree for a moment.
  *
  * Polling only runs while something is subscribed, so it stops as soon as
  * the last reader goes away.
@@ -175,10 +175,4 @@ export function useNowPlaying(): Listening {
  */
 export function useListeningWeek(): ListeningWeek {
   return useSyncExternalStore(subscribe, () => week, () => loadingWeek)
-}
-
-/** Ask again now, from the unreachable state. Shows loading until the answer lands. */
-export function retryNowPlaying() {
-  if (state.kind === 'unreachable') set(loading)
-  void poll()
 }
