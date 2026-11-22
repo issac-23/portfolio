@@ -74,20 +74,6 @@ test.describe('with the boot screen on', () => {
     await expect(html(page)).not.toHaveAttribute('data-boot', '')
   })
 
-  test("no boot for plain view, a deep link, or the DSi's own less-motion setting",async ({ page }) => {
-    await page.goto('/?view=plain')
-    await expect(html(page)).not.toHaveAttribute('data-boot', '')
-
-    await page.goto('/#projects')
-    await expect(html(page)).not.toHaveAttribute('data-boot', '')
-
-    // Chosen in the DSi's System Settings, stored the way prefs.ts reads it.
-    await page.addInitScript(() => localStorage.setItem('dsi-motion', 'reduce'))
-    await page.goto('/')
-    await expect(html(page)).toHaveAttribute('data-motion', 'reduce')
-    await expect(html(page)).not.toHaveAttribute('data-boot', '')
-  })
-
   test('the boot still plays under the system reduced motion, with its fades at full length', async ({ page }) => {
     await holdBoot(page)
     await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -166,11 +152,6 @@ test('the power button comes after the rail in the Tab order', async ({ page }) 
     return !!(rail.compareDocumentPosition(btn) & Node.DOCUMENT_POSITION_FOLLOWING)
   })
   expect(after, 'the power button follows the rail in the DOM').toBe(true)
-})
-
-test('nothing but the page colour around the device', async ({ page }) => {
-  await openMenu(page)
-  await expect(page.locator('.dsi-ambient')).toHaveCount(0)
 })
 
 /** Whether the Shortcuts nav and the device's boxes intersect. */

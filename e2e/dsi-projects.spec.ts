@@ -150,16 +150,12 @@ test('the list scrolls inside the lower screen, never the page', async ({ page }
   expect(await page.evaluate(() => window.scrollY)).toBe(0)
 })
 
-for (const how of ['the Back button', 'Escape'] as const) {
-  test(`${how} returns home with the rail still centred on Projects`, async ({ page }) => {
-    await watchEffects(page)
-    await launchProjects(page)
+// Escape from Projects is covered by dsi-apps, which runs it for every app.
+test('the Back button returns home with the rail still centred on Projects', async ({ page }) => {
+  await launchProjects(page)
+  await page.getByRole('button', { name: 'Back' }).click()
 
-    if (how === 'Escape') await page.keyboard.press('Escape')
-    else await page.getByRole('button', { name: 'Back' }).click()
-
-    await expectSettledOn(page, 'Projects')
-    await expect(page.getByRole('button', { name: 'Projects', exact: true })).toBeFocused()
-    await expectNoLeftovers(page)
-  })
-}
+  await expectSettledOn(page, 'Projects')
+  await expect(page.getByRole('button', { name: 'Projects', exact: true })).toBeFocused()
+  await expectNoLeftovers(page)
+})

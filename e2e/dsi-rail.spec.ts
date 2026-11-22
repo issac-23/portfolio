@@ -38,19 +38,12 @@ test('slot widths do not change when the rounded font swaps in', async ({ page }
   expect(after).toEqual(first)
 })
 
-test('loads centred on Profile and running off both edges', async ({ page }) => {
-  await openMenu(page)
-})
-
-test('arrow keys work before anything has focus', async ({ page }) => {
-  // Bound to the rail at first, so they did nothing until a slot was focused.
-  await openMenu(page)
-  await page.keyboard.press('ArrowRight')
-  await expectSettledOn(page, APPS[1])
-})
-
 test('Tab lands on the selected app, and a second Tab leaves the rail', async ({ page }) => {
+  // Every test here starts with openMenu, which checks the rail loads centred
+  // on Profile and running off both edges.
   await openMenu(page)
+  // The arrow keys were bound to the rail at first, so they did nothing until
+  // a slot was focused. Nothing has focus yet here.
   await page.keyboard.press('ArrowRight')
   await expectSettledOn(page, APPS[1])
 

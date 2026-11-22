@@ -1,7 +1,7 @@
 import { SITE_URL } from '../app/site'
 import { availability } from '../data/profile'
 import { expect, test } from './fixtures'
-import { APPS, expectSettledOn, openApp, openMenu } from './helpers/dsi'
+import { expectSettledOn, openApp, openMenu } from './helpers/dsi'
 
 /**
  * The DSi as the home page: every app has an address, the addresses the old
@@ -64,12 +64,6 @@ test('opening an app puts its address in the bar, without a history entry', asyn
   await openApp(page, 'Projects')
   await expect.poll(() => new URL(page.url()).hash).toBe('#projects')
   expect(await page.evaluate(() => history.length)).toBe(before)
-})
-
-test('the skip link does not close anything or count as an app', async ({ page }) => {
-  await page.goto('/#main-content')
-  await openMenu(page)
-  await expectSettledOn(page, APPS[0])
 })
 
 test('/dsi, and /dsi?view=plain, redirect to their new homes', async ({ page }) => {

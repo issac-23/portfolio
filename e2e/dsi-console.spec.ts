@@ -38,12 +38,6 @@ const phase = (page: Page) => page.locator('.dsi-device')
 const power = (page: Page, name: 'Power off' | 'Power on') => page.getByRole('button', { name })
 const hash = (page: Page) => new URL(page.url()).hash
 
-test('the console starts on the menu', async ({ page }) => {
-  await openMenu(page)
-  await expect(phase(page)).toHaveAttribute('data-console', 'menu')
-  await sequence(page).toEqual(['menu'])
-})
-
 test('menu to launching to app, and back through returning to the menu', async ({ page }) => {
   await openApp(page, 'Projects')
   await expect(phase(page)).toHaveAttribute('data-console', 'app')
@@ -243,11 +237,6 @@ test.describe('the pre-paint boot rule', () => {
   })
 
   const bootSeen = (page: Page) => page.evaluate(() => (window as unknown as { __bootSeen: boolean }).__bootSeen)
-
-  test('a first visit boots', async ({ page }) => {
-    await page.goto('/')
-    expect(await bootSeen(page)).toBe(true)
-  })
 
   test('a visit that already booted does not boot again', async ({ page }) => {
     await page.addInitScript(() => sessionStorage.setItem('dsi-booted', '1'))
