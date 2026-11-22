@@ -39,6 +39,8 @@ test('Theme cycles Auto, Light Blue, Matte Black and back, and sticks across vis
   await page.reload({ waitUntil: 'commit' })
   await page.waitForSelector('.dsi-root', { state: 'attached' })
   expect(await isDark(page)).toBe(true)
+  // The stored choice also carries into the shell colour on a fresh load.
+  await expect.poll(() => shell(page)).toBe(MATTE_BLACK)
 
   await openApp(page, 'System Settings')
   await page.getByRole('button', { name: /^Theme/ }).click()
@@ -53,13 +55,6 @@ test('Auto follows the device when it changes mid-visit', async ({ page }) => {
   expect(await isDark(page)).toBe(false)
   await page.emulateMedia({ colorScheme: 'dark' })
   await expect.poll(() => isDark(page)).toBe(true)
-})
-
-test('a theme stored by the old site carries over to the DSi', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'light' })
-  await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
-  await openMenu(page)
-  expect(await shell(page)).toBe(MATTE_BLACK)
 })
 
 test('Reduce motion turns off every effect from then on, and is remembered', async ({ page }) => {

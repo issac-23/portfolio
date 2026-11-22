@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
-import { effectsEmpty, expectSettledOn, openApp, openMenu, railState } from './helpers/dsi'
+import { expectSettledOn, openMenu, railState } from './helpers/dsi'
 
 /**
  * The boot screen, the POWER button, and the device filling the page.
@@ -20,21 +20,16 @@ const ready = (page: Page) => page.locator('.dsi-rail[data-ready]').waitFor({ st
  * Holds the boot screen on for a starved worker. The fade is CSS that runs from
  * first paint while hydration (which arms the 3s safety timer) can come
  * seconds later, so without this the boot can finish before a test looks.
- * `timer` stretches that safety timer too, leaving only a key or tap to end it.
+ * The 3s safety timer is left alone, so it is what hands over.
  */
-const holdBoot = (page: Page, { timer = false } = {}) =>
-  page.addInitScript(stretch => {
-    if (stretch) {
-      const set = window.setTimeout.bind(window)
-      window.setTimeout = ((fn: TimerHandler, ms?: number, ...a: unknown[]) =>
-        set(fn, ms === 3000 ? 60_000 : ms, ...a)) as typeof window.setTimeout
-    }
+const holdBoot = (page: Page) =>
+  page.addInitScript(() => {
     document.addEventListener('DOMContentLoaded', () => {
       const st = document.createElement('style')
       st.textContent = '.dsi-boot, .dsi-boot-mark { animation-delay: 60s !important }'
       document.head.append(st)
     })
-  }, timer)
+  })
 
 test.describe('with the boot screen on', () => {
   test.use({ boot: true })
@@ -49,19 +44,6 @@ test.describe('with the boot screen on', () => {
     // The 3s safety timer starts at hydration, not at goto, so wait for that first.
     await ready(page)
     await expect(html(page)).not.toHaveAttribute('data-boot', '', { timeout: 5000 })
-    await expectSettledOn(page, 'Profile')
-  })
-
-  test('a key skips the boot without moving the rail', async ({ page }) => {
-    // Stretch the boot's 3s safety timer and its fade, so a slow worker cannot
-    // see the boot end by itself before the key is pressed. Only the skip is
-    // left to end it.
-    await holdBoot(page, { timer: true })
-    await page.goto('/')
-    await ready(page)
-    await expect(html(page)).toHaveAttribute('data-boot', '')
-    await page.keyboard.press('ArrowRight')
-    await expect(html(page)).not.toHaveAttribute('data-boot', '', { timeout: 1000 })
     await expectSettledOn(page, 'Profile')
   })
 
@@ -87,17 +69,6 @@ test.describe('with the boot screen on', () => {
     await ready(page)
     await expect(html(page)).not.toHaveAttribute('data-boot', '', { timeout: 5000 })
   })
-
-  test('powering on boots again', async ({ page }) => {
-    await page.goto('/')
-    await ready(page)
-    // Skip the first boot so the button is not under it.
-    await page.keyboard.press('Escape')
-    await expect(html(page)).not.toHaveAttribute('data-boot', '', { timeout: 1000 })
-    await power(page, 'Power off').click()
-    await power(page, 'Power on').click()
-    await expect(html(page)).toHaveAttribute('data-boot', '')
-  })
 })
 
 test('power turns the screens off and back on', async ({ page }) => {
@@ -114,30 +85,6 @@ test('power turns the screens off and back on', async ({ page }) => {
 
   await power(page, 'Power on').click()
   await expectSettledOn(page, 'Profile')
-})
-
-test('power off from inside an app closes it and clears the address', async ({ page }) => {
-  await openApp(page, 'Projects')
-  await expect.poll(() => new URL(page.url()).hash).toBe('#projects')
-  await power(page, 'Power off').click()
-  await expect(page.locator('.dsi-device')).toHaveAttribute('data-power', 'off')
-  await expect(page.locator('.dsi-app-lower')).toHaveCount(0)
-  await expect.poll(() => new URL(page.url()).hash).toBe('')
-  expect(await effectsEmpty(page)).toEqual([0, 0])
-})
-
-test('a deep link while the power is off opens nothing', async ({ page }) => {
-  await openMenu(page)
-  await power(page, 'Power off').click()
-  await expect(page.locator('.dsi-device')).toHaveAttribute('data-power', 'off')
-  await page.evaluate(() => {
-    location.hash = '#projects'
-  })
-  // Nothing to wait for, so give an app a fair chance to (wrongly) appear.
-  await expect(page.locator('.dsi-app-lower')).toHaveCount(0)
-  await page.waitForTimeout(500)
-  await expect(page.locator('.dsi-app-lower')).toHaveCount(0)
-  await expect(page.locator('.dsi-device')).toHaveAttribute('data-power', 'off')
 })
 
 test('the power button comes after the rail in the Tab order', async ({ page }) => {

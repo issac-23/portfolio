@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
-import { APPS, expectSettledOn, openApp, openMenu } from './helpers/dsi'
+import { APPS, effectsEmpty, expectSettledOn, openApp, openMenu } from './helpers/dsi'
 
 /**
  * Every move the console makes, read off data-console on the device.
@@ -35,6 +35,7 @@ test.beforeEach(async ({ page }) => {
 const seen = (page: Page) => page.evaluate(() => (window as unknown as { __console: string[] }).__console)
 const sequence = (page: Page) => expect.poll(() => seen(page), { timeout: 10_000 })
 const phase = (page: Page) => page.locator('.dsi-device')
+const html = (page: Page) => page.locator('html')
 const power = (page: Page, name: 'Power off' | 'Power on') => page.getByRole('button', { name })
 const hash = (page: Page) => new URL(page.url()).hash
 
@@ -63,15 +64,20 @@ test('power off from the menu, then back on, plays the boot', async ({ page }) =
   await power(page, 'Power off').click()
   await expect(phase(page)).toHaveAttribute('data-console', 'off')
   await power(page, 'Power on').click()
+  await expect(html(page)).toHaveAttribute('data-boot', '')
   await expectSettledOn(page, 'Profile')
   await sequence(page).toEqual(['menu', 'off', 'booting', 'menu'])
 })
 
 test('power off from an app goes straight to off and clears the address', async ({ page }) => {
   await openApp(page, 'Projects')
+  await expect.poll(() => hash(page)).toBe('#projects')
   await power(page, 'Power off').click()
   await expect(phase(page)).toHaveAttribute('data-console', 'off')
+  await expect(phase(page)).toHaveAttribute('data-power', 'off')
+  await expect(page.locator('.dsi-app-lower')).toHaveCount(0)
   await expect.poll(() => hash(page)).toBe('')
+  expect(await effectsEmpty(page)).toEqual([0, 0])
   await sequence(page).toEqual(['menu', 'launching', 'app', 'off'])
 })
 
@@ -113,11 +119,16 @@ test('a hash that names no app, or a dark console, changes nothing', async ({ pa
   })
   await expect(phase(page)).toHaveAttribute('data-console', 'menu')
   await power(page, 'Power off').click()
+  await expect(phase(page)).toHaveAttribute('data-power', 'off')
   await page.evaluate(() => {
     location.hash = '#projects'
   })
+  // Nothing to wait for, so give an app a fair chance to (wrongly) appear.
+  await expect(page.locator('.dsi-app-lower')).toHaveCount(0)
   await page.waitForTimeout(500)
+  await expect(page.locator('.dsi-app-lower')).toHaveCount(0)
   await expect(phase(page)).toHaveAttribute('data-console', 'off')
+  await expect(phase(page)).toHaveAttribute('data-power', 'off')
   await sequence(page).toEqual(['menu', 'off'])
 })
 
@@ -211,7 +222,9 @@ test.describe('with the boot screen on', () => {
     await page.goto('/')
     await page.locator('.dsi-rail[data-ready]').waitFor({ state: 'attached', timeout: 20_000 })
     await expect(phase(page)).toHaveAttribute('data-console', 'booting')
+    await expect(html(page)).toHaveAttribute('data-boot', '')
     await page.keyboard.press('ArrowRight')
+    await expect(html(page)).not.toHaveAttribute('data-boot', '', { timeout: 1000 })
     await expect(phase(page)).toHaveAttribute('data-console', 'menu')
     // The server's own menu comes first, then the boot the script started.
     await sequence(page).toEqual(['menu', 'booting', 'menu'])
