@@ -6,7 +6,12 @@ const nextConfig = {
   // The DSi lived at /dsi while it was being built. It is / now; old links
   // (and ?view=plain) carry over, the query string comes along on its own.
   async redirects() {
-    return [{ source: '/dsi', destination: '/', permanent: true }]
+    return [
+      { source: '/dsi', destination: '/', permanent: true },
+      // The first portfolio lived at /classic until it was retired. It and
+      // anything under it go to the home page.
+      { source: '/classic/:path*', destination: '/', permanent: true },
+    ]
   },
   images: {
     remotePatterns: [

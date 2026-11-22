@@ -8,7 +8,6 @@ a Nintendo DSi home menu: each section is an app on the rail.
 | `/` | The DSi menu |
 | `/#projects`, `/#profile`, … | Opens that app directly. The old `#about`, `#music`, `#media`, `#gallery` and `#contact` anchors still work |
 | `/?view=plain` | The same content as an ordinary page, no DSi (also in System Settings) |
-| `/classic` | The site before the DSi, kept for old bookmarks, not indexed |
 
 ## Stack
 
@@ -32,9 +31,8 @@ a Nintendo DSi home menu: each section is an app on the rail.
 ```
 ├── app/
 │   ├── (dsi)/             # The home page: the DSi menu and plain view
-│   ├── classic/           # The previous site, at /classic
 │   └── api/spotify/       # Spotify API routes
-├── components/            # Classic UI components (Nav, Hero, About, etc.)
+├── components/            # Shared hooks (useNowPlaying) and the DSi components
 │   └── dsi/               # The DSi: shell, rail, apps, launch transition
 ├── data/
 │   ├── profile.ts         # Bio, stats and contact channels
@@ -95,7 +93,7 @@ npm run test:e2e                 # journeys, contrast, axe and the DSi, both wid
 The screenshot scripts below still want a server on port 3000 (`npm run dev`):
 
 ```bash
-node scripts/shots.mjs <label>   # /classic at desktop + mobile, both themes
+node scripts/notfound-shot.mjs <label>   # the 404 page, both themes
 ```
 
 ```bash
@@ -108,7 +106,7 @@ If port 3000 is already taken by another project, start this one elsewhere and
 point the scripts at it — otherwise they will happily shoot the wrong app:
 
 ```bash
-SITE=http://localhost:3009 node scripts/shots.mjs <label>
+SITE=http://localhost:3009 node scripts/notfound-shot.mjs <label>
 ```
 
 > **Don't run `npm run build` while `npm run dev` is running** — they share

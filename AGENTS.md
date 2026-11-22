@@ -1,8 +1,8 @@
 # Working in this repo
 
 Issac's personal portfolio site, built with Next.js App Router, TypeScript and
-Tailwind. The DSi redesign lives at `/` and the previous site is kept at
-`/classic`.
+Tailwind. The DSi lives at `/`. The first portfolio that used to be at
+`/classic` is retired, and `/classic` redirects to `/`.
 
 `npm run check` runs lint, the e2e type-check, then `test:e2e`, and local e2e
 runs queue behind each other through a lock in the temp dir, and drop to 2 workers

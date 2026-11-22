@@ -55,7 +55,7 @@ test('Auto follows the device when it changes mid-visit', async ({ page }) => {
   await expect.poll(() => isDark(page)).toBe(true)
 })
 
-test('a theme picked on the classic site carries over to the DSi', async ({ page }) => {
+test('a theme stored by the old site carries over to the DSi', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' })
   await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
   await openMenu(page)

@@ -20,7 +20,7 @@ export const photoLabel = (photo: GalleryPhoto, index: number) =>
  */
 export const PHOTO_STAGE_SIZES = '(max-width: 620px) 76vw, 640px'
 
-/** `sizes` for the grid thumbnails, classic and plain view alike. */
+/** `sizes` for the grid thumbnails. */
 export const PHOTO_THUMB_SIZES = '(max-width: 640px) 45vw, 200px'
 
 // ─────────────────────────────────────────────────────────────────

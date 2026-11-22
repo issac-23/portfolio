@@ -7,7 +7,7 @@ export interface Project {
   status: 'live' | 'wip' | 'concept'
 }
 
-/** How each status reads on every screen, classic and DSi alike. */
+/** How each status reads on every screen, DSi and plain view alike. */
 export const statusLabels: Record<Project['status'], string> = {
   live: 'Live',
   wip: 'In progress',

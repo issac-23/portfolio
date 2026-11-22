@@ -3,7 +3,7 @@ import { APPS, APP_BY_ID, type AppId } from './apps'
 /**
  * Every app has an address, so a recruiter can be sent straight to the
  * projects (issac-ip.com/#projects) the way the reference site gives each
- * section its own URL. Addresses and the classic site's aliases are declared
+ * section its own URL. Addresses and the old site's aliases are declared
  * on each app in apps.tsx.
  */
 
