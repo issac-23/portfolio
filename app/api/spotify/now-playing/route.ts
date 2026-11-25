@@ -1,45 +1,37 @@
 import { aggregateWeek, playable, toItemTrack, toTrack } from './week'
+import { TokenError, dropAccessToken, getAccessToken } from './token'
 
-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!
-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET!
-const REFRESH_TOKEN = process.env.SPOTIFY_REFRESH_TOKEN!
-
-async function getAccessToken() {
-  const basic = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64')
-  const res = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${basic}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: REFRESH_TOKEN,
-    }),
-    cache: 'no-store',
-  })
-  if (!res.ok) {
-    // Spotify's error code is safe to keep; the body can echo nothing secret.
-    const code = (await res.json().catch(() => null))?.error
-    throw new TokenError(res.status, typeof code === 'string' ? code : undefined)
-  }
-  const body = await res.json()
-  if (!body.access_token) throw new Error('token response had no access_token')
-  return body as { access_token: string }
-}
-
-/** The token endpoint refused the refresh grant. Carries only status and Spotify's error code. */
-class TokenError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code?: string,
-  ) {
-    super(`token request failed: ${status}${code ? ` ${code}` : ''}`)
-  }
-}
-
-// Answers come from Spotify on every request; nothing here is worth building ahead.
+// Spotify is asked fresh on every request that reaches this function (every
+// upstream fetch is no-store), so nothing is built ahead. Sharing between
+// visitors happens at the CDN through the Cache-Control on a good answer.
 export const dynamic = 'force-dynamic'
+
+/** Concurrent visitors within 15 s share one upstream fetch; a stale answer is served for 30 s more while it refreshes. */
+const SHARED = { 'Cache-Control': 's-maxage=15, stale-while-revalidate=30' }
+
+/** One try with the cached token, and one retry with a fresh token if Spotify says the cached one is no good. */
+async function fetchPlayer() {
+  for (let attempt = 0; ; attempt++) {
+    const accessToken = await getAccessToken()
+    const headers = { Authorization: `Bearer ${accessToken}` }
+    // Recently played is always needed for the week's counts, so fetch it
+    // alongside currently-playing instead of after it.
+    const [nowRes, recentRes] = await Promise.all([
+      fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+        headers,
+        cache: 'no-store',
+      }),
+      fetch('https://api.spotify.com/v1/me/player/recently-played?limit=50', {
+        headers,
+        cache: 'no-store',
+      }),
+    ])
+    const refused = nowRes.status === 401 || recentRes.status === 401
+    if (refused) dropAccessToken()
+    if (refused && attempt === 0) continue
+    return { nowRes, recentRes }
+  }
+}
 
 /**
  * Failure has its own body so the client can tell "Spotify did not answer"
@@ -64,21 +56,7 @@ const unavailable = (cause: string) => failure('spotify_unavailable', cause)
 
 export async function GET() {
   try {
-    const { access_token } = await getAccessToken()
-    const headers = { Authorization: `Bearer ${access_token}` }
-
-    // Recently played is always needed for the week's counts, so fetch it
-    // alongside currently-playing instead of after it.
-    const [nowRes, recentRes] = await Promise.all([
-      fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-        headers,
-        cache: 'no-store',
-      }),
-      fetch('https://api.spotify.com/v1/me/player/recently-played?limit=50', {
-        headers,
-        cache: 'no-store',
-      }),
-    ])
+    const { nowRes, recentRes } = await fetchPlayer()
 
     // Every answer carries the week, so without recent plays there is no answer.
     if (!recentRes.ok) return unavailable(`recently-played ${recentRes.status}`)
@@ -91,7 +69,7 @@ export async function GET() {
     const recentTracks = playable(recentItems).slice(0, 5).map(toTrack)
 
     if (nowRes.status === 204) {
-      return Response.json({ isPlaying: false, recentTracks, week })
+      return Response.json({ isPlaying: false, recentTracks, week }, { headers: SHARED })
     }
 
     if (!nowRes.ok) return unavailable(`currently-playing ${nowRes.status}`)
@@ -99,16 +77,19 @@ export async function GET() {
     const data = await nowRes.json()
 
     if (!data.item) {
-      return Response.json({ isPlaying: false, recentTracks, week })
+      return Response.json({ isPlaying: false, recentTracks, week }, { headers: SHARED })
     }
 
     // While a track is playing the client shows it, not the history.
-    return Response.json({
-      isPlaying: data.is_playing,
-      ...toItemTrack(data.item),
-      recentTracks: data.is_playing ? [] : recentTracks,
-      week,
-    })
+    return Response.json(
+      {
+        isPlaying: data.is_playing,
+        ...toItemTrack(data.item),
+        recentTracks: data.is_playing ? [] : recentTracks,
+        week,
+      },
+      { headers: SHARED },
+    )
   } catch (err) {
     if (err instanceof TokenError) {
       const auth = err.status === 400 && err.code === 'invalid_grant'
