@@ -70,3 +70,37 @@ test.describe('with Spotify down', () => {
     await expect(listening(page)).not.toContainText("Couldn't reach Spotify")
   })
 })
+
+test('refreshes right away when a hidden tab comes back, not at the next tick', async ({ page }) => {
+  await page.clock.install()
+  await mockSpotify(page, { isPlaying: true, ...track('Nights'), recentTracks: [] })
+  await page.goto('/?view=plain')
+  await expect(listening(page)).toContainText('Now playing: Nights')
+
+  // Headless Chromium is always 'visible', so stand in for the tab state.
+  const setVisibility = (state: 'hidden' | 'visible') =>
+    page.evaluate(s => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => s })
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => s === 'hidden' })
+      document.dispatchEvent(new Event('visibilitychange'))
+    }, state)
+
+  let polls = 0
+  await page.unroute('**/api/spotify/now-playing')
+  await page.route('**/api/spotify/now-playing', r => {
+    polls++
+    return r.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ isPlaying: true, ...track('Pink + White'), recentTracks: [] }),
+    })
+  })
+
+  await setVisibility('hidden')
+  await page.clock.fastForward(5_000)
+  expect(polls).toBe(0)
+  await expect(listening(page)).toContainText('Nights')
+
+  await setVisibility('visible')
+  await expect(listening(page)).toContainText('Now playing: Pink + White')
+  expect(polls).toBe(1)
+})
