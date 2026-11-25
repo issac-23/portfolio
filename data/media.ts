@@ -9,17 +9,14 @@ export interface MediaItem {
   date?: string
 }
 
-/**
- * How each type reads on every screen. `one` labels a single item, `many`
- * names the group.
- */
-export const mediaTypeLabels: Record<MediaType, { one: string; many: string }> = {
-  article: { one: 'Article', many: 'Articles' },
-  video: { one: 'Video', many: 'Videos' },
-  podcast: { one: 'Podcast', many: 'Podcasts' },
-  book: { one: 'Book', many: 'Books' },
-  film: { one: 'Film', many: 'Film & TV' },
-  other: { one: 'Other', many: 'Other' },
+/** How each type reads on every screen, as the label of a single item. */
+export const mediaTypeLabels: Record<MediaType, string> = {
+  article: 'Article',
+  video: 'Video',
+  podcast: 'Podcast',
+  book: 'Book',
+  film: 'Film',
+  other: 'Other',
 }
 
 // ─────────────────────────────────────────────────────────────────

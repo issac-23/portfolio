@@ -23,7 +23,7 @@ test('project statuses read as the data table words them', async ({ page }) => {
 test('media types read as the data table words them', async ({ page }) => {
   for (const m of mediaItems) {
     await expect(page.locator('.dsi-plain-shelf li', { hasText: m.title }).locator('.dsi-plain-meta')).toContainText(
-      `${mediaTypeLabels[m.type].one} by ${m.creator}`,
+      `${mediaTypeLabels[m.type]} by ${m.creator}`,
     )
   }
 })
