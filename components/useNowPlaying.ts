@@ -122,6 +122,7 @@ let state: Listening = loading
 let week: ListeningWeek = loadingWeek
 const listeners = new Set<() => void>()
 let timer: ReturnType<typeof setInterval> | undefined
+let polling = false
 
 function set(next: Listening, nextWeek: ListeningWeek = week) {
   state = next
@@ -137,6 +138,8 @@ async function poll() {
   // Each poll costs two Spotify calls, so a background tab that already has
   // an answer waits until it is looked at again.
   if (document.hidden && answered(state)) return
+  if (polling) return
+  polling = true
   try {
     const res = await fetch('/api/spotify/now-playing')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -145,7 +148,14 @@ async function poll() {
     set(derive(body), deriveWeek(body.week))
   } catch {
     if (state.kind === 'loading' || state.kind === 'unreachable') set({ kind: 'unreachable' })
+  } finally {
+    polling = false
   }
+}
+
+/** A tab that comes back to the front catches up now, not at the next tick. */
+function onVisibility() {
+  if (!document.hidden) void poll()
 }
 
 function subscribe(listener: () => void) {
@@ -153,11 +163,13 @@ function subscribe(listener: () => void) {
   if (listeners.size === 1) {
     void poll()
     timer = setInterval(poll, POLL_MS)
+    document.addEventListener('visibilitychange', onVisibility)
   }
   return () => {
     listeners.delete(listener)
     if (listeners.size === 0) {
       clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisibility)
       state = loading
       week = loadingWeek
     }
