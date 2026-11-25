@@ -123,6 +123,9 @@ let week: ListeningWeek = loadingWeek
 const listeners = new Set<() => void>()
 let timer: ReturnType<typeof setInterval> | undefined
 let polling = false
+// Bumped when the last subscriber leaves, so a poll still in flight then
+// can't write its answer over the reset state.
+let generation = 0
 
 function set(next: Listening, nextWeek: ListeningWeek = week) {
   state = next
@@ -140,16 +143,17 @@ async function poll() {
   if (document.hidden && answered(state)) return
   if (polling) return
   polling = true
+  const gen = generation
   try {
     const res = await fetch('/api/spotify/now-playing')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const body = (await res.json()) as NowPlayingBody
     if (body.error) throw new Error(body.error)
-    set(derive(body), deriveWeek(body.week))
+    if (gen === generation) set(derive(body), deriveWeek(body.week))
   } catch {
-    if (state.kind === 'loading' || state.kind === 'unreachable') set({ kind: 'unreachable' })
+    if (gen === generation && (state.kind === 'loading' || state.kind === 'unreachable')) set({ kind: 'unreachable' })
   } finally {
-    polling = false
+    if (gen === generation) polling = false
   }
 }
 
@@ -170,6 +174,8 @@ function subscribe(listener: () => void) {
     if (listeners.size === 0) {
       clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisibility)
+      generation++
+      polling = false
       state = loading
       week = loadingWeek
     }
