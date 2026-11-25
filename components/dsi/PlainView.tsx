@@ -74,7 +74,7 @@ const SECTIONS: Record<AppId, ReactElement | null> = {
           <li key={m.url}>
             <a href={m.url} {...externalProps(m.url)}>{m.title}</a>
             <span className="dsi-plain-meta">
-              {mediaTypeLabels[m.type].one} by {m.creator}
+              {mediaTypeLabels[m.type]} by {m.creator}
               {m.date ? `, ${m.date}` : ''}
             </span>
             {m.note && <q>{m.note}</q>}

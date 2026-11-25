@@ -9,7 +9,7 @@ export function ShelfItem({ item }: { item: MediaItem }) {
   return (
     <div className="dsi-detail">
       <span className="dsi-sub">
-        {mediaTypeLabels[item.type].one}
+        {mediaTypeLabels[item.type]}
         {item.date ? ` · ${item.date}` : ''}
       </span>
       <h2>{item.title}</h2>
@@ -50,7 +50,7 @@ export function ShelfList({ items, selected, onSelect, onBack }: ShelfListProps)
                 <b>{m.title}</b>
                 <span>{m.creator}</span>
               </span>
-              <span className="dsi-card-status">{mediaTypeLabels[m.type].one}</span>
+              <span className="dsi-card-status">{mediaTypeLabels[m.type]}</span>
             </button>
           </li>
         ))}
