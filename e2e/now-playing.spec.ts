@@ -30,6 +30,17 @@ test('lists recent tracks once each when nothing is playing', async ({ page }) =
   await expect(listening(page)).not.toContainText('Now playing')
 })
 
+test('shows history for a paused track, which the route sends as not playing', async ({ page }) => {
+  // The route reports a paused track with its fields, isPlaying false and the recent plays.
+  const recent = [track('Ivy'), track('Pink + White')]
+  await mockSpotify(page, { isPlaying: false, ...track('Nights', 'Frank Ocean'), recentTracks: recent })
+  await page.goto('/?view=plain')
+  await expect(listening(page).getByText('Recently played:')).toBeVisible()
+  await expect(listening(page)).not.toContainText('Now playing')
+  await expect(listening(page)).not.toContainText('Nothing playing right now.')
+  await expect(listening(page).locator('a[href^="https://open.spotify.com/track/"]')).toHaveCount(2)
+})
+
 test('says nothing is playing when there is no history either', async ({ page }) => {
   await mockSpotify(page, { isPlaying: false, recentTracks: [] })
   await page.goto('/?view=plain')

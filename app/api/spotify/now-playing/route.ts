@@ -85,10 +85,13 @@ export async function GET() {
     const recentItems: any[] = (await recentRes.json()).items ?? []
     const week = aggregateWeek(recentItems)
 
+    // Newest first, so the first five are the five most recent plays. Sent
+    // whenever nothing is playing (idle, paused or an ad) so the client has
+    // history to show instead of its empty state.
+    const recentTracks = playable(recentItems).slice(0, 5).map(toTrack)
+
     if (nowRes.status === 204) {
-      // Newest first, so the first five are the five most recent plays.
-      const tracks = playable(recentItems).slice(0, 5).map(toTrack)
-      return Response.json({ isPlaying: false, recentTracks: tracks, week })
+      return Response.json({ isPlaying: false, recentTracks, week })
     }
 
     if (!nowRes.ok) return unavailable(`currently-playing ${nowRes.status}`)
@@ -96,13 +99,14 @@ export async function GET() {
     const data = await nowRes.json()
 
     if (!data.item) {
-      return Response.json({ isPlaying: false, recentTracks: [], week })
+      return Response.json({ isPlaying: false, recentTracks, week })
     }
 
+    // While a track is playing the client shows it, not the history.
     return Response.json({
       isPlaying: data.is_playing,
       ...toItemTrack(data.item),
-      recentTracks: [],
+      recentTracks: data.is_playing ? [] : recentTracks,
       week,
     })
   } catch (err) {
