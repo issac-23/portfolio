@@ -47,6 +47,16 @@
   --dsi-px-soil-hi: #dbab84;
   --dsi-px-mortar: #a36d4a;
   --dsi-px-block-edge: #85553a;
+  --dsi-px-pipe: #4aa84f;
+  --dsi-px-pipe-hi: #86d46c;
+  --dsi-px-pipe-lo: #2f8040;
+  --dsi-px-pipe-edge: #1d4a2a;
+  --dsi-px-pole: #eef5ea;
+  --dsi-px-pole-lo: #b9c9b8;
+  --dsi-px-ball: #f0c850;
+  --dsi-px-ball-hi: #fbe596;
+  --dsi-px-flag: #e0604f;
+  --dsi-px-flag-lo: #b84538;
   --dsi-shell: #58c8e9;
   --dsi-shell-hi: #7ad8f2;
   --dsi-shell-lo: #35a8cc;
@@ -124,6 +134,16 @@
   --dsi-px-soil-hi: #3b2e28;
   --dsi-px-mortar: #211915;
   --dsi-px-block-edge: #1a1310;
+  --dsi-px-pipe: #1f4a34;
+  --dsi-px-pipe-hi: #2b5e43;
+  --dsi-px-pipe-lo: #153626;
+  --dsi-px-pipe-edge: #0b1d14;
+  --dsi-px-pole: #8da096;
+  --dsi-px-pole-lo: #66786f;
+  --dsi-px-ball: #8f7c3a;
+  --dsi-px-ball-hi: #a8955a;
+  --dsi-px-flag: #7a3d3a;
+  --dsi-px-flag-lo: #5c2d2c;
   --dsi-shell: #2f3337;
   --dsi-shell-hi: #43484d;
   --dsi-shell-lo: #1c2023;
@@ -214,8 +234,29 @@
 @media (min-aspect-ratio: 3/2) {
   .dsi-blocks { display: block; }
   .dsi-blocks-l { right: calc(50% + var(--dsi-scene-dev) / 2 + 3vw); bottom: 40%; }
-  .dsi-blocks-r { left: calc(50% + var(--dsi-scene-dev) / 2 + 4vw); bottom: 56%; }
-  .dsi-blocks-r2 { left: calc(50% + var(--dsi-scene-dev) / 2 + 9vw); bottom: 34%; }
+  /* Floors keep the right-hand blocks above the flagpole, which reaches
+     228px up, on a short window such as a 1366x768 laptop. */
+  .dsi-blocks-r { left: calc(50% + var(--dsi-scene-dev) / 2 + 4vw); bottom: max(56%, 316px); }
+  .dsi-blocks-r2 { left: calc(50% + var(--dsi-scene-dev) / 2 + 9vw); bottom: max(34%, 244px); }
+}
+/* A phone on its side has no room for those floors between the flag and
+   the top of the window, and the left block would sit behind the hills:
+   keep one block, between the two. */
+@media (min-aspect-ratio: 3/2) and (max-height: 480px) {
+  .dsi-blocks-l,
+  .dsi-blocks-r2 { display: none; }
+  .dsi-blocks-r { bottom: 62%; }
+}
+
+/* Pipes and a flagpole standing on the ground in the margins, in front of
+   the brick. Measured out from the device's edge, like the blocks, so they
+   never reach behind it; where a margin is narrower than they are, the
+   window's edge cuts them off instead. On a phone or a narrow window, none. */
+.dsi-pipes { display: none; bottom: 48px; }
+@media (min-aspect-ratio: 3/2) {
+  .dsi-pipes { display: block; }
+  .dsi-pipes-l { right: calc(50% + var(--dsi-scene-dev) / 2 + 1.5vw); }
+  .dsi-pipes-r { left: calc(50% + var(--dsi-scene-dev) / 2 + 1.5vw); }
 }
 
 /* Night only: stars over the top of the sky and a crescent moon. */
@@ -248,6 +289,16 @@
 .dsi-px-soil-hi { fill: var(--dsi-px-soil-hi); }
 .dsi-px-mortar { fill: var(--dsi-px-mortar); }
 .dsi-px-block-edge { fill: var(--dsi-px-block-edge); }
+.dsi-px-pipe { fill: var(--dsi-px-pipe); }
+.dsi-px-pipe-hi { fill: var(--dsi-px-pipe-hi); }
+.dsi-px-pipe-lo { fill: var(--dsi-px-pipe-lo); }
+.dsi-px-pipe-edge { fill: var(--dsi-px-pipe-edge); }
+.dsi-px-pole { fill: var(--dsi-px-pole); }
+.dsi-px-pole-lo { fill: var(--dsi-px-pole-lo); }
+.dsi-px-ball { fill: var(--dsi-px-ball); }
+.dsi-px-ball-hi { fill: var(--dsi-px-ball-hi); }
+.dsi-px-flag { fill: var(--dsi-px-flag); }
+.dsi-px-flag-lo { fill: var(--dsi-px-flag-lo); }
 
 /* Positioned so the shoulder buttons hang off its top edge, and isolated so
    their z-index tucks them behind the lid rather than behind the page. */

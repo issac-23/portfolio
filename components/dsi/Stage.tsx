@@ -117,6 +117,52 @@ function Blocks({ count, className }: { count: number; className: string }) {
   )
 }
 
+// A pipe 16 pixels wide: a wider rim on top over a narrower body, each lit
+// down the left and shaded down the right inside a dark outline. body is
+// how many rows of body there are under the 4-row rim.
+function Pipe({ x, body }: { x: number; body: number }) {
+  const rim: Rect[] = [[0, 0, 16, 1], [0, 3, 16, 1], [0, 1, 1, 2], [15, 1, 1, 2]]
+  const shaft: Rect[] = [[1, 4, 1, body], [14, 4, 1, body]]
+  return (
+    <g transform={`translate(${x} 0)`}>
+      <rect className="dsi-px-pipe" x={0} y={0} width={16} height={4} />
+      <rect className="dsi-px-pipe" x={1} y={4} width={14} height={body} />
+      {pixels([[2, 1, 2, 2], [3, 4, 2, body]], 'dsi-px-pipe-hi')}
+      {pixels([[12, 1, 3, 2], [11, 4, 3, body]], 'dsi-px-pipe-lo')}
+      {pixels([...rim, ...shaft], 'dsi-px-pipe-edge')}
+    </g>
+  )
+}
+
+// A flagpole 12 pixels wide and 30 tall: a ball on a thin pole, a pennant
+// pointing left from just under it, and a brick block at the foot.
+const POLE_BALL: Rect[] = [[5, 0, 2, 1], [4, 1, 4, 3], [5, 4, 2, 1]]
+const POLE_BALL_HI: Rect[] = [[5, 1, 1, 1]]
+const POLE: Rect[] = [[5, 5, 1, 17]]
+const POLE_SHADE: Rect[] = [[6, 5, 1, 17]]
+const PENNANT: Rect[] = [[3, 6, 2, 1], [2, 7, 3, 1], [1, 8, 4, 1], [0, 9, 5, 1], [1, 10, 4, 1], [2, 11, 3, 1], [3, 12, 2, 1]]
+const PENNANT_SHADE: Rect[] = [[1, 10, 4, 1], [2, 11, 3, 1], [3, 12, 2, 1]]
+const POLE_BASE_EDGE: Rect[] = [[1, 22, 10, 1], [1, 29, 10, 1], [1, 23, 1, 6], [10, 23, 1, 6]]
+const POLE_BASE_MORTAR: Rect[] = [[2, 25, 8, 1], [6, 23, 1, 2], [4, 26, 1, 3], [8, 26, 1, 3]]
+const POLE_BASE_HI: Rect[] = [[2, 23, 3, 1], [7, 23, 2, 1], [2, 26, 2, 1], [5, 26, 3, 1]]
+
+function Flagpole({ x }: { x: number }) {
+  return (
+    <g transform={`translate(${x} 0)`}>
+      {pixels(PENNANT, 'dsi-px-flag')}
+      {pixels(PENNANT_SHADE, 'dsi-px-flag-lo')}
+      {pixels(POLE, 'dsi-px-pole')}
+      {pixels(POLE_SHADE, 'dsi-px-pole-lo')}
+      {pixels(POLE_BALL, 'dsi-px-ball')}
+      {pixels(POLE_BALL_HI, 'dsi-px-ball-hi')}
+      <rect className="dsi-px-soil" x={2} y={23} width={8} height={6} />
+      {pixels(POLE_BASE_MORTAR, 'dsi-px-mortar')}
+      {pixels(POLE_BASE_HI, 'dsi-px-soil-hi')}
+      {pixels(POLE_BASE_EDGE, 'dsi-px-block-edge')}
+    </g>
+  )
+}
+
 /** A crescent 2r pixels across: a disc with a smaller one bitten out of its upper right. */
 function crescent(r: number): Rect[] {
   const out: Rect[] = []
@@ -212,6 +258,20 @@ export default function Stage() {
         </g>
         <g transform="translate(0 204)">
           <rect width="100%" height={60} fill="url(#dsi-pat-ground)" />
+        </g>
+      </svg>
+
+      {/* Standing on the ground, out in the margins beside the device. */}
+      <svg className="dsi-pipes dsi-pipes-l" width={198} height={84} shapeRendering="crispEdges">
+        <g transform="scale(6)">
+          <Pipe x={0} body={10} />
+          <g transform="translate(17 5)"><Pipe x={0} body={5} /></g>
+        </g>
+      </svg>
+      <svg className="dsi-pipes dsi-pipes-r" width={192} height={180} shapeRendering="crispEdges">
+        <g transform="scale(6)">
+          <g transform="translate(0 22)"><Pipe x={0} body={4} /></g>
+          <Flagpole x={20} />
         </g>
       </svg>
     </div>
