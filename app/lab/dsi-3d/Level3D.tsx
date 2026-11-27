@@ -163,8 +163,8 @@ function brickTexture() {
   return t
 }
 
-/** Which side of the screen the moon goes: the right, out of the way of the flag on a wide window. */
-const wideSide = (v: View) => 0.45 + 0.2 * (1 - v.wide)
+/** Which side of the screen the moon goes: the right on a wide window, the left on a tall one (clear of the Music button). */
+const wideSide = (v: View) => (v.wide > 0.5 ? 0.5 : -0.5)
 
 function skyTexture(dark: boolean) {
   const P = dark ? NIGHT : DAY
@@ -332,7 +332,7 @@ function build(still: boolean, v: View, dark: boolean) {
     stars.frustumCulled = false
     root.add(stars)
     const moon = new Mesh(track(new SphereGeometry(5, 16, 12)), track(new MeshBasicMaterial({ color: MOON, fog: false, toneMapped: false })))
-    moon.position.set(across(wideSide(v), -140), v.camY + (v.camZ + 140) * Math.tan((5.5 * Math.PI) / 180), v.camZ - (v.camZ + 140))
+    moon.position.set(across(wideSide(v), -140), v.camY + (v.camZ + 140) * Math.tan((4.2 * Math.PI) / 180), v.camZ - (v.camZ + 140))
     root.add(moon)
   }
 
