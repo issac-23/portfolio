@@ -11,6 +11,5 @@ hinge, geometry reduced from 264k to about 170k triangles (the original's
 bevels and button rims are kept), textures resized to 2048 px for the shell and
 buttons and 1024 px for the rest and re-encoded as WebP, the plastics made
 non-metallic and the buttons a little glossier than the shell, the shell's
-mottled wear texture flattened to an even near-black (printed marks kept) with
-a faint moulded grain added to its normal and roughness maps, original
-animation removed.
+mottled wear texture flattened to an even near-black (printed marks kept) and
+its scanned normal and roughness maps removed, original animation removed.

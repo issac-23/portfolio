@@ -320,31 +320,16 @@ for (const m of root.listMaterials()) {
 // The shell's colour map is a scan of a worn console: a mottled grey wash over
 // the black, which reads as dusty clay under any light. Flatten everything that
 // is not a printed mark (the marks are far brighter than the wash) to one even
-// near-black, and give the shell's normal and roughness maps a faint moulded
-// grain instead, so it reads as plastic rather than as paint.
+// near-black. The shell's own normal and roughness maps are scanned wear too:
+// under softbox light they show as crumpled streaks, so they are dropped and the
+// page applies a small tiling grain instead (see DsiScene.tsx).
 const SHELL_BLACK = [17, 19, 23]
-const GRAIN_NORMAL = Number(process.env.DSI_GRAIN_NORMAL ?? 5)
-const GRAIN_ROUGH = Number(process.env.DSI_GRAIN_ROUGH ?? 7)
-function noise(n, seed) {
-  // Small deterministic generator, so a rebuild gives the same file.
-  let s = seed >>> 0
-  const out = new Float32Array(n)
-  for (let i = 0; i < n; i++) {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
-    out[i] = (s / 4294967296) * 2 - 1
-  }
-  return out
-}
-async function raw(buf, size, channels) {
-  const { data } = await sharp(buf).resize(size, size, { fit: 'fill' }).toColourspace('srgb').removeAlpha().raw().toBuffer({ resolveWithObject: true })
-  return data
-}
 const shell = root.listMaterials().find(m => m.getName() === 'Matte_plastic')
 {
   const size = BIG_TEX
   const px = size * size
   const base = shell.getBaseColorTexture()
-  const d = await raw(Buffer.from(base.getImage()), size)
+  const { data: d } = await sharp(Buffer.from(base.getImage())).resize(size, size, { fit: 'fill' }).toColourspace('srgb').removeAlpha().raw().toBuffer({ resolveWithObject: true })
   for (let i = 0; i < px; i++) {
     const v = Math.max(d[i * 3], d[i * 3 + 1], d[i * 3 + 2])
     // 0 below the wash (about 28 on average, up to ~70 in the lighter patches), 1 on a printed mark.
@@ -352,27 +337,13 @@ const shell = root.listMaterials().find(m => m.getName() === 'Matte_plastic')
     for (let c = 0; c < 3; c++) d[i * 3 + c] = Math.round(SHELL_BLACK[c] + (d[i * 3 + c] - SHELL_BLACK[c]) * t)
   }
   base.setImage(new Uint8Array(await sharp(d, { raw: { width: size, height: size, channels: 3 } }).webp({ quality: 90, effort: 5 }).toBuffer())).setMimeType('image/webp')
-
-  // Grain: pixel noise, softened a little so it survives mipmapping.
-  const grain = async (tex, amount, channels) => {
-    const dd = await raw(Buffer.from(tex.getImage()), size)
-    const nz = new Float32Array(px)
-    nz.set(noise(px, 7))
-    const soft = await sharp(Buffer.from(Uint8Array.from(nz, x => Math.round(128 + x * 127))), { raw: { width: size, height: size, channels: 1 } }).blur(0.8).raw().toBuffer()
-    for (let i = 0; i < px; i++) {
-      const g = ((soft[i] - 128) / 127) * amount * 2.2
-      for (const c of channels) dd[i * 3 + c] = Math.max(0, Math.min(255, Math.round(dd[i * 3 + c] + g)))
-    }
-    tex.setImage(new Uint8Array(await sharp(dd, { raw: { width: size, height: size, channels: 3 } }).webp({ quality: 95, effort: 5 }).toBuffer())).setMimeType('image/webp')
-  }
-  // Normal: tilt x/y; roughness lives in the green channel of the metal-rough map.
-  await grain(shell.getNormalTexture(), GRAIN_NORMAL, [0, 1])
-  await grain(shell.getMetallicRoughnessTexture(), GRAIN_ROUGH, [1])
+  shell.setNormalTexture(null).setMetallicRoughnessTexture(null).setRoughnessFactor(0.45)
 }
 
+await doc.transform(prune())
 // Textures, one by one: the big materials keep BIG_TEX, the rest shrink to
 // SMALL_TEX. Normal maps are encoded at a higher WebP quality than colour.
-const done = new Set([shell.getBaseColorTexture(), shell.getNormalTexture(), shell.getMetallicRoughnessTexture()])
+const done = new Set([shell.getBaseColorTexture()])
 for (const tex of root.listTextures()) {
   if (done.has(tex)) continue
   const owners = tex.listParents().filter(p => p.propertyType === 'Material')
@@ -382,7 +353,7 @@ for (const tex of root.listTextures()) {
   const img = await sharp(Buffer.from(tex.getImage())).resize(size, size, { fit: 'fill' }).webp({ quality: isNormal ? 92 : 85, effort: 5 }).toBuffer()
   tex.setImage(new Uint8Array(img)).setMimeType('image/webp')
 }
-await doc.transform(meshopt({ encoder: MeshoptEncoder, level: 'high' }))
+await doc.transform(prune(), meshopt({ encoder: MeshoptEncoder, level: 'high' }))
 
 const after = { Base: 0, Lid: 0 }
 for (const node of root.listNodes()) {

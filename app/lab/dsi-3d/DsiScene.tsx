@@ -9,7 +9,9 @@ import {
   ACESFilmicToneMapping,
   Box3,
   Color,
+  DataTexture,
   Group,
+  LinearMipmapLinearFilter,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
@@ -18,8 +20,11 @@ import {
   Object3D,
   PerspectiveCamera,
   Quaternion,
+  RGBAFormat,
+  RepeatWrapping,
   SRGBColorSpace,
   SphereGeometry,
+  Vector2,
   Vector3,
 } from 'three'
 import DsiMenu from '@/components/dsi/DsiMenu'
@@ -85,6 +90,32 @@ const PLASTIC: Record<string, { roughness: number; clearcoat: number; clearcoatR
   Buttons1: { roughness: 0.62, clearcoat: 0.5, clearcoatRoughness: 0.2 },
 }
 
+/** A small tiling noise as a normal map: the faint grain of moulded plastic. */
+let grainTex: DataTexture | null = null
+function grain() {
+  if (grainTex) return grainTex
+  const n = 128
+  const data = new Uint8Array(n * n * 4)
+  let seed = 7
+  const rnd = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
+    return seed / 4294967296
+  }
+  for (let i = 0; i < n * n; i++) {
+    data[i * 4] = 128 + (rnd() - 0.5) * 120
+    data[i * 4 + 1] = 128 + (rnd() - 0.5) * 120
+    data[i * 4 + 2] = 255
+    data[i * 4 + 3] = 255
+  }
+  grainTex = new DataTexture(data, n, n, RGBAFormat)
+  grainTex.wrapS = grainTex.wrapT = RepeatWrapping
+  grainTex.repeat.set(14, 14)
+  grainTex.generateMipmaps = true
+  grainTex.minFilter = LinearMipmapLinearFilter
+  grainTex.needsUpdate = true
+  return grainTex
+}
+
 /** Swaps the loader's standard materials for physical ones carrying the same maps. */
 function plasticize(root: Object3D) {
   const made = new Map<MeshStandardMaterial, MeshPhysicalMaterial>()
@@ -100,12 +131,14 @@ function plasticize(root: Object3D) {
         name: src.name,
         color: src.color,
         map: src.map,
-        normalMap: src.normalMap,
-        normalScale: src.normalScale.clone().multiplyScalar(0.2),
+        // The shell's scanned maps were dropped from the model (they showed as crumpled streaks); it gets a fine uniform grain instead.
+        normalMap: src.normalMap ?? grain(),
+        normalScale: src.normalMap ? src.normalScale : new Vector2(0.12, 0.12),
         roughnessMap: src.roughnessMap,
         metalness: 0,
         envMapIntensity: 1,
         ...kind,
+        roughness: src.roughnessMap ? kind.roughness : 0.45,
       })
       made.set(src, mat)
     }
