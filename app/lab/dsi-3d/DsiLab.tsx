@@ -133,7 +133,7 @@ export default function DsiLab() {
 
   return (
     <main
-      className="relative h-[100svh] w-full overflow-hidden"
+      className="relative h-[100svh] w-full overflow-hidden dark:[background:#0d1830!important]"
       style={{ background: 'linear-gradient(180deg, #a9cbee 0%, #bad6f2 35%, #cbe1f4 65%, #dcebf4 100%)' }}
     >
       {webgl === false ? (
@@ -176,8 +176,8 @@ export default function DsiLab() {
         </>
       )}
 
-      <p className="pointer-events-none absolute inset-x-0 bottom-2 px-4 text-center text-[10px] leading-snug text-[#0e4155]">
-        <span className="pointer-events-auto rounded bg-[#f1f9ff]/85 px-1.5 py-0.5 [box-decoration-break:clone]">
+      <p className="pointer-events-none absolute inset-x-0 bottom-2 px-4 text-center text-[10px] leading-snug text-[#0e4155] dark:text-[#c3ccd2]">
+        <span className="pointer-events-auto rounded bg-[#f1f9ff]/85 dark:bg-[#0b1426]/85 px-1.5 py-0.5 [box-decoration-break:clone]">
           This work is based on &quot;DSi&quot; (<a href={CREDIT.model}>{CREDIT.model}</a>) by Cleanman00 (
           <a href={CREDIT.author}>{CREDIT.author}</a>) licensed under CC-BY-4.0 (
           <a href={CREDIT.license}>{CREDIT.license}</a>)

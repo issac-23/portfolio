@@ -18,6 +18,8 @@ import {
   Matrix4,
   Mesh,
   MeshBasicMaterial,
+  Points,
+  PointsMaterial,
   NearestFilter,
   Quaternion,
   SRGBColorSpace,
@@ -53,20 +55,25 @@ const PUSH = 3
 // The level is modelled big and drawn at this scale, so it reads as far off next to the DSi.
 const SCALE = 0.45
 
-const SKY_TOP = '#3d98e4'
-const SKY_MID = '#86caf6'
-const SKY_HORIZON = '#c4e8fb'
-
-// The home page's stage palette, in 3D.
-const GRASS = '#72b85a'
-const GRASS_HI = '#8ccc6c'
-const SOIL = '#c9926a'
-const BRICK = ['#d9996c', '#cf8e62', '#c98558', '#dba577']
-const PIPE = ['#4aa84f', '#43a04b']
-const HILL_FAR = '#b2d89a'
-const HILL_NEAR = '#86c06f'
-const CLOUD = '#fbfdff'
-const FLAG = '#e0604f'
+// The home page's stage palette, in 3D: a day and a night one (the night values are the stage's :root.dark ones).
+const DAY = {
+  skyTop: '#3d98e4', skyMid: '#86caf6', skyHorizon: '#c4e8fb',
+  grass: '#72b85a', grassHi: '#8ccc6c', soil: '#c9926a',
+  brick: ['#d9996c', '#cf8e62', '#c98558', '#dba577'],
+  pipe: ['#4aa84f', '#43a04b'], rim: '#56b95a',
+  hillFar: '#b2d89a', hillNear: '#86c06f', cloud: '#fbfdff',
+  flag: '#e0604f', pole: '#e8f0e4', ball: '#f2c94c',
+}
+const NIGHT: typeof DAY = {
+  skyTop: '#070c1a', skyMid: '#0d1830', skyHorizon: '#1b2d52',
+  grass: '#1b3f2c', grassHi: '#245036', soil: '#2f2420',
+  brick: ['#4a362c', '#42302a', '#3d2c24', '#50392e'],
+  pipe: ['#1f4a34', '#1b4330'], rim: '#2b5e43',
+  hillFar: '#12303a', hillNear: '#143128', cloud: '#2d3a5a',
+  flag: '#7a3d3a', pole: '#9aa6b8', ball: '#b89a3a',
+}
+const STAR = '#c8d3ea'
+const MOON = '#e6dfbf'
 
 type Item = { p: [number, number, number]; s?: [number, number, number]; ry?: number; color: string }
 
@@ -156,16 +163,20 @@ function brickTexture() {
   return t
 }
 
-function skyTexture() {
+/** Which side of the screen the moon goes: the right, out of the way of the flag on a wide window. */
+const wideSide = (v: View) => 0.45 + 0.2 * (1 - v.wide)
+
+function skyTexture(dark: boolean) {
+  const P = dark ? NIGHT : DAY
   const c = document.createElement('canvas')
   c.width = 2
   c.height = 256
   const x = c.getContext('2d')!
   const g = x.createLinearGradient(0, 0, 0, 256)
-  g.addColorStop(0, SKY_TOP)
-  g.addColorStop(0.13, SKY_MID)
-  g.addColorStop(0.27, SKY_HORIZON)
-  g.addColorStop(1, SKY_HORIZON)
+  g.addColorStop(0, P.skyTop)
+  g.addColorStop(0.13, P.skyMid)
+  g.addColorStop(0.27, P.skyHorizon)
+  g.addColorStop(1, P.skyHorizon)
   x.fillStyle = g
   x.fillRect(0, 0, 2, 256)
   const t = new CanvasTexture(c)
@@ -173,7 +184,8 @@ function skyTexture() {
   return t
 }
 
-function build(still: boolean, v: View) {
+function build(still: boolean, v: View, dark: boolean) {
+  const P = dark ? NIGHT : DAY
   const root = new Group()
   // A point at this fraction of the screen's half-width (-1 left, 1 right), at depth z down the level.
   const across = (f: number, z: number) => f * v.tanH * (v.camZ - z)
@@ -197,12 +209,12 @@ function build(still: boolean, v: View) {
   // The field: a grass top over soil, running far off.
   const LEN = 170
   add(box(), plain, [
-    { p: [0, -0.3, 9 - LEN / 2], s: [110, 0.6, LEN], color: GRASS },
-    { p: [0, -2.6, 9 - LEN / 2], s: [110, 4, LEN], color: SOIL },
+    { p: [0, -0.3, 9 - LEN / 2], s: [110, 0.6, LEN], color: P.grass },
+    { p: [0, -2.6, 9 - LEN / 2], s: [110, 4, LEN], color: P.soil },
   ])
   // Lighter grass stripes, so the way the field runs shows.
   const stripes: Item[] = []
-  for (let z = 6; z > -150; z -= 8) stripes.push({ p: [0, 0.01, z], s: [110, 0.04, 4], color: GRASS_HI })
+  for (let z = 6; z > -150; z -= 8) stripes.push({ p: [0, 0.01, z], s: [110, 0.04, 4], color: P.grassHi })
   add(box(), plain, stripes)
 
   // The brick path, laid in tiles that follow the bends.
@@ -217,7 +229,7 @@ function build(still: boolean, v: View) {
         p: [cx + k * Math.cos(ry), 0.1, z - k * Math.sin(ry)],
         s: [0.97, 0.22, 1.2],
         ry,
-        color: BRICK[Math.floor(r() * BRICK.length)],
+        color: P.brick[Math.floor(r() * P.brick.length)],
       })
     }
   }
@@ -233,9 +245,9 @@ function build(still: boolean, v: View) {
   const bodies: Item[] = []
   const rims: Item[] = []
   pipeSpots.forEach(([x, z, h], i) => {
-    const color = PIPE[i % PIPE.length]
+    const color = P.pipe[i % P.pipe.length]
     bodies.push({ p: [x, (h - 0.55) / 2, z], s: [1, h - 0.55, 1], color })
-    rims.push({ p: [x, h - 0.275, z], s: [1, 0.55, 1], color: '#56b95a' })
+    rims.push({ p: [x, h - 0.275, z], s: [1, 0.55, 1], color: P.rim })
   })
   add(shade(new CylinderGeometry(0.78, 0.78, 1, 20)), plain, bodies)
   add(shade(new CylinderGeometry(0.98, 0.98, 1, 20)), plain, rims)
@@ -243,7 +255,7 @@ function build(still: boolean, v: View) {
   // Floating brick blocks, in short rows.
   const blocks: Item[] = []
   const row = (x: number, z: number, y: number, n: number) => {
-    for (let i = 0; i < n; i++) blocks.push({ p: [x + i * 1.35, y, z], s: [1.3, 1.3, 1.3], color: BRICK[(i + n) % BRICK.length] })
+    for (let i = 0; i < n; i++) blocks.push({ p: [x + i * 1.35, y, z], s: [1.3, 1.3, 1.3], color: P.brick[(i + n) % P.brick.length] })
   }
   row(pathX(-14) - 2.7, -14, 6.2, 4)
   row(pathX(-26) - 1.4, -26, 7, 3)
@@ -267,12 +279,12 @@ function build(still: boolean, v: View) {
     hills.push({
       p: [x, -1.2, z],
       s: [w, 2.5 + hr() * 5 + far * 3, w * 0.9],
-      color: new Color(HILL_NEAR).lerp(new Color(HILL_FAR), far).getStyle(),
+      color: new Color(P.hillNear).lerp(new Color(P.hillFar), far).getStyle(),
     })
   }
   // Two wide ones right behind the flag.
-  hills.push({ p: [-9, -1.4, -96], s: [14, 8, 11], color: HILL_FAR })
-  hills.push({ p: [11, -1.4, -102], s: [16, 10, 12], color: HILL_FAR })
+  hills.push({ p: [-9, -1.4, -96], s: [14, 8, 11], color: P.hillFar })
+  hills.push({ p: [11, -1.4, -102], s: [16, 10, 12], color: P.hillFar })
   const hillGeo = new SphereGeometry(1, 9, 5, 0, Math.PI * 2, 0, Math.PI / 2)
   const flatHill = hillGeo.toNonIndexed()
   hillGeo.dispose()
@@ -289,21 +301,40 @@ function build(still: boolean, v: View) {
     const depth = near ? 35 + cr() * 25 : 70 + cr() * 60
     const s = near ? 0.7 + cr() * 0.4 : 1.2 + cr() * 1.0
     const elev = (near ? 3 + cr() * 2.5 : 1.2 + cr() * 3.5) * (Math.PI / 180)
-    clouds.push({ p: [-80 + (i / 10) * 160 + cr() * 10, v.camY + depth * Math.tan(elev), v.camZ - depth], s: [s, s, s], color: CLOUD })
+    clouds.push({ p: [-80 + (i / 10) * 160 + cr() * 10, v.camY + depth * Math.tan(elev), v.camZ - depth], s: [s, s, s], color: P.cloud })
   }
   const cloudMesh = add(cloudGeo, plain, clouds)
 
   // The flagpole, far down the path: a block base, a pole, a gold ball and a pennant.
   const fz = -84
   const fx = pathX(fz)
-  add(box(), bricks, [{ p: [fx, 0.7, fz], s: [2.4, 1.4, 2.4], color: BRICK[2] }])
-  add(shade(new CylinderGeometry(0.16, 0.16, 1, 8)), plain, [{ p: [fx, 8.3, fz], s: [1, 14.6, 1], color: '#e8f0e4' }])
-  add(shade(new SphereGeometry(0.42, 10, 8)), plain, [{ p: [fx, 15.8, fz], color: '#f2c94c' }])
+  add(box(), bricks, [{ p: [fx, 0.7, fz], s: [2.4, 1.4, 2.4], color: P.brick[2] }])
+  add(shade(new CylinderGeometry(0.16, 0.16, 1, 8)), plain, [{ p: [fx, 8.3, fz], s: [1, 14.6, 1], color: P.pole }])
+  add(shade(new SphereGeometry(0.42, 10, 8)), plain, [{ p: [fx, 15.8, fz], color: P.ball }])
   const pennant = new BufferGeometry()
   pennant.setAttribute('position', new Float32BufferAttribute([0, 0, 0, -3.6, -1.1, 0, 0, -2.2, 0], 3))
   pennant.setAttribute('normal', new Float32BufferAttribute([0, 0, 1, 0, 0, 1, 0, 0, 1], 3))
   shade(pennant)
-  add(pennant, flat, [{ p: [fx - 0.16, 15.1, fz], s: [1, 1, 1], color: FLAG }])
+  add(pennant, flat, [{ p: [fx - 0.16, 15.1, fz], s: [1, 1, 1], color: P.flag }])
+
+  if (dark) {
+    // Stars: one Points object scattered over the sky above the horizon, and a round moon.
+    const sr = rng(11)
+    const pts: number[] = []
+    for (let i = 0; i < 220; i++) {
+      const depth = 150
+      const elev = (0.4 + sr() * 9) * (Math.PI / 180)
+      pts.push(-170 + sr() * 340, v.camY + depth * Math.tan(elev), v.camZ - depth)
+    }
+    const sg = track(new BufferGeometry())
+    sg.setAttribute('position', new Float32BufferAttribute(pts, 3))
+    const stars = new Points(sg, track(new PointsMaterial({ color: STAR, size: 2, sizeAttenuation: false, fog: false, toneMapped: false })))
+    stars.frustumCulled = false
+    root.add(stars)
+    const moon = new Mesh(track(new SphereGeometry(5, 16, 12)), track(new MeshBasicMaterial({ color: MOON, fog: false, toneMapped: false })))
+    moon.position.set(across(wideSide(v), -140), v.camY + (v.camZ + 140) * Math.tan((5.5 * Math.PI) / 180), v.camZ - (v.camZ + 140))
+    root.add(moon)
+  }
 
   // Slow drift: the clouds slide sideways and wrap round. Still stays still.
   const m = new Matrix4()
@@ -324,7 +355,7 @@ function build(still: boolean, v: View) {
     cloudMesh.instanceMatrix.needsUpdate = true
   }
   const meshes: Mesh[] = []
-  root.traverse(o => (o as Mesh).isMesh && meshes.push(o as Mesh))
+  root.traverse(o => ((o as Mesh).isMesh || (o as Points).isPoints) && meshes.push(o as Mesh))
   return { root, drift: still ? null : drift, dispose: () => toDispose.forEach(o => o.dispose()), triangles: meshes.reduce((t, mesh) => t + ((mesh.geometry.index?.count ?? mesh.geometry.getAttribute('position').count) / 3) * ((mesh as InstancedMesh).count ?? 1), 0), draws: meshes.length }
 }
 
@@ -351,14 +382,24 @@ export default function Level3D({ still }: { still: boolean }) {
     }
     return { tilt, origin, v }
   }, [aspect, camD])
-  const level = useMemo(() => build(still, view.v), [still, view])
+  // The site's theme is the `dark` class on <html>; follow it live.
+  const [dark, setDark] = useState(false)
+  useEffect(() => {
+    const el = document.documentElement
+    const read = () => setDark(el.classList.contains('dark'))
+    read()
+    const mo = new MutationObserver(read)
+    mo.observe(el, { attributes: true, attributeFilter: ['class'] })
+    return () => mo.disconnect()
+  }, [])
+  const level = useMemo(() => build(still, view.v, dark), [still, view, dark])
   // The sky is the scene's background; the fog fades the far ground into it.
   useEffect(() => {
-    const sky = skyTexture()
+    const sky = skyTexture(dark)
     const prevBg = scene.background
     const prevFog = scene.fog
     scene.background = sky
-    scene.fog = new Fog(SKY_HORIZON, 14, 95)
+    scene.fog = new Fog((dark ? NIGHT : DAY).skyHorizon, 14, 95)
     ;(window as unknown as { __dsiLab?: Record<string, unknown> }).__dsiLab = {
       ...(window as unknown as { __dsiLab?: Record<string, unknown> }).__dsiLab,
       levelStats: () => ({ draws: level.draws, triangles: level.triangles }),
@@ -368,7 +409,7 @@ export default function Level3D({ still }: { still: boolean }) {
       scene.fog = prevFog
       sky.dispose()
     }
-  }, [scene, level])
+  }, [scene, level, dark])
   useEffect(() => () => level.dispose(), [level])
 
   useFrame((_, dt) => {
@@ -380,6 +421,8 @@ export default function Level3D({ still }: { still: boolean }) {
   return (
     <group position={view.origin} rotation={[view.tilt, 0, 0]} scale={SCALE}>
       <primitive object={level.root} />
+      {/* A cool light from behind keeps the black DSi's edges against the night. */}
+      {dark && <directionalLight position={[0, 4, -8]} intensity={1.6} color="#7aa4ee" />}
     </group>
   )
 }
