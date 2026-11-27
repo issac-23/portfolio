@@ -24,7 +24,16 @@ import sharp from 'sharp'
 
 const SRC = resolve(process.argv[2] ?? join(homedir(), 'Downloads', 'dsi-model', 'scene.gltf'))
 const OUT = resolve(process.argv[3] ?? join(import.meta.dirname, '..', 'public', 'models', 'dsi.glb'))
-const TARGET_TRIS = 40000
+// The source is 264k triangles. The first build cut it to 40k at a 2% error
+// and the edges, bevels and button rims went with it (the DSi read as clay).
+// Keep most of it, and only let the simplifier touch what cannot be seen.
+const TARGET_TRIS = Number(process.env.DSI_TRIS ?? 170000)
+const SIMPLIFY_ERROR = Number(process.env.DSI_ERROR ?? 0.0008)
+// Texture edge length: the shell and the buttons carry the normal and
+// roughness maps that make the plastic read as plastic; the rest are small.
+const BIG_TEX = Number(process.env.DSI_TEX ?? 2048)
+const SMALL_TEX = 1024
+const BIG_MATERIALS = /^(Matte_plastic|Buttons1)$/
 
 // ---- small vector helpers -------------------------------------------------
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
@@ -295,11 +304,30 @@ const totalBefore = tris.Base + tris.Lid
 await doc.transform(
   dedup(),
   weld({}),
-  simplify({ simplifier: MeshoptSimplifier, ratio: TARGET_TRIS / totalBefore, error: 0.02 }),
+  simplify({ simplifier: MeshoptSimplifier, ratio: Math.min(1, TARGET_TRIS / totalBefore), error: SIMPLIFY_ERROR }),
   prune(),
-  textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [1024, 1024] }),
-  meshopt({ encoder: MeshoptEncoder, level: 'high' }),
 )
+
+// Materials. The source's plastic maps carry a metalness channel that averages
+// ~0.22, which strips the diffuse colour and makes plastic look like putty. Real
+// DSi plastic is a dielectric, so the plastics are made non-metallic, and the
+// buttons a little glossier than the shell (the roughness map is kept).
+for (const m of root.listMaterials()) {
+  if (/^(Matte_plastic|Buttons1|Skyddsplast|Shiny)$/.test(m.getName())) m.setMetallicFactor(0)
+  if (m.getName() === 'Buttons1') m.setRoughnessFactor(0.75)
+}
+
+// Textures, one by one: the big materials keep BIG_TEX, the rest shrink to
+// SMALL_TEX. Normal maps are encoded at a higher WebP quality than colour.
+for (const tex of root.listTextures()) {
+  const owners = tex.listParents().filter(p => p.propertyType === 'Material')
+  const big = owners.some(m => BIG_MATERIALS.test(m.getName()))
+  const isNormal = owners.some(m => m.getNormalTexture() === tex)
+  const size = big ? BIG_TEX : SMALL_TEX
+  const img = await sharp(Buffer.from(tex.getImage())).resize(size, size, { fit: 'fill' }).webp({ quality: isNormal ? 92 : 85, effort: 5 }).toBuffer()
+  tex.setImage(new Uint8Array(img)).setMimeType('image/webp')
+}
+await doc.transform(meshopt({ encoder: MeshoptEncoder, level: 'high' }))
 
 const after = { Base: 0, Lid: 0 }
 for (const node of root.listNodes()) {
