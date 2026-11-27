@@ -14,6 +14,7 @@ import {
   MeshBasicMaterial,
   MeshStandardMaterial,
   Object3D,
+  PerspectiveCamera,
   Quaternion,
   SphereGeometry,
   Vector3,
@@ -23,10 +24,22 @@ import type { DeviceProps } from '@/components/dsi/Device'
 import { INITIAL } from '@/components/dsi/console'
 import { getMotion } from '@/components/dsi/prefs'
 
-const OPEN_SECONDS = 1.1
+// The opening: the closed DSi turns to face the viewer, then the lid opens, the
+// two overlapping a little so it reads as one movement.
+const TURN_SECONDS = 0.7
+const LID_START = 0.55
+const LID_SECONDS = 0.85
+const INTRO_SECONDS = LID_START + LID_SECONDS
 const MAX_YAW = 0.7
 const MAX_PITCH = 0.3
-const INTRO_YAW = 0.65
+const INTRO_YAW = 0.6
+// Shut, the DSi is drawn this much smaller so its turning fits a narrow window too.
+const CLOSED_SCALE = 0.85
+// Where the camera sits, as an angle above the table, and how much of the view
+// the open model may fill (NDC, 1 is the edge). The bottom edge leaves room for the credit line.
+const CAMERA_ELEVATION = 0.7
+const FILL_X = 0.97
+const FILL_Y = 0.9
 // The live screens are laid out at this many CSS px and scaled onto the model.
 const PANEL_W = 400
 const PANEL_H = 300
@@ -45,6 +58,8 @@ interface Frame {
 
 const OFF_AT_START = { ...INITIAL, phase: 'off' as const }
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+const unit = (t: number) => Math.max(0, Math.min(1, t))
 
 /** The page's reduced-motion choices: the system's, or the DSi's own setting. */
 function wantsStill() {
@@ -56,6 +71,30 @@ type LabHooks = Record<string, unknown>
 const hooks = (): LabHooks => {
   const w = window as unknown as { __dsiLab?: LabHooks }
   return (w.__dsiLab ??= {})
+}
+
+/** A thin sample of the model's vertices as they are with the lid open (call after updateMatrixWorld). */
+function openPoints(root: Object3D, center: Vector3, scale: number) {
+  const meshes: Mesh[] = []
+  let total = 0
+  root.traverse(o => {
+    const m = o as Mesh
+    if (m.isMesh && m.name !== 'PowerHit') {
+      meshes.push(m)
+      total += m.geometry.getAttribute('position').count
+    }
+  })
+  const stride = Math.max(1, Math.ceil(total / 30000))
+  const out: number[] = []
+  const v = new Vector3()
+  for (const m of meshes) {
+    const pos = m.geometry.getAttribute('position')
+    for (let i = 0; i < pos.count; i += stride) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).sub(center).multiplyScalar(scale)
+      out.push(v.x, v.y, v.z)
+    }
+  }
+  return new Float32Array(out)
 }
 
 /** Hangs a DOM panel on a screen: a CSS3D plane glued to the model's screen frame. */
@@ -104,6 +143,8 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
   const start = useRef<number | null>(null)
   const [opened, setOpened] = useState(false)
   const hovering = useRef(false)
+  // Where the camera looks, so the shut DSi can be brought to it.
+  const aim = useRef(new Vector3())
 
   const rig = useMemo(() => {
     const lid = scene.getObjectByName('Lid') as Object3D
@@ -131,6 +172,14 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     const box = new Box3().setFromObject(scene)
     const center = box.getCenter(new Vector3())
     const size = box.getSize(new Vector3())
+    const scale = 3.4 / Math.max(size.x, size.y, size.z)
+    const points = openPoints(scene, center, scale)
+    // Shut, the DSi lies lower than its open middle; the opening lifts it from there.
+    lid.quaternion.setFromAxisAngle(axis, closeAngle)
+    scene.updateMatrixWorld(true)
+    const closedAt = new Box3().setFromObject(scene).getCenter(new Vector3()).sub(center).multiplyScalar(scale)
+    lid.quaternion.setFromAxisAngle(axis, 0)
+    scene.updateMatrixWorld(true)
     return {
       lid,
       base,
@@ -140,7 +189,10 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
       buttonMat,
       hit,
       center,
-      scale: 3.4 / Math.max(size.x, size.y, size.z),
+      scale,
+      closedAt,
+      // The open model's points, relative to its centre and in scene units, for the camera to fit.
+      points,
       top: lid.userData.screen as Frame,
       bottom: base.userData.screen as Frame,
     }
@@ -160,6 +212,53 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     rig.screenMat.emissiveIntensity = lit ? 0.55 : 0
   }, [rig, lit])
 
+  // Frames the open model for the window's shape: as close as it can get with
+  // every point of it still inside the view. A wide window is limited by
+  // height, a tall phone by width, so the distance is worked out from the
+  // window's aspect rather than fixed.
+  const aspect = useThree(s => s.size.width / Math.max(1, s.size.height))
+  useEffect(() => {
+    const cam = camera as PerspectiveCamera
+    const dir = new Vector3(0, Math.sin(CAMERA_ELEVATION), Math.cos(CAMERA_ELEVATION))
+    const up = new Vector3(0, Math.cos(CAMERA_ELEVATION), -Math.sin(CAMERA_ELEVATION))
+    const tanV = Math.tan((cam.fov * Math.PI) / 360)
+    const tanH = tanV * aspect
+    // For a point at x across, y up and z toward the camera, the camera at
+    // distance d sees it at depth d - z, and it must satisfy |x| <= FILL * tan * depth.
+    // The camera looks at the middle of the model's height, so the spare room is even.
+    const p = rig.points
+    const n = p.length / 3
+    const ys = new Float32Array(n)
+    const zs = new Float32Array(n)
+    for (let i = 0; i < n; i++) {
+      ys[i] = p[i * 3 + 1] * up.y + p[i * 3 + 2] * up.z
+      zs[i] = p[i * 3 + 1] * dir.y + p[i * 3 + 2] * dir.z
+    }
+    // Near parts look bigger, so the middle of the height is nudged until the
+    // gaps above and below the model match.
+    let mid = 0
+    let d = 1
+    for (let pass = 0; pass < 4; pass++) {
+      d = 1
+      for (let i = 0; i < n; i++) d = Math.max(d, zs[i] + Math.abs(p[i * 3]) / (FILL_X * tanH), zs[i] + Math.abs(ys[i] - mid) / (FILL_Y * tanV))
+      let top = -Infinity
+      let bottom = Infinity
+      for (let i = 0; i < n; i++) {
+        const v = (ys[i] - mid) / ((d - zs[i]) * tanV)
+        top = Math.max(top, v)
+        bottom = Math.min(bottom, v)
+      }
+      mid += ((top + bottom) / 2) * d * tanV
+    }
+    for (let i = 0; i < n; i++) d = Math.max(d, zs[i] + Math.abs(p[i * 3]) / (FILL_X * tanH), zs[i] + Math.abs(ys[i] - mid) / (FILL_Y * tanV))
+    const target = up.clone().multiplyScalar(mid)
+    aim.current.copy(target)
+    cam.aspect = aspect
+    cam.position.copy(dir).multiplyScalar(d).add(target)
+    cam.lookAt(target)
+    cam.updateProjectionMatrix()
+  }, [rig, camera, aspect])
+
   // For the headless checks: where the power button is on screen.
   useEffect(() => {
     hooks().powerPoint = () => {
@@ -177,22 +276,28 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
       gl.domElement.dataset.phase = still ? 'open' : 'opening'
     }
     const elapsed = freeze !== null ? freeze / 1000 : clock.elapsedTime - start.current
-    const t = still ? 1 : Math.min(elapsed / OPEN_SECONDS, 1)
-    const e = easeOutCubic(t)
-    if (t >= 1 && !opened) {
+    const done = still || elapsed >= INTRO_SECONDS
+    // Turn to face the viewer first, with the lid shut, then lift the lid.
+    const turn = still ? 1 : easeInOut(unit(elapsed / TURN_SECONDS))
+    const lid = still ? 1 : easeOutCubic(unit((elapsed - LID_START) / LID_SECONDS))
+    if (done && !opened) {
       gl.domElement.dataset.phase = 'open'
       setOpened(true)
       onOpened()
     }
-    setOpen(e)
+    setOpen(lid)
 
     // Drag offsets ease back to rest when the pointer lets go.
     const d = drag.current
     const k = 1 - Math.exp(-dt * (d.active ? 18 : 5))
     d.yaw += ((d.active ? d.x : 0) - d.yaw) * k
     d.pitch += ((d.active ? d.y : 0) - d.pitch) * k
-    el.rotation.y = (still ? 0 : (1 - e) * INTRO_YAW) + d.yaw
+    el.rotation.y = (1 - turn) * INTRO_YAW + d.yaw
     el.rotation.x = d.pitch
+    // Shut, the DSi sits where the camera looks; the opening lowers it into its place.
+    const shrink = CLOSED_SCALE + (1 - CLOSED_SCALE) * lid
+    el.scale.setScalar(rig.scale * shrink)
+    el.position.copy(rig.closedAt).multiplyScalar(shrink).applyEuler(el.rotation).negate().add(aim.current).multiplyScalar(1 - lid)
   })
 
   const isPower = (o: Object3D) => o.name === 'PowerHit' || o.name === 'Power_button'
@@ -352,7 +457,10 @@ export default function DsiScene({ onPress, register, onLit, lit, onCue, onOpene
       onPointerMove={e => {
         const d = drag.current
         if (!d.active || e.pointerId !== d.id) return
-        d.x = clamp((e.clientX - origin.current.x) * 0.006, MAX_YAW)
+        // On a tall window the open DSi is fitted to nearly the full width, so
+        // any sideways turn would swing a corner off screen; only tilting is left.
+        const yawLimit = window.innerWidth < window.innerHeight ? 0 : MAX_YAW
+        d.x = clamp((e.clientX - origin.current.x) * 0.006, yawLimit)
         d.y = clamp((e.clientY - origin.current.y) * 0.004, MAX_PITCH)
       }}
       onPointerUp={() => {
@@ -362,7 +470,7 @@ export default function DsiScene({ onPress, register, onLit, lit, onCue, onOpene
         drag.current.active = false
       }}
     >
-      <Canvas frameloop={fps ? 'demand' : 'always'} dpr={[1, 2]} camera={{ position: [0, 2.6, 6.2], fov: 30 }} onCreated={({ camera }) => camera.lookAt(0, 0.1, 0)}>
+      <Canvas frameloop={fps ? 'demand' : 'always'} dpr={[1, 2]} camera={{ position: [0, 2.6, 6.2], fov: 30 }}>
         {fps > 0 && <Ticker fps={fps} />}
         <hemisphereLight args={['#eaf4ff', '#9db8cc', 0.9]} />
         <directionalLight position={[3, 6, 4]} intensity={2.2} />
