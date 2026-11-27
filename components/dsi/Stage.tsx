@@ -117,7 +117,6 @@ function Blocks({ count, className }: { count: number; className: string }) {
   )
 }
 
-
 // A pipe 16 pixels wide: a wider rim on top over a narrower body, each lit
 // down the left and shaded down the right inside a dark outline. body is
 // how many rows of body there are under the 4-row rim.

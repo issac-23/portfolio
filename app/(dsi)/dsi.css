@@ -239,13 +239,14 @@
 }
 
 /* Pipes and a flagpole standing on the ground in the margins, in front of
-   the brick. Shown only where those margins are wide enough that they
-   never reach behind the device; on a phone or a narrow window, none. */
+   the brick. Measured out from the device's edge, like the blocks, so they
+   never reach behind it; where a margin is narrower than they are, the
+   window's edge cuts them off instead. On a phone or a narrow window, none. */
 .dsi-pipes { display: none; bottom: 48px; }
 @media (min-aspect-ratio: 3/2) {
   .dsi-pipes { display: block; }
-  .dsi-pipes-l { left: 0.5vw; }
-  .dsi-pipes-r { right: 0.5vw; }
+  .dsi-pipes-l { right: calc(50% + var(--dsi-scene-dev) / 2 + 1.5vw); }
+  .dsi-pipes-r { left: calc(50% + var(--dsi-scene-dev) / 2 + 1.5vw); }
 }
 
 /* Night only: stars over the top of the sky and a crescent moon. */
