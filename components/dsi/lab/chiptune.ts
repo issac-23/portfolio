@@ -13,7 +13,8 @@
 
 const BPM = 96
 const EIGHTH = 60 / BPM / 2
-const MASTER = Math.pow(10, -18 / 20) // about -18 dB
+// Background level: well under the sound effects (#98; it was -18 dB, too loud).
+const MASTER = Math.pow(10, -30 / 20) // about -30 dB
 const FADE_IN = 1.6
 const AHEAD = 0.25
 const TICK_MS = 50
