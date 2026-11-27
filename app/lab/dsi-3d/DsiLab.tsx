@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createChiptune, type Chiptune } from '@/components/dsi/lab/chiptune'
 import { createSfx, type Cue } from '@/components/dsi/lab/sfx'
+import PowerHint from './PowerHint'
 
 // three, the model and the whole DSi UI load only in the browser, and only on this route.
 const DsiScene = dynamic(() => import('./DsiScene'), {
@@ -43,6 +44,14 @@ const readMuted = () => {
 export default function DsiLab() {
   const [lit, setLit] = useState(false)
   const [muted, setMuted] = useState(false)
+  // The "Press POWER" pointer is for a visitor who has not turned the console on
+  // yet: it waits for the lid to be up, and once they have, it stays gone for
+  // the rest of the visit, however often they switch off and on.
+  const [opened, setOpened] = useState(false)
+  const [everLit, setEverLit] = useState(false)
+  useEffect(() => {
+    if (lit) setEverLit(true)
+  }, [lit])
   // Unknown until the browser has been asked, so the server render matches.
   const [webgl, setWebgl] = useState<boolean | null>(null)
   useEffect(() => setWebgl(hasWebGL()), [])
@@ -87,6 +96,11 @@ export default function DsiLab() {
     if (lit) music.current?.start()
     else music.current?.stop()
   }, [lit])
+
+  const onOpened = useCallback(() => {
+    cue('reveal')
+    setOpened(true)
+  }, [cue])
 
   const register = useCallback((fn: () => void) => {
     power.current = fn
@@ -133,7 +147,7 @@ export default function DsiLab() {
           </p>
         </div>
       ) : webgl ? (
-        <DsiScene onPress={press} register={register} onLit={setLit} lit={lit} onCue={cue} onOpened={() => cue('reveal')} />
+        <DsiScene onPress={press} register={register} onLit={setLit} lit={lit} onCue={cue} onOpened={onOpened} />
       ) : null}
 
       {webgl !== false && (
@@ -147,6 +161,8 @@ export default function DsiLab() {
           >
             {lit ? 'Power off' : 'Power on'}
           </button>
+
+          {opened && !lit && !everLit && <PowerHint />}
 
           <button
             type="button"
