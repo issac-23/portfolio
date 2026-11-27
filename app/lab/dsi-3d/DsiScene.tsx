@@ -13,6 +13,7 @@ import {
   Matrix4,
   Mesh,
   MeshBasicMaterial,
+  MeshPhysicalMaterial,
   MeshStandardMaterial,
   Object3D,
   PerspectiveCamera,
@@ -73,6 +74,43 @@ type LabHooks = Record<string, unknown>
 const hooks = (): LabHooks => {
   const w = window as unknown as { __dsiLab?: LabHooks }
   return (w.__dsiLab ??= {})
+}
+
+// Moulded plastic: a dielectric with a thin glossy skin over a fairly matte body,
+// so the softbox reflections show as crisp streaks on the edges while the
+// faces stay even. The shell and the buttons differ only in how glossy.
+const PLASTIC: Record<string, { roughness: number; clearcoat: number; clearcoatRoughness: number }> = {
+  Matte_plastic: { roughness: 0.82, clearcoat: 0.45, clearcoatRoughness: 0.18 },
+  Shiny: { roughness: 0.7, clearcoat: 0.4, clearcoatRoughness: 0.25 },
+  Buttons1: { roughness: 0.62, clearcoat: 0.5, clearcoatRoughness: 0.2 },
+}
+
+/** Swaps the loader's standard materials for physical ones carrying the same maps. */
+function plasticize(root: Object3D) {
+  const made = new Map<MeshStandardMaterial, MeshPhysicalMaterial>()
+  root.traverse(o => {
+    const m = o as Mesh
+    if (!m.isMesh) return
+    const src = m.material as MeshStandardMaterial
+    const kind = PLASTIC[src.name]
+    if (!kind) return
+    let mat = made.get(src)
+    if (!mat) {
+      mat = new MeshPhysicalMaterial({
+        name: src.name,
+        color: src.color,
+        map: src.map,
+        normalMap: src.normalMap,
+        normalScale: src.normalScale.clone().multiplyScalar(0.2),
+        roughnessMap: src.roughnessMap,
+        metalness: 0,
+        envMapIntensity: 1,
+        ...kind,
+      })
+      made.set(src, mat)
+    }
+    m.material = mat
+  })
 }
 
 /** A thin sample of the model's vertices as they are with the lid open (call after updateMatrixWorld). */
@@ -149,6 +187,7 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
   const aim = useRef(new Vector3())
 
   const rig = useMemo(() => {
+    plasticize(scene)
     const lid = scene.getObjectByName('Lid') as Object3D
     const base = scene.getObjectByName('Base') as Object3D
     const axis = new Vector3(...(lid.userData.hingeAxis as [number, number, number]))
@@ -161,7 +200,7 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     // The power button gets its own material so it can light up on hover, and a
     // larger invisible target so a 4 mm button is not hard to hit.
     const button = scene.getObjectByName('Power_button') as Mesh
-    const buttonMat = (button.material as MeshStandardMaterial).clone()
+    const buttonMat = (button.material as MeshPhysicalMaterial).clone()
     button.material = buttonMat
     lid.quaternion.setFromAxisAngle(axis, 0)
     scene.updateMatrixWorld(true)
@@ -487,15 +526,22 @@ export default function DsiScene({ onPress, register, onLit, lit, onCue, onOpene
         gl={{ alpha: true, toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.05, outputColorSpace: SRGBColorSpace }}
       >
         {fps > 0 && <Ticker fps={fps} />}
-        {/* A low key from the left rakes across the plastic so edges and engraving catch it; a softer fill from the right; the sky and ground tint keeps shadows from going black. */}
-        <hemisphereLight args={['#eaf4ff', '#8fa7b8', 0.45]} />
-        <directionalLight position={[-5, 2.6, 2.2]} intensity={2.6} color="#fff6ea" />
-        <directionalLight position={[4, 3, 4]} intensity={0.7} color="#dcecff" />
-        <Environment resolution={128}>
-          <Lightformer form="rect" intensity={2.2} position={[0, 5, 2]} scale={[8, 4, 1]} color="#ffffff" />
-          <Lightformer form="rect" intensity={1.2} position={[-5, 1, 3]} scale={[3, 4, 1]} color="#cfe6ff" />
-          <Lightformer form="rect" intensity={0.9} position={[5, 1, -2]} scale={[3, 4, 1]} color="#fff4e0" />
-          <Lightformer form="rect" intensity={0.5} position={[0, 0.5, 6]} scale={[10, 1.5, 1]} color="#ffffff" />
+        {/* Studio lighting. A low key from the left rakes across the plastic so edges and engraving catch it; the rest of the light is in the environment below, as a few hard-edged softboxes whose reflections run along the edges. Almost no flat fill, so the black stays black and keeps its shape. */}
+        <hemisphereLight args={['#eaf4ff', '#8fa7b8', 0.08]} />
+        <directionalLight position={[-5, 2.6, 2.2]} intensity={0.9} color="#fff6ea" />
+        <directionalLight position={[4, 3, 4]} intensity={0.25} color="#dcecff" />
+        <Environment resolution={256}>
+          {/* a long box overhead and behind: the sheen on the lid and the top faces */}
+          <Lightformer form="rect" intensity={7} position={[0, 6, -2.5]} scale={[14, 0.7, 1]} color="#ffffff" />
+          {/* tall strips either side: thin highlights down the side edges and the hinge's ends */}
+          <Lightformer form="rect" intensity={14} position={[-6, 2, 1]} scale={[0.9, 7, 1]} color="#f2f8ff" />
+          <Lightformer form="rect" intensity={12} position={[6, 2, 0]} scale={[0.9, 7, 1]} color="#fff6ea" />
+          {/* a thin bar in front and above: the front edges and the rim of the base */}
+          <Lightformer form="rect" intensity={2.5} position={[0, 6.5, 4]} scale={[12, 1.6, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={20} position={[0, 4.6, 5]} scale={[7, 0.12, 1]} color="#ffffff" />
+          {/* a low, dim card, so the underside of the edges is not a hole */}
+          <Lightformer form="rect" intensity={8} position={[0, 0.4, 6]} scale={[9, 0.35, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={0.1} position={[0, -2, 4]} scale={[10, 2, 1]} color="#9fb4c4" />
         </Environment>
         <Device
           drag={drag}
