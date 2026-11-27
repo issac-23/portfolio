@@ -4,8 +4,9 @@ import { createPortal as domPortal } from 'react-dom'
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import type { Cue } from '@/components/dsi/lab/sfx'
 import { Canvas, createPortal, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { Environment, Html, Lightformer, useGLTF } from '@react-three/drei'
+import { ContactShadows, Environment, Html, Lightformer, useGLTF } from '@react-three/drei'
 import {
+  ACESFilmicToneMapping,
   Box3,
   Color,
   Group,
@@ -16,6 +17,7 @@ import {
   Object3D,
   PerspectiveCamera,
   Quaternion,
+  SRGBColorSpace,
   SphereGeometry,
   Vector3,
 } from 'three'
@@ -151,7 +153,7 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     const base = scene.getObjectByName('Base') as Object3D
     const axis = new Vector3(...(lid.userData.hingeAxis as [number, number, number]))
     const closeAngle = lid.userData.closeAngle as number
-    const screenMat = new MeshStandardMaterial({ color: new Color('#050607'), roughness: 0.35, metalness: 0 })
+    const screenMat = new MeshStandardMaterial({ color: new Color('#050607'), roughness: 0.14, metalness: 0, envMapIntensity: 1.4 })
     for (const name of ['ScreenTop', 'ScreenBottom']) {
       const m = scene.getObjectByName(name) as Mesh | undefined
       if (m) m.material = screenMat
@@ -180,7 +182,11 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     const closedAt = new Box3().setFromObject(scene).getCenter(new Vector3()).sub(center).multiplyScalar(scale)
     lid.quaternion.setFromAxisAngle(axis, 0)
     scene.updateMatrixWorld(true)
+    // The lowest point of the open model, in scene units, where the contact shadow sits.
+    let floor = Infinity
+    for (let i = 1; i < points.length; i += 3) floor = Math.min(floor, points[i])
     return {
+      floor,
       lid,
       base,
       axis,
@@ -310,7 +316,10 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
   }
 
   return (
-    <group ref={pivot} scale={rig.scale}>
+    <>
+      {/* Soft shadow where the DSi meets the table; stays put while the DSi lifts and tilts. */}
+      <ContactShadows position={[0, rig.floor - 0.005, 0]} scale={9} resolution={512} far={1.6} blur={2.6} opacity={0.55} color="#1b2a35" frames={Infinity} />
+      <group ref={pivot} scale={rig.scale}>
       <primitive
         object={scene}
         position={[-rig.center.x, -rig.center.y, -rig.center.z]}
@@ -327,7 +336,8 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
       {/* Only once the lid is up: before that the DOM layer would sit on top of a closed lid. */}
       {opened && <ScreenPanel frame={rig.top} container={rig.lid} setEl={setTopEl} />}
       {opened && <ScreenPanel frame={rig.bottom} container={rig.base} setEl={setBottomEl} />}
-    </group>
+      </group>
+    </>
   )
 }
 
@@ -470,15 +480,22 @@ export default function DsiScene({ onPress, register, onLit, lit, onCue, onOpene
         drag.current.active = false
       }}
     >
-      <Canvas frameloop={fps ? 'demand' : 'always'} dpr={[1, 2]} camera={{ position: [0, 2.6, 6.2], fov: 30 }}>
+      <Canvas
+        frameloop={fps ? 'demand' : 'always'}
+        dpr={[1, 2]}
+        camera={{ position: [0, 2.6, 6.2], fov: 30 }}
+        gl={{ alpha: true, toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.05, outputColorSpace: SRGBColorSpace }}
+      >
         {fps > 0 && <Ticker fps={fps} />}
-        <hemisphereLight args={['#eaf4ff', '#9db8cc', 0.9]} />
-        <directionalLight position={[3, 6, 4]} intensity={2.2} />
-        <directionalLight position={[-4, 2, 3]} intensity={0.8} />
-        <Environment resolution={64}>
-          <Lightformer form="rect" intensity={3} position={[0, 5, 2]} scale={[8, 4, 1]} color="#ffffff" />
-          <Lightformer form="rect" intensity={1.5} position={[-5, 1, 3]} scale={[3, 4, 1]} color="#cfe6ff" />
-          <Lightformer form="rect" intensity={1.2} position={[5, 1, -2]} scale={[3, 4, 1]} color="#fff4e0" />
+        {/* A low key from the left rakes across the plastic so edges and engraving catch it; a softer fill from the right; the sky and ground tint keeps shadows from going black. */}
+        <hemisphereLight args={['#eaf4ff', '#8fa7b8', 0.45]} />
+        <directionalLight position={[-5, 2.6, 2.2]} intensity={2.6} color="#fff6ea" />
+        <directionalLight position={[4, 3, 4]} intensity={0.7} color="#dcecff" />
+        <Environment resolution={128}>
+          <Lightformer form="rect" intensity={2.2} position={[0, 5, 2]} scale={[8, 4, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={1.2} position={[-5, 1, 3]} scale={[3, 4, 1]} color="#cfe6ff" />
+          <Lightformer form="rect" intensity={0.9} position={[5, 1, -2]} scale={[3, 4, 1]} color="#fff4e0" />
+          <Lightformer form="rect" intensity={0.5} position={[0, 0.5, 6]} scale={[10, 1.5, 1]} color="#ffffff" />
         </Environment>
         <Device
           drag={drag}
