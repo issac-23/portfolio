@@ -234,8 +234,18 @@
 @media (min-aspect-ratio: 3/2) {
   .dsi-blocks { display: block; }
   .dsi-blocks-l { right: calc(50% + var(--dsi-scene-dev) / 2 + 3vw); bottom: 40%; }
-  .dsi-blocks-r { left: calc(50% + var(--dsi-scene-dev) / 2 + 4vw); bottom: 56%; }
-  .dsi-blocks-r2 { left: calc(50% + var(--dsi-scene-dev) / 2 + 9vw); bottom: 34%; }
+  /* Floors keep the right-hand blocks above the flagpole, which reaches
+     228px up, on a short window such as a 1366x768 laptop. */
+  .dsi-blocks-r { left: calc(50% + var(--dsi-scene-dev) / 2 + 4vw); bottom: max(56%, 316px); }
+  .dsi-blocks-r2 { left: calc(50% + var(--dsi-scene-dev) / 2 + 9vw); bottom: max(34%, 244px); }
+}
+/* A phone on its side has no room for those floors between the flag and
+   the top of the window, and the left block would sit behind the hills:
+   keep one block, between the two. */
+@media (min-aspect-ratio: 3/2) and (max-height: 480px) {
+  .dsi-blocks-l,
+  .dsi-blocks-r2 { display: none; }
+  .dsi-blocks-r { bottom: 62%; }
 }
 
 /* Pipes and a flagpole standing on the ground in the margins, in front of
