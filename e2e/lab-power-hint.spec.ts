@@ -12,8 +12,8 @@ test('the Press POWER hint shows while the console is off and goes once it is on
   await page.goto('/lab/dsi-3d')
   const hint = page.getByTestId('power-hint')
   // It waits for the lid to be up, then shows, pointing at the button.
-  await expect(hint).toBeVisible({ timeout: 60_000 })
-  await expect(hint).toContainText('Press POWER')
+  // (The wrapper has no box of its own, so it is the label that is looked at.)
+  await expect(hint.getByText('Press POWER')).toBeVisible({ timeout: 60_000 })
   await expect(hint).toHaveAttribute('aria-hidden', 'true')
   const gap = await page.evaluate(() => {
     const at = (window as unknown as { __dsiLab: Lab }).__dsiLab.powerPoint!()!
