@@ -457,7 +457,10 @@ export default function DsiScene({ onPress, register, onLit, lit, onCue, onOpene
       onPointerMove={e => {
         const d = drag.current
         if (!d.active || e.pointerId !== d.id) return
-        d.x = clamp((e.clientX - origin.current.x) * 0.006, MAX_YAW)
+        // On a tall window the open DSi is fitted to nearly the full width, so
+        // any sideways turn would swing a corner off screen; only tilting is left.
+        const yawLimit = window.innerWidth < window.innerHeight ? 0 : MAX_YAW
+        d.x = clamp((e.clientX - origin.current.x) * 0.006, yawLimit)
         d.y = clamp((e.clientY - origin.current.y) * 0.004, MAX_PITCH)
       }}
       onPointerUp={() => {
