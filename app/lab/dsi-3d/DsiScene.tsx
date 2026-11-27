@@ -25,6 +25,7 @@ import DsiMenu from '@/components/dsi/DsiMenu'
 import type { DeviceProps } from '@/components/dsi/Device'
 import { INITIAL } from '@/components/dsi/console'
 import { getMotion } from '@/components/dsi/prefs'
+import Level3D from './Level3D'
 
 // The opening: the closed DSi turns to face the viewer, then the lid opens, the
 // two overlapping a little so it reads as one movement.
@@ -487,6 +488,7 @@ export default function DsiScene({ onPress, register, onLit, lit, onCue, onOpene
         gl={{ alpha: true, toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.05, outputColorSpace: SRGBColorSpace }}
       >
         {fps > 0 && <Ticker fps={fps} />}
+        <Level3D still={still} />
         {/* A low key from the left rakes across the plastic so edges and engraving catch it; a softer fill from the right; the sky and ground tint keeps shadows from going black. */}
         <hemisphereLight args={['#eaf4ff', '#8fa7b8', 0.45]} />
         <directionalLight position={[-5, 2.6, 2.2]} intensity={2.6} color="#fff6ea" />
