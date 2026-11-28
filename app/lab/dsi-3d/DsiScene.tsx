@@ -86,7 +86,8 @@ const hooks = (): LabHooks => {
 // so the softbox reflections show as crisp streaks on the edges while the
 // faces stay even. The shell and the buttons differ only in how glossy.
 const PLASTIC: Record<string, { roughness: number; clearcoat: number; clearcoatRoughness: number }> = {
-  Matte_plastic: { roughness: 0.82, clearcoat: 0.25, clearcoatRoughness: 0.28 },
+  // The shell has no roughness map, so its value is used as is; the others scale their maps.
+  Matte_plastic: { roughness: 0.55, clearcoat: 0.25, clearcoatRoughness: 0.28 },
   Shiny: { roughness: 0.7, clearcoat: 0.4, clearcoatRoughness: 0.25 },
   Buttons1: { roughness: 0.62, clearcoat: 0.5, clearcoatRoughness: 0.2 },
 }
@@ -139,7 +140,6 @@ function plasticize(root: Object3D) {
         metalness: 0,
         envMapIntensity: 1,
         ...kind,
-        roughness: src.roughnessMap ? kind.roughness : 0.55,
       })
       made.set(src, mat)
     }
@@ -216,6 +216,8 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
   const pivot = useRef<Group>(null)
   const start = useRef<number | null>(null)
   const [opened, setOpened] = useState(false)
+  // Whether the DSi is moving (the intro, a drag or its ease back), so the contact shadow is only redrawn then.
+  const [moving, setMoving] = useState(true)
   const hovering = useRef(false)
   // Where the camera looks, so the shut DSi can be brought to it.
   const aim = useRef(new Vector3())
@@ -238,6 +240,9 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     button.material = buttonMat
     lid.quaternion.setFromAxisAngle(axis, 0)
     scene.updateMatrixWorld(true)
+    // useGLTF hands every mount the same cached scene, so drop what an earlier
+    // mount added before measuring or adding again.
+    for (const name of ['PowerHit', 'HingeBacking']) scene.getObjectByName(name)?.removeFromParent()
     const bb = new Box3().setFromObject(button)
     const hit = new Mesh(new SphereGeometry(0.0065, 12, 8), new MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }))
     hit.name = 'PowerHit'
@@ -382,6 +387,8 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     const k = 1 - Math.exp(-dt * (d.active ? 18 : 5))
     d.yaw += ((d.active ? d.x : 0) - d.yaw) * k
     d.pitch += ((d.active ? d.y : 0) - d.pitch) * k
+    const nowMoving = !done || d.active || Math.abs(d.yaw) + Math.abs(d.pitch) > 1e-4
+    if (nowMoving !== moving) setMoving(nowMoving)
     el.rotation.y = (1 - turn) * INTRO_YAW + d.yaw
     el.rotation.x = d.pitch
     // Shut, the DSi sits where the camera looks; the opening lowers it into its place.
@@ -401,8 +408,8 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
 
   return (
     <>
-      {/* Soft shadow where the DSi meets the table; stays put while the DSi lifts and tilts. */}
-      <ContactShadows position={[0, rig.floor - 0.005, 0]} scale={9} resolution={512} far={1.6} blur={2.6} opacity={0.55} color="#1b2a35" frames={Infinity} />
+      {/* Soft shadow where the DSi meets the table. Redrawn while the DSi moves, then once more at rest (a re-render resets its frame count). */}
+      <ContactShadows position={[0, rig.floor - 0.005, 0]} scale={9} resolution={512} far={1.6} blur={2.6} opacity={0.55} color="#1b2a35" frames={moving ? Infinity : 1} />
       <group ref={pivot} scale={rig.scale}>
       <primitive
         object={scene}
