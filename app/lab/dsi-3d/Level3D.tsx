@@ -163,8 +163,11 @@ function brickTexture() {
   return t
 }
 
-/** Which side of the screen the moon goes: the right on a wide window, the left on a tall one (clear of the Music button). */
-const wideSide = (v: View) => (v.wide > 0.5 ? 0.5 : -0.5)
+const TANV = Math.tan((15 * Math.PI) / 180)
+const SING = Math.sin(GAZE)
+const COSG = Math.cos(GAZE)
+/** Where the horizon is on screen (NDC y). */
+const HORIZON = Math.tan(GAZE) / TANV
 
 function skyTexture(dark: boolean) {
   const P = dark ? NIGHT : DAY
@@ -189,10 +192,23 @@ function build(still: boolean, v: View, dark: boolean) {
   const root = new Group()
   // A point at this fraction of the screen's half-width (-1 left, 1 right), at depth z down the level.
   const across = (f: number, z: number) => f * v.tanH * (v.camZ - z)
-  // The path keeps to the left gutter of a wide window, then swings out toward the flag; on a tall one it runs up the middle.
-  const roadNear = across(-0.8 * v.wide, -35)
-  const roadFar = across(-0.74 * v.wide, -84)
-  const pathX = (z: number) => roadNear + (roadFar - roadNear) * smooth((-z - 35) / 50) + (1.6 - 0.7 * v.wide) * Math.sin(z * 0.11)
+  // A point at screen position (nx, ny) in NDC, t units out along the view, and back again.
+  const screenAt = (nx: number, ny: number, t: number): [number, number, number] => [
+    nx * v.tanH * t,
+    v.camY + t * (ny * TANV * COSG - SING),
+    v.camZ - t * (ny * TANV * SING + COSG),
+  ]
+  // The path hugs the right gutter of a wide window, so it stays in view beside the DSi
+  // and recedes to the horizon; on a tall one it runs up the middle and bends right at the far end.
+  const FZ = -125
+  const f0 = v.wide * 0.95
+  const f1 = v.wide * 0.66 + (1 - v.wide) * 0.5
+  const pathX = (z: number) => across(f0 + (f1 - f0) * smooth(-z / -FZ), z) + (1.6 - 0.7 * v.wide) * Math.sin(z * 0.11)
+  // The flag: on a wide window it stands on the ground at the road's end; on a tall one, where
+  // the DSi hides everything near the horizon, it stands on a far hill that rises into the sky above it.
+  const flagDepth = v.camZ - FZ
+  const flagBase = (1 - v.wide) * (v.camY + flagDepth * Math.tan((1.1 * Math.PI) / 180))
+  const poleH = v.wide > 0.5 ? 14.6 : 8
   const toDispose: { dispose(): void }[] = []
   const track = <T extends { dispose(): void }>(o: T) => (toDispose.push(o), o)
   const plain = track(new MeshBasicMaterial({ vertexColors: true, toneMapped: false }))
@@ -220,7 +236,7 @@ function build(still: boolean, v: View, dark: boolean) {
   // The brick path, laid in tiles that follow the bends.
   const tiles: Item[] = []
   const r = rng(7)
-  for (let z = 8; z > -110; z -= 1.25) {
+  for (let z = 8; z > FZ - 4; z -= 1.25) {
     const dz = 0.1
     const ry = Math.atan2(pathX(z - dz) - pathX(z + dz), -2 * dz)
     const cx = pathX(z)
@@ -240,7 +256,7 @@ function build(still: boolean, v: View, dark: boolean) {
   const pipeSpots: [x: number, z: number, h: number][] = [
     [pathX(-5) + 3.9, -5, 2.4], [pathX(-12) - 3.9, -12, 3.4], [pathX(-20) + 3.9, -20, 3.4], [pathX(-28) - 3.9, -28, 4.4],
     [pathX(-37) + 3.9, -37, 2.4], [pathX(-48) - 3.9, -48, 3.4], [pathX(-58) + 3.9, -58, 4.4], [pathX(-68) - 3.9, -68, 2.4],
-    [across(0.78, -10), -10, 3.4], [across(0.72, -26), -26, 2.4], [across(0.8, -42), -42, 4.4], [across(0.7, -60), -60, 3.4],
+    [across(-0.8, -10), -10, 3.4], [across(-0.78, -26), -26, 2.4], [across(-0.8, -42), -42, 4.4], [across(-0.72, -60), -60, 3.4],
   ]
   const bodies: Item[] = []
   const rims: Item[] = []
@@ -254,17 +270,17 @@ function build(still: boolean, v: View, dark: boolean) {
 
   // Floating brick blocks, in short rows.
   const blocks: Item[] = []
-  const row = (x: number, z: number, y: number, n: number) => {
-    for (let i = 0; i < n; i++) blocks.push({ p: [x + i * 1.35, y, z], s: [1.3, 1.3, 1.3], color: P.brick[(i + n) % P.brick.length] })
+  const row = (cx: number, z: number, y: number, n: number) => {
+    for (let i = 0; i < n; i++) blocks.push({ p: [cx + (i - (n - 1) / 2) * 1.35, y, z], s: [1.3, 1.3, 1.3], color: P.brick[(i + n) % P.brick.length] })
   }
-  row(pathX(-14) - 2.7, -14, 6.2, 4)
-  row(pathX(-26) - 1.4, -26, 7, 3)
-  row(pathX(-36) - 3.4, -36, 5.8, 5)
-  row(pathX(-50) + 1, -50, 6.8, 3)
-  row(pathX(-64) - 2, -64, 6, 4)
-  row(across(0.62, -18), -18, 5.6, 3)
-  row(across(0.7, -34), -34, 6.6, 4)
-  row(across(-0.5, -8), -8, 5.2, 2)
+  row(pathX(-14), -14, 6.2, 4)
+  row(pathX(-26), -26, 7, 3)
+  row(pathX(-36), -36, 5.8, 5)
+  row(pathX(-50), -50, 6.8, 3)
+  row(pathX(-64), -64, 6, 4)
+  row(across(-0.82, -18), -18, 5.6, 3)
+  row(across(-0.84, -34), -34, 6.6, 4)
+  row(across(-0.86, -8), -8, 5.2, 2)
   add(box(), bricks, blocks)
 
   // Round low-poly hills, paler the further they are.
@@ -276,46 +292,56 @@ function build(still: boolean, v: View, dark: boolean) {
     const x = side * (12 + hr() * 30)
     const far = Math.min(1, (-z - 20) / 100)
     const w = 6 + hr() * 7
+    if (Math.abs(x - pathX(z)) < w + 8) continue
     hills.push({
       p: [x, -1.2, z],
       s: [w, 2.5 + hr() * 5 + far * 3, w * 0.9],
       color: new Color(P.hillNear).lerp(new Color(P.hillFar), far).getStyle(),
     })
   }
-  // Two wide ones right behind the flag.
-  hills.push({ p: [-9, -1.4, -96], s: [14, 8, 11], color: P.hillFar })
-  hills.push({ p: [11, -1.4, -102], s: [16, 10, 12], color: P.hillFar })
+  // On a tall window the flag stands on a far hill of its own.
+  if (flagBase > 0) hills.push({ p: [pathX(FZ), -1.4, FZ], s: [flagBase * 2.6, flagBase + 1.4, flagBase * 2.2], color: P.hillFar })
   const hillGeo = new SphereGeometry(1, 9, 5, 0, Math.PI * 2, 0, Math.PI / 2)
   const flatHill = hillGeo.toNonIndexed()
   hillGeo.dispose()
   flatHill.computeVertexNormals()
   add(shade(flatHill), plain, hills)
 
-  // Puffy clouds: a few overlapping blocks, merged into one shape.
-  const puff = (w: number, h: number, d: number, x: number, y: number, z: number) => new BoxGeometry(w, h, d).translate(x, y, z)
-  const cloudGeo = soften(shade(mergeGeometries([puff(4, 1.1, 2.2, 0, 0, 0), puff(2.6, 1.3, 1.8, -0.7, 0.95, 0), puff(2.2, 1.5, 1.7, 1.0, 0.95, 0.1), puff(1.5, 1, 1.4, 1.9, 0.1, 0.2)]) as BufferGeometry))
+  // Puffy clouds: a handful of overlapping round puffs, merged into one shape.
+  const puff = (sx: number, sy: number, sz: number, x: number, y: number, z: number) => new SphereGeometry(1, 9, 6).scale(sx, sy, sz).translate(x, y, z)
+  const cloudGeo = soften(shade(mergeGeometries([puff(2.0, 0.8, 1.1, 0, 0, 0), puff(1.3, 0.95, 1, -0.9, 0.55, 0), puff(1.4, 1.1, 1.1, 0.8, 0.6, 0.1), puff(0.9, 0.7, 0.8, 1.9, -0.05, 0.1), puff(0.9, 0.7, 0.8, -1.9, -0.05, 0.1)]) as BufferGeometry))
+  const cloudMat = dark ? track(new MeshBasicMaterial({ vertexColors: true, toneMapped: false, transparent: true, opacity: 0.7, depthWrite: false })) : plain
+  // The moon's place on screen; clouds keep clear of it, and of the frame's edges and the horizon.
+  const moonAt = v.wide > 0.5 ? { x: 0.8, y: 0.72 } : { x: -0.6, y: 0.72 }
+  const flagNdcX = pathX(FZ) / (flagDepth * v.tanH)
   const cr = rng(3)
   const clouds: Item[] = []
-  for (let i = 0; i < 10; i++) {
-    const near = i < 4
-    const depth = near ? 35 + cr() * 25 : 70 + cr() * 60
-    const s = near ? 0.7 + cr() * 0.4 : 1.2 + cr() * 1.0
-    const elev = (near ? 3 + cr() * 2.5 : 1.2 + cr() * 3.5) * (Math.PI / 180)
-    clouds.push({ p: [-80 + (i / 10) * 160 + cr() * 10, v.camY + depth * Math.tan(elev), v.camZ - depth], s: [s, s, s], color: P.cloud })
+  for (let tries = 0; clouds.length < 9 && tries < 400; tries++) {
+    const near = clouds.length < 3
+    const t = near ? 35 + cr() * 25 : 70 + cr() * 60
+    // No wider on screen than a fifth of the view, so a narrow window is not swamped.
+    const s = Math.min(near ? 0.7 + cr() * 0.4 : 1.2 + cr() * 1.0, (0.2 * t * v.tanH) / 2.9)
+    const nx = -1.4 + cr() * 2.8
+    const ny = HORIZON + 0.08 + cr() * 0.3
+    const w = (2.9 * s) / (t * v.tanH)
+    const h = (1.5 * s) / (t * TANV)
+    const sidesOk = Math.abs(nx) + w < 0.93 || Math.abs(nx) - w > 1.1
+    if (!sidesOk || ny + h > 0.94 || ny - h < HORIZON + 0.02 || Math.hypot(nx - moonAt.x, (ny - moonAt.y) * 0.9) < 0.3 + w || Math.hypot(nx - flagNdcX, (ny - (HORIZON + 0.2)) * 0.9) < 0.3 + w) continue
+    clouds.push({ p: screenAt(nx, ny, t), s: [s, s, s], color: P.cloud })
   }
-  const cloudMesh = add(cloudGeo, plain, clouds)
+  const cloudMesh = add(cloudGeo, cloudMat, clouds)
 
   // The flagpole, far down the path: a block base, a pole, a gold ball and a pennant.
-  const fz = -84
+  const fz = FZ
   const fx = pathX(fz)
-  add(box(), bricks, [{ p: [fx, 0.7, fz], s: [2.4, 1.4, 2.4], color: P.brick[2] }])
-  add(shade(new CylinderGeometry(0.16, 0.16, 1, 8)), plain, [{ p: [fx, 8.3, fz], s: [1, 14.6, 1], color: P.pole }])
-  add(shade(new SphereGeometry(0.42, 10, 8)), plain, [{ p: [fx, 15.8, fz], color: P.ball }])
+  add(box(), bricks, [{ p: [fx, flagBase + 0.7, fz], s: [2.4, 1.4, 2.4], color: P.brick[2] }])
+  add(shade(new CylinderGeometry(0.16, 0.16, 1, 8)), plain, [{ p: [fx, flagBase + 1 + poleH / 2, fz], s: [1, poleH, 1], color: P.pole }])
+  add(shade(new SphereGeometry(0.42, 10, 8)), plain, [{ p: [fx, flagBase + 1.2 + poleH, fz], color: P.ball }])
   const pennant = new BufferGeometry()
   pennant.setAttribute('position', new Float32BufferAttribute([0, 0, 0, -3.6, -1.1, 0, 0, -2.2, 0], 3))
   pennant.setAttribute('normal', new Float32BufferAttribute([0, 0, 1, 0, 0, 1, 0, 0, 1], 3))
   shade(pennant)
-  add(pennant, flat, [{ p: [fx - 0.16, 15.1, fz], s: [1, 1, 1], color: P.flag }])
+  add(pennant, flat, [{ p: [fx - 0.16, flagBase + 0.5 + poleH, fz], s: [1, 1, 1], color: P.flag }])
 
   if (dark) {
     // Stars: one Points object scattered over the sky above the horizon, and a round moon.
@@ -331,8 +357,8 @@ function build(still: boolean, v: View, dark: boolean) {
     const stars = new Points(sg, track(new PointsMaterial({ color: STAR, size: 2, sizeAttenuation: false, fog: false, toneMapped: false })))
     stars.frustumCulled = false
     root.add(stars)
-    const moon = new Mesh(track(new SphereGeometry(5, 16, 12)), track(new MeshBasicMaterial({ color: MOON, fog: false, toneMapped: false })))
-    moon.position.set(across(wideSide(v), -140), v.camY + (v.camZ + 140) * Math.tan((4.2 * Math.PI) / 180), v.camZ - (v.camZ + 140))
+    const moon = new Mesh(track(new SphereGeometry(5.5, 16, 12)), track(new MeshBasicMaterial({ color: MOON, fog: false, toneMapped: false })))
+    moon.position.set(...screenAt(moonAt.x, moonAt.y, 150))
     root.add(moon)
   }
 
@@ -399,7 +425,7 @@ export default function Level3D({ still }: { still: boolean }) {
     const prevBg = scene.background
     const prevFog = scene.fog
     scene.background = sky
-    scene.fog = new Fog((dark ? NIGHT : DAY).skyHorizon, 14, 95)
+    scene.fog = new Fog((dark ? NIGHT : DAY).skyHorizon, 20, 140)
     ;(window as unknown as { __dsiLab?: Record<string, unknown> }).__dsiLab = {
       ...(window as unknown as { __dsiLab?: Record<string, unknown> }).__dsiLab,
       levelStats: () => ({ draws: level.draws, triangles: level.triangles }),
