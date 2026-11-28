@@ -320,6 +320,14 @@ function build(still: boolean, v: View, dark: boolean) {
   row(across(-0.82, -18), -18, 5.6, 3)
   row(across(-0.84, -34), -34, 6.6, 4)
   row(across(-0.86, -8), -8, 5.2, 2)
+  // A tall window has no room for the rows above: add a short row of small bricks hovering in the open
+  // band to the left of the path, below the DSi, placed from a screen target.
+  if (v.wide < 0.5) {
+    const ny = -0.62
+    const ground = v.camY / (SING - ny * TANV * COSG)
+    const base = screenAt(-0.74, ny, ground * 0.7)
+    for (let i = 0; i < 3; i++) blocks.push({ p: [base[0] + (i - 1) * 0.48, base[1], base[2]], s: [0.45, 0.45, 0.45], color: P.brick[i % P.brick.length] })
+  }
   add(box(), bricks, blocks)
 
   // Round low-poly hills, paler the further they are.
@@ -356,8 +364,12 @@ function build(still: boolean, v: View, dark: boolean) {
   // outline by a margin (4% of the view height); anywhere else it is shrunk away, so none grazes an edge.
   const inner = deviceRects(0, 0)
   const outer = deviceRects(0.08 / A, 0.08)
+  // The moon and the flag (pennant included) also keep clouds off them, as they drift by.
+  const moonBox = around(moonAt.x, moonAt.y, 5.5 / (150 * v.tanH) + 0.04, 5.5 / (150 * TANV) + 0.04)
+  const flagBox: Rect = [flagTop.x - 3.8 / (flagTop.t * v.tanH) - 0.05, roadEnd.y - 0.03, flagTop.x + 0.6 / (flagTop.t * v.tanH) + 0.05, flagTop.y + 0.05]
   const cloudClear = (nx: number, ny: number, w: number, h: number) => {
     const box = around(nx, ny, w, h)
+    if (overlaps(box, moonBox) || overlaps(box, flagBox)) return false
     if (Math.max(Math.abs(box[0]), Math.abs(box[2])) > 0.95 && Math.min(Math.abs(box[0]), Math.abs(box[2])) < 1.05) return false
     if (box[3] > 0.95 && box[1] < 1.05) return false
     if (inner.some(r => within(box, r))) return true
@@ -366,17 +378,22 @@ function build(still: boolean, v: View, dark: boolean) {
   const flagNdcX = pathX(FZ) / (flagDepth * v.tanH)
   const cr = rng(3)
   const clouds: Item[] = []
-  for (let tries = 0; clouds.length < 9 && tries < 400; tries++) {
+  const placed: Rect[] = []
+  const maxClouds = v.wide > 0.5 ? 9 : 2
+  for (let tries = 0; clouds.length < maxClouds && tries < 600; tries++) {
     const near = clouds.length < 3
     const t = near ? 35 + cr() * 25 : 70 + cr() * 60
     // No wider on screen than a fifth of the view, so a narrow window is not swamped.
-    const s = Math.min(near ? 0.7 + cr() * 0.4 : 1.2 + cr() * 1.0, (0.2 * t * v.tanH) / 2.9)
+    const s = Math.min((near ? 0.7 + cr() * 0.4 : 1.2 + cr() * 1.0) * (0.7 + cr() * 0.4), (0.2 * t * v.tanH) / 2.9)
     const nx = -1 + cr() * 2
     const ny = HORIZON + 0.08 + cr() * 0.26
     const w = (2.9 * s) / (t * v.tanH)
     const h = (1.5 * s) / (t * TANV)
-    if (ny - h < HORIZON + 0.02 || Math.hypot(nx - moonAt.x, (ny - moonAt.y) * 0.9) < 0.3 + w || Math.hypot(nx - flagNdcX, (ny - (HORIZON + 0.2)) * 0.9) < 0.3 + w) continue
+    if (ny - h < HORIZON + 0.02 || Math.hypot(nx - moonAt.x, (ny - moonAt.y) * 0.9) < 0.2 + w) continue
     if (!cloudClear(nx, ny, w, h)) continue
+    // Staggered, not stacked: never within 1.2 cloud widths sideways of another.
+    if (placed.some(b => Math.abs(nx - (b[0] + b[2]) / 2) < 1.2 * (w + (b[2] - b[0]) / 2))) continue
+    placed.push(around(nx, ny, w, h))
     clouds.push({ p: screenAt(nx, ny, t), s: [s, s, s], color: P.cloud })
   }
   const cloudMesh = add(cloudGeo, cloudMat, clouds)
