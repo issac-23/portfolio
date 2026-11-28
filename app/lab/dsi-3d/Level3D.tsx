@@ -148,7 +148,10 @@ function instanced(geo: BufferGeometry, mat: Material, items: Item[]) {
 }
 
 /** A 32 px brick pattern, white with grey mortar: it only darkens the colour it multiplies. */
+let cachedBrick: CanvasTexture | null = null
+/** The brick pattern never changes, so one texture serves every build (and is never disposed with one). */
 function brickTexture() {
+  if (cachedBrick) return cachedBrick
   const c = document.createElement('canvas')
   c.width = c.height = 32
   const x = c.getContext('2d')!
@@ -166,6 +169,7 @@ function brickTexture() {
   t.magFilter = NearestFilter
   t.minFilter = LinearMipmapLinearFilter
   t.anisotropy = 4
+  cachedBrick = t
   return t
 }
 
@@ -233,11 +237,13 @@ function build(still: boolean, v: View, dark: boolean) {
   const toDispose: { dispose(): void }[] = []
   const track = <T extends { dispose(): void }>(o: T) => (toDispose.push(o), o)
   const plain = track(new MeshBasicMaterial({ vertexColors: true, toneMapped: false }))
-  const bricks = track(new MeshBasicMaterial({ vertexColors: true, toneMapped: false, map: track(brickTexture()) }))
+  const bricks = track(new MeshBasicMaterial({ vertexColors: true, toneMapped: false, map: brickTexture() }))
   const flat = track(new MeshBasicMaterial({ vertexColors: true, toneMapped: false, side: DoubleSide }))
+  const instances: InstancedMesh[] = []
   const add = (geo: BufferGeometry, mat: Material, items: Item[]) => {
     track(geo)
     const m = instanced(geo, mat, items)
+    instances.push(m)
     root.add(m)
     return m
   }
@@ -452,24 +458,29 @@ function build(still: boolean, v: View, dark: boolean) {
   }
   const meshes: Mesh[] = []
   root.traverse(o => ((o as Mesh).isMesh || (o as Points).isPoints) && meshes.push(o as Mesh))
-  return { root, clouds: clouds.map(c => c.p.map(n => Math.round(n))), drift: still ? null : drift, dispose: () => toDispose.forEach(o => o.dispose()), triangles: meshes.reduce((t, mesh) => t + ((mesh.geometry.index?.count ?? mesh.geometry.getAttribute('position').count) / 3) * ((mesh as InstancedMesh).count ?? 1), 0), draws: meshes.length }
+  return { root, clouds: clouds.map(c => c.p.map(n => Math.round(n))), drift: still ? null : drift, dispose: () => {
+      // The instance buffers go with each InstancedMesh; the stars and moon only hold tracked geometry and materials.
+      instances.forEach(m => m.dispose())
+      toDispose.forEach(o => o.dispose())
+    }, triangles: meshes.reduce((t, mesh) => t + ((mesh.geometry.index?.count ?? mesh.geometry.getAttribute('position').count) / 3) * ((mesh as InstancedMesh).count ?? 1), 0), draws: meshes.length }
 }
 
 /** The 3D level behind the DSi. `still` freezes its drift (reduced motion). */
 export default function Level3D({ still }: { still: boolean }) {
   const { scene, camera } = useThree()
-  const aspect = useThree(st => st.size.width / Math.max(1, st.size.height))
-  // The scene fits the camera to the DSi after this renders, so the first frame's
-  // distance is read back, and the level is laid out again if it moved.
-  const [camD, setCamD] = useState(0)
+  // Rounded, so dragging a window edge does not rebuild the level at every step.
+  const aspect = useThree(st => Math.round((st.size.width / Math.max(1, st.size.height)) * 20) / 20)
+  // The scene fits the camera to the DSi after this renders, so the camera's real position
+  // (height and distance) is read back, and the level is laid out again if it moved.
+  const [camAt, setCamAt] = useState<[number, number] | null>(null)
   const view = useMemo(() => {
     const dir = new Vector3(0, Math.sin(CAMERA_ELEVATION), Math.cos(CAMERA_ELEVATION))
     const tilt = -(CAMERA_ELEVATION - GAZE)
     const up = new Vector3(0, Math.cos(tilt), Math.sin(tilt))
     const fwd = new Vector3(0, -Math.sin(tilt), Math.cos(tilt))
     const origin = up.clone().multiplyScalar(-GAP).addScaledVector(dir, -PUSH)
-    const d = camD || 8
-    const rel = dir.clone().multiplyScalar(d).sub(origin)
+    const cam = camAt ? new Vector3(0, camAt[0], camAt[1]) : dir.clone().multiplyScalar(8)
+    const rel = cam.sub(origin)
     const v: View = {
       camY: rel.dot(up) / SCALE,
       camZ: rel.dot(fwd) / SCALE,
@@ -477,9 +488,9 @@ export default function Level3D({ still }: { still: boolean }) {
       wide: Math.max(0, Math.min(1, (aspect - 0.9) / 0.5)),
     }
     return { tilt, origin, v }
-  }, [aspect, camD])
+  }, [aspect, camAt])
   // The site's theme is the `dark` class on <html>; follow it live.
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
   useEffect(() => {
     const el = document.documentElement
     const read = () => setDark(el.classList.contains('dark'))
@@ -496,10 +507,8 @@ export default function Level3D({ still }: { still: boolean }) {
     const prevFog = scene.fog
     scene.background = sky
     scene.fog = new Fog((dark ? NIGHT : DAY).skyHorizon, 20, 140)
-    ;(window as unknown as { __dsiLab?: Record<string, unknown> }).__dsiLab = {
-      ...(window as unknown as { __dsiLab?: Record<string, unknown> }).__dsiLab,
-      levelStats: () => ({ draws: level.draws, triangles: level.triangles, clouds: level.clouds }),
-    }
+    const w = window as unknown as { __dsiLab?: Record<string, unknown> }
+    ;(w.__dsiLab ??= {}).levelStats = () => ({ draws: level.draws, triangles: level.triangles, clouds: level.clouds })
     return () => {
       scene.background = prevBg
       scene.fog = prevFog
@@ -509,8 +518,8 @@ export default function Level3D({ still }: { still: boolean }) {
   useEffect(() => () => level.dispose(), [level])
 
   useFrame((_, dt) => {
-    const d = camera.position.length()
-    if (Math.abs(d - camD) > 0.05) setCamD(d)
+    const { y, z } = camera.position
+    if (!camAt || Math.abs(y - camAt[0]) > 0.05 || Math.abs(z - camAt[1]) > 0.05) setCamAt([Math.round(y * 100) / 100, Math.round(z * 100) / 100])
     level.drift?.(Math.min(dt, 0.1))
   })
 
