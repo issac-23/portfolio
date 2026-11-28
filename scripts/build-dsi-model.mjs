@@ -26,8 +26,10 @@ const SRC = resolve(process.argv[2] ?? join(homedir(), 'Downloads', 'dsi-model',
 const OUT = resolve(process.argv[3] ?? join(import.meta.dirname, '..', 'public', 'models', 'dsi.glb'))
 // The source is 264k triangles. The first build cut it to 40k at a 2% error
 // and the edges, bevels and button rims went with it (the DSi read as clay).
-// Keep most of it, and only let the simplifier touch what cannot be seen.
-const TARGET_TRIS = Number(process.env.DSI_TRIS ?? 170000)
+// Even a light simplify leaves slivers whose normals streak under a clearcoat,
+// and the full mesh fits in 1.6 MB, so by default nothing is removed (set
+// DSI_TRIS to a lower count to simplify).
+const TARGET_TRIS = Number(process.env.DSI_TRIS ?? 1e9)
 const SIMPLIFY_ERROR = Number(process.env.DSI_ERROR ?? 0.0008)
 // Texture edge length: the shell and the buttons carry the normal and
 // roughness maps that make the plastic read as plastic; the rest are small.

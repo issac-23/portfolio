@@ -8,6 +8,7 @@ import { ContactShadows, Environment, Html, Lightformer, useGLTF } from '@react-
 import {
   ACESFilmicToneMapping,
   Box3,
+  BoxGeometry,
   Color,
   DataTexture,
   Group,
@@ -27,6 +28,7 @@ import {
   Vector2,
   Vector3,
 } from 'three'
+import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import DsiMenu from '@/components/dsi/DsiMenu'
 import type { DeviceProps } from '@/components/dsi/Device'
 import { INITIAL } from '@/components/dsi/console'
@@ -85,7 +87,7 @@ const hooks = (): LabHooks => {
 // so the softbox reflections show as crisp streaks on the edges while the
 // faces stay even. The shell and the buttons differ only in how glossy.
 const PLASTIC: Record<string, { roughness: number; clearcoat: number; clearcoatRoughness: number }> = {
-  Matte_plastic: { roughness: 0.82, clearcoat: 0.45, clearcoatRoughness: 0.18 },
+  Matte_plastic: { roughness: 0.82, clearcoat: 0.45, clearcoatRoughness: 0.15 },
   Shiny: { roughness: 0.7, clearcoat: 0.4, clearcoatRoughness: 0.25 },
   Buttons1: { roughness: 0.62, clearcoat: 0.5, clearcoatRoughness: 0.2 },
 }
@@ -119,6 +121,7 @@ function grain() {
 /** Swaps the loader's standard materials for physical ones carrying the same maps. */
 function plasticize(root: Object3D) {
   const made = new Map<MeshStandardMaterial, MeshPhysicalMaterial>()
+  const smoothed = new Set<object>()
   root.traverse(o => {
     const m = o as Mesh
     if (!m.isMesh) return
@@ -143,6 +146,13 @@ function plasticize(root: Object3D) {
       made.set(src, mat)
     }
     m.material = mat
+    // The source's vertex normals are noisy where the simplifier left slivers, and a clearcoat shows every kink as a streak. Recompute them from the faces, smoothing only below a 35 degree crease so bevels stay round and edges stay crisp.
+    if (src.name !== 'Buttons1' && !smoothed.has(m.geometry)) {
+      const g = m.geometry
+      g.deleteAttribute('normal')
+      m.geometry = toCreasedNormals(g, (35 * Math.PI) / 180)
+      smoothed.add(m.geometry)
+    }
   })
 }
 
@@ -257,6 +267,17 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     // The lowest point of the open model, in scene units, where the contact shadow sits.
     let floor = Infinity
     for (let i = 1; i < points.length; i += 3) floor = Math.min(floor, points[i])
+    // Where the lid's lower rim meets the hinge, a gap shows the page through the model as thin pale lines. A thin dark bar right behind it, as seen from the camera, fills the gap without being seen anywhere else.
+    {
+      const hinge = scene.worldToLocal(lid.getWorldPosition(new Vector3()))
+      const toCam = new Vector3(0, Math.sin(CAMERA_ELEVATION), Math.cos(CAMERA_ELEVATION))
+      const camUp = new Vector3(0, Math.cos(CAMERA_ELEVATION), -Math.sin(CAMERA_ELEVATION))
+      const bar = new Mesh(new BoxGeometry(size.x * 0.84, 0.004, 0.004), new MeshBasicMaterial({ color: '#0b0c0e' }))
+      bar.name = 'HingeBacking'
+      bar.raycast = () => {}
+      bar.position.copy(hinge).addScaledVector(camUp, 0.0036).addScaledVector(toCam, -0.004)
+      scene.add(bar)
+    }
     return {
       floor,
       lid,
@@ -565,13 +586,13 @@ export default function DsiScene({ onPress, register, onLit, lit, onCue, onOpene
         <directionalLight position={[4, 3, 4]} intensity={0.25} color="#dcecff" />
         <Environment resolution={256}>
           {/* a long box overhead and behind: the sheen on the lid and the top faces */}
-          <Lightformer form="rect" intensity={7} position={[0, 6, -2.5]} scale={[14, 0.7, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={7.5} position={[0, 6, -2.5]} scale={[14, 0.7, 1]} color="#ffffff" />
           {/* tall strips either side: thin highlights down the side edges and the hinge's ends */}
-          <Lightformer form="rect" intensity={14} position={[-6, 2, 1]} scale={[0.9, 7, 1]} color="#f2f8ff" />
-          <Lightformer form="rect" intensity={12} position={[6, 2, 0]} scale={[0.9, 7, 1]} color="#fff6ea" />
+          <Lightformer form="rect" intensity={16} position={[-6, 2, 1]} scale={[0.9, 7, 1]} color="#f2f8ff" />
+          <Lightformer form="rect" intensity={13.5} position={[6, 2, 0]} scale={[0.9, 7, 1]} color="#fff6ea" />
           {/* a thin bar in front and above: the front edges and the rim of the base */}
           <Lightformer form="rect" intensity={2.5} position={[0, 6.5, 4]} scale={[12, 1.6, 1]} color="#ffffff" />
-          <Lightformer form="rect" intensity={20} position={[0, 4.6, 5]} scale={[7, 0.12, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={22} position={[0, 4.6, 5]} scale={[7, 0.12, 1]} color="#ffffff" />
           {/* a low, dim card, so the underside of the edges is not a hole */}
           <Lightformer form="rect" intensity={8} position={[0, 0.4, 6]} scale={[9, 0.35, 1]} color="#ffffff" />
           <Lightformer form="rect" intensity={0.1} position={[0, -2, 4]} scale={[10, 2, 1]} color="#9fb4c4" />
