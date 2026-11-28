@@ -12,7 +12,7 @@
 
 export type Cue = 'power' | 'boot-chime' | 'move' | 'bump' | 'confirm' | 'whoosh' | 'back' | 'reveal'
 
-const LEVEL = 0.2 // sits a little above the music, which is near -18 dB
+const LEVEL = 0.2 // sits well above the music, which is near -30 dB
 
 const hz = (semitonesFromA4: number) => 440 * Math.pow(2, semitonesFromA4 / 12)
 // A few named pitches, in semitones from A4.
