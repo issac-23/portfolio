@@ -75,6 +75,12 @@ const NIGHT: typeof DAY = {
 const STAR = '#c8d3ea'
 const MOON = '#e6dfbf'
 
+/** A screen rectangle in NDC: x0, y0, x1, y1. */
+type Rect = [number, number, number, number]
+const overlaps = (a: Rect, b: Rect) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]
+const within = (a: Rect, b: Rect) => a[0] >= b[0] && a[2] <= b[2] && a[1] >= b[1] && a[3] <= b[3]
+const around = (x: number, y: number, w: number, h: number): Rect => [x - w, y - h, x + w, y + h]
+
 type Item = { p: [number, number, number]; s?: [number, number, number]; ry?: number; color: string }
 
 /** What the camera sees, in the level's own units: its height and distance, and how wide the view is per unit of depth. */
@@ -198,6 +204,21 @@ function build(still: boolean, v: View, dark: boolean) {
     v.camY + t * (ny * TANV * COSG - SING),
     v.camZ - t * (ny * TANV * SING + COSG),
   ]
+  const toScreen = (p: [number, number, number]) => {
+    const dy = p[1] - v.camY
+    const dz = p[2] - v.camZ
+    const t = -dy * SING - dz * COSG
+    return { x: p[0] / (t * v.tanH), y: (dy * COSG - dz * SING) / (t * TANV), t }
+  }
+  // Where the open DSi covers the screen (NDC): the lid over the base, fitted the way DsiScene fits it.
+  const A = v.tanH / TANV
+  const halfX0 = (1.17 * 0.9) / A
+  const halfX = Math.min(0.97, halfX0)
+  const halfY = halfX0 > 0.97 ? (0.97 * A) / 1.17 : 0.9
+  const deviceRects = (mx: number, my: number): Rect[] => [
+    [-0.83 * halfX - mx, -0.04 - my, 0.83 * halfX + mx, halfY + my],
+    [-halfX - mx, -halfY - my, halfX + mx, -0.04 + my],
+  ]
   // The path hugs the right gutter of a wide window, so it stays in view beside the DSi
   // and recedes to the horizon; on a tall one it runs up the middle and bends right at the far end.
   const FZ = -125
@@ -270,12 +291,30 @@ function build(still: boolean, v: View, dark: boolean) {
 
   // Floating brick blocks, in short rows.
   const blocks: Item[] = []
+  // The path's last stretch and the flag, on screen: nothing else goes there.
+  const flagTop = toScreen([pathX(FZ), flagBase + poleH + 2, FZ])
+  const roadNearEnd = toScreen([pathX(-80), 0, -80])
+  const roadEnd = toScreen([pathX(FZ), flagBase, FZ])
+  const endBox: Rect = [
+    Math.min(roadNearEnd.x, roadEnd.x, flagTop.x) - 0.12,
+    Math.min(roadEnd.y, roadNearEnd.y) - 0.08,
+    Math.max(roadNearEnd.x, roadEnd.x, flagTop.x) + 0.2,
+    flagTop.y + 0.08,
+  ]
+  // Rows of blocks are kept only where they are whole on screen, do not overlap one another and
+  // leave the path's end clear; on a wide window that leaves one or two on the right.
+  const rowBoxes: Rect[] = []
   const row = (cx: number, z: number, y: number, n: number) => {
+    const c = toScreen([cx, y, z])
+    const box = around(c.x, c.y, ((n * 1.35) / 2 + 0.2) / (c.t * v.tanH), 0.9 / (c.t * TANV))
+    const edgeOk = Math.max(Math.abs(box[0]), Math.abs(box[2])) < 0.97 || Math.min(Math.abs(box[0]), Math.abs(box[2])) > 1.03
+    if (!edgeOk || overlaps(box, endBox) || rowBoxes.some(b => overlaps(b, around(c.x, c.y, (box[2] - box[0]) / 2 + 0.04, (box[3] - box[1]) / 2 + 0.04)))) return
+    rowBoxes.push(box)
     for (let i = 0; i < n; i++) blocks.push({ p: [cx + (i - (n - 1) / 2) * 1.35, y, z], s: [1.3, 1.3, 1.3], color: P.brick[(i + n) % P.brick.length] })
   }
   row(pathX(-14), -14, 6.2, 4)
+  row(pathX(-36), -36, 5.8, 3)
   row(pathX(-26), -26, 7, 3)
-  row(pathX(-36), -36, 5.8, 5)
   row(pathX(-50), -50, 6.8, 3)
   row(pathX(-64), -64, 6, 4)
   row(across(-0.82, -18), -18, 5.6, 3)
@@ -313,6 +352,17 @@ function build(still: boolean, v: View, dark: boolean) {
   const cloudMat = dark ? track(new MeshBasicMaterial({ vertexColors: true, toneMapped: false, transparent: true, opacity: 0.7, depthWrite: false })) : plain
   // The moon's place on screen; clouds keep clear of it, and of the frame's edges and the horizon.
   const moonAt = v.wide > 0.5 ? { x: 0.8, y: 0.72 } : { x: -0.6, y: 0.72 }
+  // A cloud is fine where it is whole in the frame and either fully behind the device or clear of its
+  // outline by a margin (4% of the view height); anywhere else it is shrunk away, so none grazes an edge.
+  const inner = deviceRects(0, 0)
+  const outer = deviceRects(0.08 / A, 0.08)
+  const cloudClear = (nx: number, ny: number, w: number, h: number) => {
+    const box = around(nx, ny, w, h)
+    if (Math.max(Math.abs(box[0]), Math.abs(box[2])) > 0.95 && Math.min(Math.abs(box[0]), Math.abs(box[2])) < 1.05) return false
+    if (box[3] > 0.95 && box[1] < 1.05) return false
+    if (inner.some(r => within(box, r))) return true
+    return !outer.some(r => overlaps(box, r))
+  }
   const flagNdcX = pathX(FZ) / (flagDepth * v.tanH)
   const cr = rng(3)
   const clouds: Item[] = []
@@ -321,12 +371,12 @@ function build(still: boolean, v: View, dark: boolean) {
     const t = near ? 35 + cr() * 25 : 70 + cr() * 60
     // No wider on screen than a fifth of the view, so a narrow window is not swamped.
     const s = Math.min(near ? 0.7 + cr() * 0.4 : 1.2 + cr() * 1.0, (0.2 * t * v.tanH) / 2.9)
-    const nx = -1.4 + cr() * 2.8
-    const ny = HORIZON + 0.08 + cr() * 0.3
+    const nx = -1 + cr() * 2
+    const ny = HORIZON + 0.08 + cr() * 0.26
     const w = (2.9 * s) / (t * v.tanH)
     const h = (1.5 * s) / (t * TANV)
-    const sidesOk = Math.abs(nx) + w < 0.93 || Math.abs(nx) - w > 1.1
-    if (!sidesOk || ny + h > 0.94 || ny - h < HORIZON + 0.02 || Math.hypot(nx - moonAt.x, (ny - moonAt.y) * 0.9) < 0.3 + w || Math.hypot(nx - flagNdcX, (ny - (HORIZON + 0.2)) * 0.9) < 0.3 + w) continue
+    if (ny - h < HORIZON + 0.02 || Math.hypot(nx - moonAt.x, (ny - moonAt.y) * 0.9) < 0.3 + w || Math.hypot(nx - flagNdcX, (ny - (HORIZON + 0.2)) * 0.9) < 0.3 + w) continue
+    if (!cloudClear(nx, ny, w, h)) continue
     clouds.push({ p: screenAt(nx, ny, t), s: [s, s, s], color: P.cloud })
   }
   const cloudMesh = add(cloudGeo, cloudMat, clouds)
@@ -364,25 +414,28 @@ function build(still: boolean, v: View, dark: boolean) {
 
   // Slow drift: the clouds slide sideways and wrap round. Still stays still.
   const m = new Matrix4()
-  const pos = new Vector3()
   const q = new Quaternion()
+  const pos = new Vector3()
   const sc = new Vector3()
+  const grow = clouds.map(() => 1)
   const drift = (dt: number) => {
     for (let i = 0; i < clouds.length; i++) {
       const c = clouds[i]
       c.p[0] += dt * (0.25 + (i % 3) * 0.08)
       if (c.p[0] > 80) c.p[0] -= 160
-      cloudMesh.getMatrixAt(i, m)
-      m.decompose(pos, q, sc)
-      pos.x = c.p[0]
-      m.compose(pos, q, sc)
+      // Shrink away while crossing the device's outline or the frame's edge, grow back once clear.
+      const sp = toScreen(c.p)
+      const ok = cloudClear(sp.x, sp.y, (2.9 * (c.s as number[])[0]) / (sp.t * v.tanH), (1.5 * (c.s as number[])[0]) / (sp.t * TANV))
+      grow[i] += ((ok ? 1 : 0) - grow[i]) * Math.min(1, dt * 3)
+      const k = (c.s as number[])[0] * Math.max(grow[i], 0.001)
+      m.compose(pos.set(c.p[0], c.p[1], c.p[2]), q, sc.set(k, k, k))
       cloudMesh.setMatrixAt(i, m)
     }
     cloudMesh.instanceMatrix.needsUpdate = true
   }
   const meshes: Mesh[] = []
   root.traverse(o => ((o as Mesh).isMesh || (o as Points).isPoints) && meshes.push(o as Mesh))
-  return { root, drift: still ? null : drift, dispose: () => toDispose.forEach(o => o.dispose()), triangles: meshes.reduce((t, mesh) => t + ((mesh.geometry.index?.count ?? mesh.geometry.getAttribute('position').count) / 3) * ((mesh as InstancedMesh).count ?? 1), 0), draws: meshes.length }
+  return { root, clouds: clouds.map(c => c.p.map(n => Math.round(n))), drift: still ? null : drift, dispose: () => toDispose.forEach(o => o.dispose()), triangles: meshes.reduce((t, mesh) => t + ((mesh.geometry.index?.count ?? mesh.geometry.getAttribute('position').count) / 3) * ((mesh as InstancedMesh).count ?? 1), 0), draws: meshes.length }
 }
 
 /** The 3D level behind the DSi. `still` freezes its drift (reduced motion). */
@@ -428,7 +481,7 @@ export default function Level3D({ still }: { still: boolean }) {
     scene.fog = new Fog((dark ? NIGHT : DAY).skyHorizon, 20, 140)
     ;(window as unknown as { __dsiLab?: Record<string, unknown> }).__dsiLab = {
       ...(window as unknown as { __dsiLab?: Record<string, unknown> }).__dsiLab,
-      levelStats: () => ({ draws: level.draws, triangles: level.triangles }),
+      levelStats: () => ({ draws: level.draws, triangles: level.triangles, clouds: level.clouds }),
     }
     return () => {
       scene.background = prevBg
