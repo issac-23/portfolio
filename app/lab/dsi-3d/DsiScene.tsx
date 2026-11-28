@@ -28,7 +28,6 @@ import {
   Vector2,
   Vector3,
 } from 'three'
-import { mergeVertices, toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import DsiMenu from '@/components/dsi/DsiMenu'
 import type { DeviceProps } from '@/components/dsi/Device'
 import { INITIAL } from '@/components/dsi/console'
@@ -87,7 +86,7 @@ const hooks = (): LabHooks => {
 // so the softbox reflections show as crisp streaks on the edges while the
 // faces stay even. The shell and the buttons differ only in how glossy.
 const PLASTIC: Record<string, { roughness: number; clearcoat: number; clearcoatRoughness: number }> = {
-  Matte_plastic: { roughness: 0.82, clearcoat: 0.45, clearcoatRoughness: 0.15 },
+  Matte_plastic: { roughness: 0.82, clearcoat: 0.25, clearcoatRoughness: 0.28 },
   Shiny: { roughness: 0.7, clearcoat: 0.4, clearcoatRoughness: 0.25 },
   Buttons1: { roughness: 0.62, clearcoat: 0.5, clearcoatRoughness: 0.2 },
 }
@@ -121,7 +120,6 @@ function grain() {
 /** Swaps the loader's standard materials for physical ones carrying the same maps. */
 function plasticize(root: Object3D) {
   const made = new Map<MeshStandardMaterial, MeshPhysicalMaterial>()
-  const smoothed = new Set<object>()
   root.traverse(o => {
     const m = o as Mesh
     if (!m.isMesh) return
@@ -141,19 +139,11 @@ function plasticize(root: Object3D) {
         metalness: 0,
         envMapIntensity: 1,
         ...kind,
-        roughness: src.roughnessMap ? kind.roughness : 0.45,
+        roughness: src.roughnessMap ? kind.roughness : 0.55,
       })
       made.set(src, mat)
     }
     m.material = mat
-    // The source's vertex normals are noisy where the simplifier left slivers, and a clearcoat shows every kink as a streak. Recompute them from the faces, smoothing only below a 35 degree crease so bevels stay round and edges stay crisp.
-    if (src.name !== 'Buttons1' && !smoothed.has(m.geometry)) {
-      const g = m.geometry
-      g.deleteAttribute('normal')
-      // toCreasedNormals un-indexes the mesh; merging the identical vertices again keeps it as light to draw as before.
-      m.geometry = mergeVertices(toCreasedNormals(g, (35 * Math.PI) / 180), 1e-5)
-      smoothed.add(m.geometry)
-    }
   })
 }
 
@@ -587,15 +577,15 @@ export default function DsiScene({ onPress, register, onLit, lit, onCue, onOpene
         <directionalLight position={[4, 3, 4]} intensity={0.25} color="#dcecff" />
         <Environment resolution={256}>
           {/* a long box overhead and behind: the sheen on the lid and the top faces */}
-          <Lightformer form="rect" intensity={7.5} position={[0, 6, -2.5]} scale={[14, 0.7, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={11} position={[0, 6, -2.5]} scale={[14, 0.7, 1]} color="#ffffff" />
           {/* tall strips either side: thin highlights down the side edges and the hinge's ends */}
-          <Lightformer form="rect" intensity={16} position={[-6, 2, 1]} scale={[0.9, 7, 1]} color="#f2f8ff" />
-          <Lightformer form="rect" intensity={13.5} position={[6, 2, 0]} scale={[0.9, 7, 1]} color="#fff6ea" />
+          <Lightformer form="rect" intensity={24} position={[-6, 2, 1]} scale={[0.9, 7, 1]} color="#f2f8ff" />
+          <Lightformer form="rect" intensity={20} position={[6, 2, 0]} scale={[0.9, 7, 1]} color="#fff6ea" />
           {/* a thin bar in front and above: the front edges and the rim of the base */}
           <Lightformer form="rect" intensity={2.5} position={[0, 6.5, 4]} scale={[12, 1.6, 1]} color="#ffffff" />
-          <Lightformer form="rect" intensity={22} position={[0, 4.6, 5]} scale={[7, 0.12, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={33} position={[0, 4.6, 5]} scale={[7, 0.12, 1]} color="#ffffff" />
           {/* a low, dim card, so the underside of the edges is not a hole */}
-          <Lightformer form="rect" intensity={8} position={[0, 0.4, 6]} scale={[9, 0.35, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={4} position={[0, 0.4, 6]} scale={[9, 0.35, 1]} color="#ffffff" />
           <Lightformer form="rect" intensity={0.1} position={[0, -2, 4]} scale={[10, 2, 1]} color="#9fb4c4" />
         </Environment>
         <Device
