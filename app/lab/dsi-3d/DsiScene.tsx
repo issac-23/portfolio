@@ -28,7 +28,7 @@ import {
   Vector2,
   Vector3,
 } from 'three'
-import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { mergeVertices, toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import DsiMenu from '@/components/dsi/DsiMenu'
 import type { DeviceProps } from '@/components/dsi/Device'
 import { INITIAL } from '@/components/dsi/console'
@@ -150,7 +150,8 @@ function plasticize(root: Object3D) {
     if (src.name !== 'Buttons1' && !smoothed.has(m.geometry)) {
       const g = m.geometry
       g.deleteAttribute('normal')
-      m.geometry = toCreasedNormals(g, (35 * Math.PI) / 180)
+      // toCreasedNormals un-indexes the mesh; merging the identical vertices again keeps it as light to draw as before.
+      m.geometry = mergeVertices(toCreasedNormals(g, (35 * Math.PI) / 180), 1e-5)
       smoothed.add(m.geometry)
     }
   })
