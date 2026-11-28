@@ -24,7 +24,18 @@ import sharp from 'sharp'
 
 const SRC = resolve(process.argv[2] ?? join(homedir(), 'Downloads', 'dsi-model', 'scene.gltf'))
 const OUT = resolve(process.argv[3] ?? join(import.meta.dirname, '..', 'public', 'models', 'dsi.glb'))
-const TARGET_TRIS = 40000
+// The source is 264k triangles. The first build cut it to 40k at a 2% error
+// and the edges, bevels and button rims went with it (the DSi read as clay).
+// Even a light simplify leaves slivers whose normals streak under a clearcoat,
+// and the full mesh fits in 1.6 MB, so by default nothing is removed (set
+// DSI_TRIS to a lower count to simplify).
+const TARGET_TRIS = Number(process.env.DSI_TRIS ?? 1e9)
+const SIMPLIFY_ERROR = Number(process.env.DSI_ERROR ?? 0.0008)
+// Texture edge length: the shell and the buttons carry the normal and
+// roughness maps that make the plastic read as plastic; the rest are small.
+const BIG_TEX = Number(process.env.DSI_TEX ?? 2048)
+const SMALL_TEX = 1024
+const BIG_MATERIALS = /^(Matte_plastic|Buttons1)$/
 
 // ---- small vector helpers -------------------------------------------------
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
@@ -295,11 +306,56 @@ const totalBefore = tris.Base + tris.Lid
 await doc.transform(
   dedup(),
   weld({}),
-  simplify({ simplifier: MeshoptSimplifier, ratio: TARGET_TRIS / totalBefore, error: 0.02 }),
+  simplify({ simplifier: MeshoptSimplifier, ratio: Math.min(1, TARGET_TRIS / totalBefore), error: SIMPLIFY_ERROR }),
   prune(),
-  textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [1024, 1024] }),
-  meshopt({ encoder: MeshoptEncoder, level: 'high' }),
 )
+
+// Materials. The source's plastic maps carry a metalness channel that averages
+// ~0.22, which strips the diffuse colour and makes plastic look like putty. Real
+// DSi plastic is a dielectric, so the plastics are made non-metallic, and the
+// buttons a little glossier than the shell (the roughness map is kept).
+for (const m of root.listMaterials()) {
+  if (/^(Matte_plastic|Buttons1|Skyddsplast|Shiny)$/.test(m.getName())) m.setMetallicFactor(0)
+  if (m.getName() === 'Buttons1') m.setRoughnessFactor(0.75)
+}
+
+// The shell's colour map is a scan of a worn console: a mottled grey wash over
+// the black, which reads as dusty clay under any light. Flatten everything that
+// is not a printed mark (the marks are far brighter than the wash) to one even
+// near-black. The shell's own normal and roughness maps are scanned wear too:
+// under softbox light they show as crumpled streaks, so they are dropped and the
+// page applies a small tiling grain instead (see DsiScene.tsx).
+const SHELL_BLACK = [17, 19, 23]
+const shell = root.listMaterials().find(m => m.getName() === 'Matte_plastic')
+{
+  const size = BIG_TEX
+  const px = size * size
+  const base = shell.getBaseColorTexture()
+  const { data: d } = await sharp(Buffer.from(base.getImage())).resize(size, size, { fit: 'fill' }).toColourspace('srgb').removeAlpha().raw().toBuffer({ resolveWithObject: true })
+  for (let i = 0; i < px; i++) {
+    const v = Math.max(d[i * 3], d[i * 3 + 1], d[i * 3 + 2])
+    // 0 below the wash (about 28 on average, up to ~70 in the lighter patches), 1 on a printed mark.
+    const t = Math.min(1, Math.max(0, (v - 80) / 50))
+    for (let c = 0; c < 3; c++) d[i * 3 + c] = Math.round(SHELL_BLACK[c] + (d[i * 3 + c] - SHELL_BLACK[c]) * t)
+  }
+  base.setImage(new Uint8Array(await sharp(d, { raw: { width: size, height: size, channels: 3 } }).webp({ quality: 90, effort: 5 }).toBuffer())).setMimeType('image/webp')
+  shell.setNormalTexture(null).setMetallicRoughnessTexture(null).setRoughnessFactor(0.45)
+}
+
+await doc.transform(prune())
+// Textures, one by one: the big materials keep BIG_TEX, the rest shrink to
+// SMALL_TEX. Normal maps are encoded at a higher WebP quality than colour.
+const done = new Set([shell.getBaseColorTexture()])
+for (const tex of root.listTextures()) {
+  if (done.has(tex)) continue
+  const owners = tex.listParents().filter(p => p.propertyType === 'Material')
+  const big = owners.some(m => BIG_MATERIALS.test(m.getName()))
+  const isNormal = owners.some(m => m.getNormalTexture() === tex)
+  const size = big ? BIG_TEX : SMALL_TEX
+  const img = await sharp(Buffer.from(tex.getImage())).resize(size, size, { fit: 'fill' }).webp({ quality: isNormal ? 92 : 85, effort: 5 }).toBuffer()
+  tex.setImage(new Uint8Array(img)).setMimeType('image/webp')
+}
+await doc.transform(prune(), meshopt({ encoder: MeshoptEncoder, level: 'high' }))
 
 const after = { Base: 0, Lid: 0 }
 for (const node of root.listNodes()) {

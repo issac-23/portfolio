@@ -4,19 +4,28 @@ import { createPortal as domPortal } from 'react-dom'
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import type { Cue } from '@/components/dsi/lab/sfx'
 import { Canvas, createPortal, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { Environment, Html, Lightformer, useGLTF } from '@react-three/drei'
+import { ContactShadows, Environment, Html, Lightformer, useGLTF } from '@react-three/drei'
 import {
+  ACESFilmicToneMapping,
   Box3,
+  BoxGeometry,
   Color,
+  DataTexture,
   Group,
+  LinearMipmapLinearFilter,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
+  MeshPhysicalMaterial,
   MeshStandardMaterial,
   Object3D,
   PerspectiveCamera,
   Quaternion,
+  RGBAFormat,
+  RepeatWrapping,
+  SRGBColorSpace,
   SphereGeometry,
+  Vector2,
   Vector3,
 } from 'three'
 import DsiMenu from '@/components/dsi/DsiMenu'
@@ -71,6 +80,71 @@ type LabHooks = Record<string, unknown>
 const hooks = (): LabHooks => {
   const w = window as unknown as { __dsiLab?: LabHooks }
   return (w.__dsiLab ??= {})
+}
+
+// Moulded plastic: a dielectric with a thin glossy skin over a fairly matte body,
+// so the softbox reflections show as crisp streaks on the edges while the
+// faces stay even. The shell and the buttons differ only in how glossy.
+const PLASTIC: Record<string, { roughness: number; clearcoat: number; clearcoatRoughness: number }> = {
+  // The shell has no roughness map, so its value is used as is; the others scale their maps.
+  Matte_plastic: { roughness: 0.55, clearcoat: 0.25, clearcoatRoughness: 0.28 },
+  Shiny: { roughness: 0.7, clearcoat: 0.4, clearcoatRoughness: 0.25 },
+  Buttons1: { roughness: 0.62, clearcoat: 0.5, clearcoatRoughness: 0.2 },
+}
+
+/** A small tiling noise as a normal map: the faint grain of moulded plastic. */
+let grainTex: DataTexture | null = null
+function grain() {
+  if (grainTex) return grainTex
+  const n = 128
+  const data = new Uint8Array(n * n * 4)
+  let seed = 7
+  const rnd = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
+    return seed / 4294967296
+  }
+  for (let i = 0; i < n * n; i++) {
+    data[i * 4] = 128 + (rnd() - 0.5) * 120
+    data[i * 4 + 1] = 128 + (rnd() - 0.5) * 120
+    data[i * 4 + 2] = 255
+    data[i * 4 + 3] = 255
+  }
+  grainTex = new DataTexture(data, n, n, RGBAFormat)
+  grainTex.wrapS = grainTex.wrapT = RepeatWrapping
+  grainTex.repeat.set(14, 14)
+  grainTex.generateMipmaps = true
+  grainTex.minFilter = LinearMipmapLinearFilter
+  grainTex.needsUpdate = true
+  return grainTex
+}
+
+/** Swaps the loader's standard materials for physical ones carrying the same maps. */
+function plasticize(root: Object3D) {
+  const made = new Map<MeshStandardMaterial, MeshPhysicalMaterial>()
+  root.traverse(o => {
+    const m = o as Mesh
+    if (!m.isMesh) return
+    const src = m.material as MeshStandardMaterial
+    const kind = PLASTIC[src.name]
+    if (!kind) return
+    let mat = made.get(src)
+    if (!mat) {
+      mat = new MeshPhysicalMaterial({
+        name: src.name,
+        color: src.color,
+        map: src.map,
+        // The shell's scanned maps were dropped from the model (they showed as crumpled streaks); it gets a fine uniform grain instead.
+        normalMap: src.normalMap ?? grain(),
+        normalScale: src.normalMap ? src.normalScale : new Vector2(0.12, 0.12),
+        roughnessMap: src.roughnessMap,
+        metalness: 0,
+        envMapIntensity: 1,
+        ...kind,
+      })
+      made.set(src, mat)
+    }
+    m.material = mat
+  })
 }
 
 /** A thin sample of the model's vertices as they are with the lid open (call after updateMatrixWorld). */
@@ -142,16 +216,19 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
   const pivot = useRef<Group>(null)
   const start = useRef<number | null>(null)
   const [opened, setOpened] = useState(false)
+  // Whether the DSi is moving (the intro, a drag or its ease back), so the contact shadow is only redrawn then.
+  const [moving, setMoving] = useState(true)
   const hovering = useRef(false)
   // Where the camera looks, so the shut DSi can be brought to it.
   const aim = useRef(new Vector3())
 
   const rig = useMemo(() => {
+    plasticize(scene)
     const lid = scene.getObjectByName('Lid') as Object3D
     const base = scene.getObjectByName('Base') as Object3D
     const axis = new Vector3(...(lid.userData.hingeAxis as [number, number, number]))
     const closeAngle = lid.userData.closeAngle as number
-    const screenMat = new MeshStandardMaterial({ color: new Color('#050607'), roughness: 0.35, metalness: 0 })
+    const screenMat = new MeshStandardMaterial({ color: new Color('#050607'), roughness: 0.14, metalness: 0, envMapIntensity: 1.4 })
     for (const name of ['ScreenTop', 'ScreenBottom']) {
       const m = scene.getObjectByName(name) as Mesh | undefined
       if (m) m.material = screenMat
@@ -159,10 +236,13 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     // The power button gets its own material so it can light up on hover, and a
     // larger invisible target so a 4 mm button is not hard to hit.
     const button = scene.getObjectByName('Power_button') as Mesh
-    const buttonMat = (button.material as MeshStandardMaterial).clone()
+    const buttonMat = (button.material as MeshPhysicalMaterial).clone()
     button.material = buttonMat
     lid.quaternion.setFromAxisAngle(axis, 0)
     scene.updateMatrixWorld(true)
+    // useGLTF hands every mount the same cached scene, so drop what an earlier
+    // mount added before measuring or adding again.
+    for (const name of ['PowerHit', 'HingeBacking']) scene.getObjectByName(name)?.removeFromParent()
     const bb = new Box3().setFromObject(button)
     const hit = new Mesh(new SphereGeometry(0.0065, 12, 8), new MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }))
     hit.name = 'PowerHit'
@@ -180,7 +260,22 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     const closedAt = new Box3().setFromObject(scene).getCenter(new Vector3()).sub(center).multiplyScalar(scale)
     lid.quaternion.setFromAxisAngle(axis, 0)
     scene.updateMatrixWorld(true)
+    // The lowest point of the open model, in scene units, where the contact shadow sits.
+    let floor = Infinity
+    for (let i = 1; i < points.length; i += 3) floor = Math.min(floor, points[i])
+    // Where the lid's lower rim meets the hinge, a gap shows the page through the model as thin pale lines. A thin dark bar right behind it, as seen from the camera, fills the gap without being seen anywhere else.
+    {
+      const hinge = scene.worldToLocal(lid.getWorldPosition(new Vector3()))
+      const toCam = new Vector3(0, Math.sin(CAMERA_ELEVATION), Math.cos(CAMERA_ELEVATION))
+      const camUp = new Vector3(0, Math.cos(CAMERA_ELEVATION), -Math.sin(CAMERA_ELEVATION))
+      const bar = new Mesh(new BoxGeometry(size.x * 0.84, 0.004, 0.004), new MeshBasicMaterial({ color: '#0b0c0e' }))
+      bar.name = 'HingeBacking'
+      bar.raycast = () => {}
+      bar.position.copy(hinge).addScaledVector(camUp, 0.0036).addScaledVector(toCam, -0.004)
+      scene.add(bar)
+    }
     return {
+      floor,
       lid,
       base,
       axis,
@@ -292,6 +387,8 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
     const k = 1 - Math.exp(-dt * (d.active ? 18 : 5))
     d.yaw += ((d.active ? d.x : 0) - d.yaw) * k
     d.pitch += ((d.active ? d.y : 0) - d.pitch) * k
+    const nowMoving = !done || d.active || Math.abs(d.yaw) + Math.abs(d.pitch) > 1e-4
+    if (nowMoving !== moving) setMoving(nowMoving)
     el.rotation.y = (1 - turn) * INTRO_YAW + d.yaw
     el.rotation.x = d.pitch
     // Shut, the DSi sits where the camera looks; the opening lowers it into its place.
@@ -310,7 +407,10 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
   }
 
   return (
-    <group ref={pivot} scale={rig.scale}>
+    <>
+      {/* Soft shadow where the DSi meets the table. Redrawn while the DSi moves, then once more at rest (a re-render resets its frame count). */}
+      <ContactShadows position={[0, rig.floor - 0.005, 0]} scale={9} resolution={512} far={1.6} blur={2.6} opacity={0.55} color="#1b2a35" frames={moving ? Infinity : 1} />
+      <group ref={pivot} scale={rig.scale}>
       <primitive
         object={scene}
         position={[-rig.center.x, -rig.center.y, -rig.center.z]}
@@ -327,7 +427,8 @@ function Device({ drag, still, lit, freeze, onPress, onOpened, setTopEl, setBott
       {/* Only once the lid is up: before that the DOM layer would sit on top of a closed lid. */}
       {opened && <ScreenPanel frame={rig.top} container={rig.lid} setEl={setTopEl} />}
       {opened && <ScreenPanel frame={rig.bottom} container={rig.base} setEl={setBottomEl} />}
-    </group>
+      </group>
+    </>
   )
 }
 
@@ -470,15 +571,29 @@ export default function DsiScene({ onPress, register, onLit, lit, onCue, onOpene
         drag.current.active = false
       }}
     >
-      <Canvas frameloop={fps ? 'demand' : 'always'} dpr={[1, 2]} camera={{ position: [0, 2.6, 6.2], fov: 30 }}>
+      <Canvas
+        frameloop={fps ? 'demand' : 'always'}
+        dpr={[1, 2]}
+        camera={{ position: [0, 2.6, 6.2], fov: 30 }}
+        gl={{ alpha: true, toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.05, outputColorSpace: SRGBColorSpace }}
+      >
         {fps > 0 && <Ticker fps={fps} />}
-        <hemisphereLight args={['#eaf4ff', '#9db8cc', 0.9]} />
-        <directionalLight position={[3, 6, 4]} intensity={2.2} />
-        <directionalLight position={[-4, 2, 3]} intensity={0.8} />
-        <Environment resolution={64}>
-          <Lightformer form="rect" intensity={3} position={[0, 5, 2]} scale={[8, 4, 1]} color="#ffffff" />
-          <Lightformer form="rect" intensity={1.5} position={[-5, 1, 3]} scale={[3, 4, 1]} color="#cfe6ff" />
-          <Lightformer form="rect" intensity={1.2} position={[5, 1, -2]} scale={[3, 4, 1]} color="#fff4e0" />
+        {/* Studio lighting. A low key from the left rakes across the plastic so edges and engraving catch it; the rest of the light is in the environment below, as a few hard-edged softboxes whose reflections run along the edges. Almost no flat fill, so the black stays black and keeps its shape. */}
+        <hemisphereLight args={['#eaf4ff', '#8fa7b8', 0.08]} />
+        <directionalLight position={[-5, 2.6, 2.2]} intensity={0.9} color="#fff6ea" />
+        <directionalLight position={[4, 3, 4]} intensity={0.25} color="#dcecff" />
+        <Environment resolution={256}>
+          {/* a long box overhead and behind: the sheen on the lid and the top faces */}
+          <Lightformer form="rect" intensity={11} position={[0, 6, -2.5]} scale={[14, 0.7, 1]} color="#ffffff" />
+          {/* tall strips either side: thin highlights down the side edges and the hinge's ends */}
+          <Lightformer form="rect" intensity={24} position={[-6, 2, 1]} scale={[0.9, 7, 1]} color="#f2f8ff" />
+          <Lightformer form="rect" intensity={20} position={[6, 2, 0]} scale={[0.9, 7, 1]} color="#fff6ea" />
+          {/* a thin bar in front and above: the front edges and the rim of the base */}
+          <Lightformer form="rect" intensity={2.5} position={[0, 6.5, 4]} scale={[12, 1.6, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={33} position={[0, 4.6, 5]} scale={[7, 0.12, 1]} color="#ffffff" />
+          {/* a low, dim card, so the underside of the edges is not a hole */}
+          <Lightformer form="rect" intensity={4} position={[0, 0.4, 6]} scale={[9, 0.35, 1]} color="#ffffff" />
+          <Lightformer form="rect" intensity={0.1} position={[0, -2, 4]} scale={[10, 2, 1]} color="#9fb4c4" />
         </Environment>
         <Device
           drag={drag}
